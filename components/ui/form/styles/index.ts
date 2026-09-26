@@ -1,1 +1,0 @@
-export { formColors } from "./colors";

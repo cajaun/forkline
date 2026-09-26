@@ -1,6 +1,3 @@
-import React from "react";
-import { ComponentCatalog } from "@/components-showcase/home/component-catalog";
+import { ChessboardSheet } from "@/src/features/chessboard-sheet";
 
-export default function Index() {
-  return <ComponentCatalog />;
-}
+export default ChessboardSheet;
