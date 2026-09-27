@@ -27,7 +27,7 @@ function AppBubble({
         fallback={fallback}
         name={icon}
         size={27}
-        tintColor={color === SHEET_COLORS.primary ? '#ffffff' : SHEET_COLORS.icon}
+        tintColor={color === SHEET_COLORS.primary ? '#FEFFFF' : SHEET_COLORS.icon}
       />
     </View>
   );
@@ -46,19 +46,20 @@ function DateBubble({
 }) {
   return (
     <View
-      className={`h-full w-full items-center justify-center gap-[5px] rounded-[23px] py-[15px] ${selected ? 'bg-[#dcdcdc]' : ''}`}>
+      className={`h-full w-full items-center justify-center gap-1.25 rounded-[23px] py-3.75 ${selected ? 'bg-[#dcdcdc]' : ''}`}>
       <Text
         className={`text-[14px] text-[#606166] ${muted ? 'text-[#aeb0b3]' : ''}`}
         style={{ fontSize: 14, fontWeight: '800' }}>
         {day}
       </Text>
       <Text
+        numberOfLines={1}
         className={`text-[28px] text-[#53555a] ${muted ? 'text-[#aeb0b3]' : ''}`}
         style={{ fontSize: 28, fontWeight: '900' }}>
         {date}
       </Text>
       <View
-        className={`mt-[3px] h-[17px] w-[17px] rounded-[9px] border-2 border-dotted ${selected ? 'border-[#202124]' : 'border-[#b9bbbf]'} ${muted ? 'opacity-65' : ''}`}
+        className={`mt-0.75 h-4.25 w-4.25 rounded-[9px] border-2 border-dotted ${selected ? 'border-[#262626]' : 'border-[#b9bbbf]'} ${muted ? 'opacity-65' : ''}`}
       />
     </View>
   );
@@ -75,7 +76,7 @@ export function HomeChrome({ progress }: { progress: SharedValue<number> }) {
   }));
 
   return (
-    <View className="flex-1 bg-[#e6e6e6] pt-[68px]">
+    <View className="flex-1 bg-[#e6e6e6] pt-17">
       <AnimatedView
         className="flex-row items-center gap-3 px-7"
         style={topChromeStyle}>
@@ -97,7 +98,7 @@ export function HomeChrome({ progress }: { progress: SharedValue<number> }) {
         />
         <View className="h-12 w-12 items-center justify-center rounded-full bg-[#b2c8dd]">
           <Text
-            className="text-white"
+            className="text-[#FEFFFF]"
             style={{ fontSize: 27, fontWeight: '800' }}>
             C
           </Text>
@@ -105,19 +106,19 @@ export function HomeChrome({ progress }: { progress: SharedValue<number> }) {
       </AnimatedView>
 
       <AnimatedView
-        className="absolute bottom-[34px] left-0 right-0 h-[123px]"
+        className="absolute bottom-8.5 left-0 right-0 h-30.75"
         style={bottomChromeStyle}>
-        <View className="absolute bottom-0 left-[5.1%] h-full w-[8%]">
+        <View className="absolute bottom-0 left-[5.1%] h-full" style={{ width: '12%' }}>
           <DateBubble day="Thu" date="24" muted />
         </View>
-        <View className="absolute bottom-0 left-[25.2%] h-full w-[8%]">
+        <View className="absolute bottom-0 left-[25.2%] h-full" style={{ width: '12%' }}>
           <DateBubble day="Fri" date="25" muted />
         </View>
         <View className="absolute bottom-0 left-[40.7%] h-full w-[18.5%]">
           <DateBubble day="Sat" date="26" selected />
         </View>
         <View className="absolute bottom-0 left-[69.4%] h-full w-[18.5%]">
-          <View className="h-full w-full items-center justify-center gap-[7px] rounded-[23px] py-[15px]">
+          <View className="h-full w-full items-center justify-center gap-1.75 rounded-[23px] py-3.75">
             <Text
               className="text-[#aeb0b3]"
               style={{ fontSize: 14, fontWeight: '800' }}>

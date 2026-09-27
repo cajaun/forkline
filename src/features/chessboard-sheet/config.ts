@@ -1,7 +1,6 @@
 import { BOARD_COLORS } from '../chess-game/constants';
 
 export const SHEET_LAYOUT = {
-  // geometry values map to the reference screen
   closedBottom: 0.22,
   closedTop: 0.18,
   closedBoardCenter: 0.556,
@@ -15,15 +14,17 @@ export const SHEET_LAYOUT = {
 
 export const SHEET_BOARD_COLORS = {
   ...BOARD_COLORS,
-  black: '#e4e7eb',
+  black: '#E9EBEB',
   checkmateHighlight: '#e2caca',
-  lastMoveHighlight: '#b0b2b5',
-  white: '#fafbfc',
+  lastMoveHighlight: '#B7B8B8',
+  white: '#F9FAFA',
 };
 
 export const SHEET_COLORS = {
+  background: '#FEFFFF',
+  handle: '#DEDFDF',
   icon: '#262626',
-  lightControl: '#f2f2f2',
+  lightControl: '#F2F2F2',
   primary: '#1f70f7',
   text: '#262626',
 } as const;

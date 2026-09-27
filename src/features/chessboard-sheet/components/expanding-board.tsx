@@ -1,25 +1,22 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+
 import { Pressable, Text, useWindowDimensions } from 'react-native';
 
-import Chessboard from 'react-native-chessboard';
-import type { MoveResult } from 'react-native-chessboard';
 import {
   Extrapolation,
   interpolate,
-  runOnJS,
-  useAnimatedReaction,
   useAnimatedStyle,
 } from 'react-native-reanimated';
 import type { SharedValue } from 'react-native-reanimated';
+import type { MoveResult } from 'react-native-chessboard/src/state/move-executor';
 
-import { SHEET_BOARD_COLORS, SHEET_LAYOUT } from '../config';
-import { capturedFromFen, kingsOnlyFen } from '../utils';
+import { SHEET_LAYOUT } from '../config';
+import { capturedFromFen } from '../utils';
 import { AnimatedView } from '../../../shared/uniwind';
 import { SfSymbol } from '../../../shared/sf-symbol';
 import { BoardCaptures } from './board-captures';
 import { BoardMeta } from './board-meta';
-import { PreviewSurface } from './preview-surface';
-import { PreviewPieces } from './preview-pieces';
+import { SheetBoard } from './sheet-board';
 
 export function ExpandingBoard({
   boardFen,
@@ -46,12 +43,30 @@ export function ExpandingBoard({
   const closedTop = closedCenterY - height * SHEET_LAYOUT.closedTop - boardSize / 2;
   const openTop = openCenterY - boardSize / 2;
   const previewScale = previewSize / boardSize;
-  const previewFen = useMemo(() => kingsOnlyFen(boardFen), [boardFen]);
-  const [displayFen, setDisplayFen] = useState(previewFen);
-  const [showPieces, setShowPieces] = useState(false);
-  const [boardReady, setBoardReady] = useState(false);
   const [captured, setCaptured] = useState(() => capturedFromFen(boardFen));
+  const [markerFen, setMarkerFen] = useState(boardFen);
+  const [spriteReady, setSpriteReady] = useState(false);
+  const pendingOpenRef = useRef(false);
+  const handleSpriteReady = useCallback((ready: boolean) => {
+    setSpriteReady(ready);
+  }, []);
+  useEffect(() => {
+    if (!spriteReady || !pendingOpenRef.current) return;
+
+    pendingOpenRef.current = false;
+    onOpen();
+  }, [onOpen, spriteReady]);
+  const handleOpen = useCallback(() => {
+    if (spriteReady) {
+      onOpen();
+      return;
+    }
+
+    pendingOpenRef.current = true;
+  }, [onOpen, spriteReady]);
   const handleMove = useCallback((result: MoveResult) => {
+    setMarkerFen(result.state.fen);
+
     const piece = result.move.captured;
     if (!piece) return;
 
@@ -61,13 +76,8 @@ export function ExpandingBoard({
       [side]: [...previous[side], piece],
     }));
   }, []);
-  useEffect(() => {
-    setDisplayFen(boardFen);
-  }, [boardFen]);
-  const closedBorderWidth = 1;
-  const closedBorderRadius = 10;
-  const openBorderWidth = 1.5;
-  const openBorderRadius = 10;
+  const borderWidth = 2;
+  const borderRadius = 12;
 
   const boardStyle = useAnimatedStyle(() => ({
     left: interpolate(progress.value, [0, 1], [closedLeft, openLeft]),
@@ -87,33 +97,10 @@ export function ExpandingBoard({
     borderRadius: interpolate(
       progress.value,
       [0, 1],
-      [closedBorderRadius / previewScale, openBorderRadius],
+      [borderRadius / previewScale, borderRadius],
       Extrapolation.CLAMP,
     ),
   }));
-  useAnimatedReaction(
-    () => progress.value >= 0.94,
-    (visible, previous) => {
-      if (visible === previous) return;
-      runOnJS(setShowPieces)(visible);
-    },
-  );
-  useEffect(() => {
-    if (!showPieces) {
-      setBoardReady(false);
-      return;
-    }
-
-    let secondFrame = 0;
-    const firstFrame = requestAnimationFrame(() => {
-      secondFrame = requestAnimationFrame(() => setBoardReady(true));
-    });
-
-    return () => {
-      cancelAnimationFrame(firstFrame);
-      if (secondFrame) cancelAnimationFrame(secondFrame);
-    };
-  }, [showPieces]);
   const playStyle = useAnimatedStyle(() => ({
     opacity: interpolate(progress.value, [0, 0.45], [1, 0], Extrapolation.CLAMP),
     transform: [
@@ -135,7 +122,7 @@ export function ExpandingBoard({
       progress.value,
       [0, 1],
       [
-        closedLeft + (boardSize - previewSize) / 2 - closedBorderWidth,
+        closedLeft + (boardSize - previewSize) / 2 - borderWidth,
         openLeft,
       ],
     ),
@@ -143,30 +130,25 @@ export function ExpandingBoard({
       progress.value,
       [0, 1],
       [
-        closedTop + (boardSize - previewSize) / 2 - closedBorderWidth,
+        closedTop + (boardSize - previewSize) / 2 - borderWidth,
         openTop,
       ],
     ),
     height: interpolate(
       progress.value,
       [0, 1],
-      [previewSize + closedBorderWidth * 2, boardSize],
+      [previewSize + borderWidth * 2, boardSize],
     ),
-    borderWidth: interpolate(
-      progress.value,
-      [0, 1],
-      [closedBorderWidth, openBorderWidth],
-      Extrapolation.CLAMP,
-    ),
+    borderWidth,
     borderRadius: interpolate(
       progress.value,
       [0, 1],
-      [closedBorderRadius, openBorderRadius],
+      [borderRadius, borderRadius],
     ),
     width: interpolate(
       progress.value,
       [0, 1],
-      [previewSize + closedBorderWidth * 2, boardSize],
+      [previewSize + borderWidth * 2, boardSize],
     ),
   }));
 
@@ -178,6 +160,7 @@ export function ExpandingBoard({
         closedTop={closedTop}
         openLeft={openLeft}
         openTop={openTop}
+        previewSize={previewSize}
         progress={progress}
       />
       <BoardCaptures
@@ -191,45 +174,35 @@ export function ExpandingBoard({
         progress={progress}
       />
       <AnimatedView
-        className="absolute z-[2] overflow-hidden rounded-lg"
+        className="absolute z-2 overflow-hidden rounded-xl"
         pointerEvents="box-none"
         style={[{ height: boardSize, width: boardSize }, boardStyle, boardClipStyle]}>
-        <AnimatedView
-          className="absolute inset-0"
-          pointerEvents={boardReady ? 'auto' : 'none'}>
-          <Chessboard
-            boardSize={boardSize}
-            colors={SHEET_BOARD_COLORS}
-            fen={displayFen}
-            gestureEnabled={boardReady}
-            onMove={handleMove}
-            withLetters={boardReady}
-            withNumbers={boardReady}
-          />
-        </AnimatedView>
-        <PreviewSurface
+        <SheetBoard
           boardSize={boardSize}
           fen={boardFen}
-          showPieces={boardReady}
+          markerFen={markerFen}
+          onReady={handleSpriteReady}
+          onMove={handleMove}
+          open={open}
+          progress={progress}
         />
-        <PreviewPieces boardSize={boardSize} fen={boardFen} progress={progress} />
         <AnimatedView
-          className="absolute inset-0 z-[3] items-center justify-center"
+          className="absolute inset-0 z-3 items-center justify-center"
           pointerEvents={open ? 'none' : 'box-none'}
           style={playStyle}>
           <Pressable
             accessibilityLabel="Open chessboard"
-            className="h-14 w-[110px] flex-row items-center justify-center gap-1 rounded-[28px] bg-[#262626]"
-            onPress={onOpen}>
+            className="h-14 w-27.5 flex-row items-center justify-center gap-1 rounded-[28px] bg-[#262626]"
+            onPress={handleOpen}>
             <SfSymbol
               fallback="play"
               name="play.fill"
               size={22}
-              tintColor="#ffffff"
+            tintColor="#FEFFFF"
               weight="medium"
             />
             <Text
-              className="text-white"
+              className="text-[#FEFFFF]"
               style={{ fontSize: 24, fontWeight: '700' }}>
               Play
             </Text>
@@ -237,14 +210,14 @@ export function ExpandingBoard({
         </AnimatedView>
       </AnimatedView>
       <AnimatedView
-        className="absolute z-[3] rounded-[10px]"
+        className="absolute z-3 rounded-xl"
         pointerEvents="none"
         style={[
           {
             borderColor: '#262626',
             borderCurve: 'continuous',
-            height: previewSize + closedBorderWidth * 2,
-            width: previewSize + closedBorderWidth * 2,
+            height: previewSize + borderWidth * 2,
+            width: previewSize + borderWidth * 2,
           },
           borderStyle,
         ]}

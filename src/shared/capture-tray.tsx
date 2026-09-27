@@ -15,7 +15,7 @@ export function CaptureTray({
   const sorted = [...pieces].sort((a, b) => (VALUE[a] ?? 0) - (VALUE[b] ?? 0));
 
   return (
-    <View className="min-h-4 flex-row items-center gap-[5px]">
+    <View className="min-h-4 flex-row items-center gap-1.25">
       {sorted.length > 0 ? (
         <View className="flex-row items-center">
           {sorted.map((piece, index) => (

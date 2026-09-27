@@ -13,7 +13,7 @@ import { SfSymbol } from '../../../shared/sf-symbol';
 import { AnimatedView } from '../../../shared/uniwind';
 
 const circleClassName =
-  'h-14 w-14 items-center justify-center rounded-full bg-[#f2f2f2]';
+  'h-14 w-14 items-center justify-center rounded-full bg-[#F2F2F2]';
 
 export function OpenControls({
   onClose,
@@ -26,15 +26,20 @@ export function OpenControls({
 }) {
   const { top } = useSafeAreaInsets();
   const controlsStyle = useAnimatedStyle(() => ({
-    opacity: interpolate(progress.value, [0, 1], [0, 1], Extrapolation.CLAMP),
-    transform: [{ translateY: interpolate(progress.value, [0, 1], [18, 0]) }],
+    opacity: interpolate(
+      progress.value,
+      [0.55, 0.82, 1],
+      [0, 0.75, 1],
+      Extrapolation.CLAMP,
+    ),
+    transform: [{ translateY: interpolate(progress.value, [0, 1], [6, 0]) }],
   }));
 
   return (
     <AnimatedView
-      className="absolute left-7 right-7 z-[4] flex-row justify-between"
+      className="absolute left-7 right-7 z-4 flex-row justify-between"
       pointerEvents={open ? 'auto' : 'none'}
-      style={[{ top: top + 6 }, controlsStyle]}>
+      style={[{ top: top + 18 }, controlsStyle]}>
       <Pressable
         accessibilityLabel="Close chessboard"
         className={circleClassName}

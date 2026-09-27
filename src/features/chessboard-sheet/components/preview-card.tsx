@@ -24,7 +24,7 @@ export function PreviewCard({
 }) {
   const { top: safeTop } = useSafeAreaInsets();
   const morphOriginStyle = useAnimatedStyle(() => ({
-    top: interpolate(progress.value, [0, 1], [47, safeTop + 33]),
+    top: interpolate(progress.value, [0, 1], [47, safeTop + 25]),
   }));
   const weekdayStyle = useAnimatedStyle(() => ({
     opacity: interpolate(progress.value, [0, 1], [1, 0], Extrapolation.CLAMP),
@@ -40,13 +40,13 @@ export function PreviewCard({
     marginTop: interpolate(progress.value, [0, 1], [0, -24]),
   }));
   const dateStyle = useAnimatedStyle(() => ({
-    top: interpolate(progress.value, [0, 1], [95, 62]),
+    top: interpolate(progress.value, [0, 1], [95, safeTop + 15]),
     transform: [
       { scale: interpolate(progress.value, [0, 1], [1, 0.43]) },
     ],
   }));
   const timeStyle = useAnimatedStyle(() => ({
-    top: interpolate(progress.value, [0, 1], [151, 97]),
+    top: interpolate(progress.value, [0, 1], [151, safeTop + 50]),
   }));
   const handleStyle = useAnimatedStyle(() => ({
     opacity: interpolate(progress.value, [0, 1], [0, 1], Extrapolation.CLAMP),
@@ -63,10 +63,10 @@ export function PreviewCard({
   return (
     <Pressable
       accessibilityLabel="Open chessboard sheet"
-      className="absolute inset-0 z-[1] overflow-visible rounded-[34px] bg-white"
+      className="absolute inset-0 z-1 overflow-visible rounded-[34px] bg-[#FEFFFF]"
       onPress={onOpen}>
-      <View className="absolute bottom-[-18px] left-[25px] right-[25px] top-[18px] rounded-[34px] bg-white opacity-65" />
-      <View className="absolute bottom-[-10px] left-3 right-3 top-[10px] rounded-[34px] bg-white opacity-90" />
+      <View className="absolute -bottom-4.5 left-6.25 right-6.25 top-4.5 rounded-[34px] bg-[#FEFFFF] opacity-65" />
+      <View className="absolute -bottom-2.5 left-3 right-3 top-2.5 rounded-[34px] bg-[#FEFFFF] opacity-90" />
       <View className="absolute inset-0 items-center" pointerEvents="none">
         <AnimatedView
           className="absolute left-0 right-0 items-center"
@@ -80,8 +80,8 @@ export function PreviewCard({
             className="absolute left-0 right-0 items-center"
             pointerEvents="none">
             <AnimatedView
-              className="h-[6px] w-[52px] rounded-[3px]"
-              style={[{ backgroundColor: SHEET_COLORS.lightControl }, handleStyle]}
+              className="h-1.5 w-13 rounded-[3px]"
+              style={[{ backgroundColor: SHEET_COLORS.handle }, handleStyle]}
             />
           </AnimatedView>
         </AnimatedView>
@@ -114,7 +114,7 @@ export function PreviewCard({
       </View>
       <Pressable
         accessibilityLabel="Close chessboard"
-        className="absolute left-0 right-0 z-[5] h-[38px] items-center justify-center"
+        className="absolute left-0 right-0 z-5 h-9.5 items-center justify-center"
         onPress={onClose}
         pointerEvents={open ? 'auto' : 'none'}
         style={{ top: 31 }}

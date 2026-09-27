@@ -13,36 +13,44 @@ import { SfSymbol } from '../../../shared/sf-symbol';
 import { AnimatedView } from '../../../shared/uniwind';
 
 const circleClassName =
-  'h-14 w-14 items-center justify-center rounded-full bg-[#f2f2f2]';
+  'h-14 w-14 items-center justify-center rounded-full bg-[#F2F2F2]';
 
 export function OpenBottomControls({ progress }: { progress: SharedValue<number> }) {
   const { bottom } = useSafeAreaInsets();
   const { width } = useWindowDimensions();
-  const leftTravel = width / 2 - 56;
-  const rightTravel = width / 2 - (width - 56);
+  const centerTravel = Math.max(0, width / 2 - 56);
   const controlsStyle = useAnimatedStyle(() => ({
-    opacity: interpolate(progress.value, [0, 1], [0, 1], Extrapolation.CLAMP),
-    transform: [{ translateY: interpolate(progress.value, [0, 1], [70, 0]) }],
+    opacity: interpolate(
+      progress.value,
+      [0.55, 0.82, 1],
+      [0, 0.75, 1],
+      Extrapolation.CLAMP,
+    ),
+    transform: [{ translateY: interpolate(progress.value, [0, 1], [6, 0]) }],
   }));
   const leftActionStyle = useAnimatedStyle(() => ({
     transform: [
-      { translateX: interpolate(progress.value, [0, 1], [leftTravel, 0]) },
-      { scale: interpolate(progress.value, [0, 1], [0.72, 1]) },
+      {
+        translateX: interpolate(progress.value, [0, 1], [centerTravel, 0]),
+      },
+      { scale: interpolate(progress.value, [0, 1], [0.92, 1]) },
     ],
   }));
   const rightActionStyle = useAnimatedStyle(() => ({
     transform: [
-      { translateX: interpolate(progress.value, [0, 1], [rightTravel, 0]) },
-      { scale: interpolate(progress.value, [0, 1], [0.72, 1]) },
+      {
+        translateX: interpolate(progress.value, [0, 1], [-centerTravel, 0]),
+      },
+      { scale: interpolate(progress.value, [0, 1], [0.92, 1]) },
     ],
   }));
 
   return (
     <AnimatedView
-      className="absolute left-7 right-7 z-[4] flex-row items-center justify-between"
+      className="absolute left-7 right-7 z-4 h-14"
       pointerEvents="none"
       style={[{ bottom: bottom + 8 }, controlsStyle]}>
-      <AnimatedView style={leftActionStyle}>
+      <AnimatedView className="absolute left-0 top-0" style={leftActionStyle}>
         <View className={circleClassName}>
           <SfSymbol
             fallback="arrow-undo-outline"
@@ -52,7 +60,7 @@ export function OpenBottomControls({ progress }: { progress: SharedValue<number>
           />
         </View>
       </AnimatedView>
-      <AnimatedView style={rightActionStyle}>
+      <AnimatedView className="absolute right-0 top-0" style={rightActionStyle}>
         <View className={circleClassName}>
           <SfSymbol
             fallback="flash"

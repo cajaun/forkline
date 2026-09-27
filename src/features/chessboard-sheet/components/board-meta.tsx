@@ -15,6 +15,7 @@ export function BoardMeta({
   closedTop,
   openLeft,
   openTop,
+  previewSize,
   progress,
 }: {
   boardSize: number;
@@ -22,15 +23,17 @@ export function BoardMeta({
   closedTop: number;
   openLeft: number;
   openTop: number;
+  previewSize: number;
   progress: SharedValue<number>;
 }) {
+  const closedVisualTop = closedTop + (boardSize - previewSize) / 2;
   const style = useAnimatedStyle(() => ({
     left: interpolate(progress.value, [0, 1], [closedLeft, openLeft]),
     opacity: interpolate(progress.value, [0, 1], [0, 1], Extrapolation.CLAMP),
     top: interpolate(
       progress.value,
       [0, 1],
-      [closedTop + boardSize * 0.42, openTop - 40],
+      [closedVisualTop - 12, openTop - 34],
     ),
     transform: [
       {
@@ -46,10 +49,10 @@ export function BoardMeta({
 
   return (
     <AnimatedView
-      className="absolute z-[1] h-8 items-center justify-center"
+      className="absolute z-1 h-8 items-center justify-center"
       pointerEvents="none"
       style={[{ width: boardSize }, style]}>
-      <View className="h-6 min-w-[58px] items-center justify-center rounded-[10px] bg-[#f2f2f2] px-3">
+      <View className="h-6 min-w-[58px] items-center justify-center rounded-[10px] bg-[#F2F2F2] px-3">
         <Text
           className="text-[#262626]"
           style={{ fontSize: 16, fontWeight: '700', lineHeight: 20 }}>

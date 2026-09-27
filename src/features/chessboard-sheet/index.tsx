@@ -31,7 +31,7 @@ export function ChessboardSheet() {
         <HomeChrome progress={progress} />
       </AnimatedView>
 
-      <AnimatedView className="absolute overflow-visible bg-white" style={sheetStyle}>
+      <AnimatedView className="absolute overflow-visible bg-[#FEFFFF]" style={sheetStyle}>
         <PreviewCard
           onClose={closeSheet}
           onOpen={openSheet}

@@ -75,7 +75,7 @@ export const GameReviewCard: React.FC<{
     .filter(row => row.you + row.opp > 0);
 
   return (
-    <AnimatedView className="absolute bottom-10 left-[22px] right-[22px]" style={style}>
+    <AnimatedView className="absolute bottom-10 left-5.5 right-5.5" style={style}>
       <AnimatedView entering={enter(0)}>
         <Text
           className="text-[11px] tracking-[2px] text-[#8f9298]"
@@ -83,7 +83,7 @@ export const GameReviewCard: React.FC<{
           GAME REVIEW
         </Text>
         <Text
-          className="mb-4 mt-[5px] text-[26px] tracking-[-0.9px] text-[#f0f2f5]"
+          className="mb-4 mt-1.25 text-[26px] tracking-[-0.9px] text-[#f0f2f5]"
          >
           {card.subtitle}
         </Text>
@@ -92,13 +92,13 @@ export const GameReviewCard: React.FC<{
       <AnimatedView className="h-11 flex-row items-center" entering={enter(55)}>
         <View className="flex-1" />
         <Text
-          className="w-[62px] text-center text-xs text-[#8f9298]"
+          className="w-15.5 text-center text-xs text-[#8f9298]"
          >
           {PLAYERS.w.name}
         </Text>
         <View className="w-11" />
         <Text
-          className="w-[62px] text-center text-xs text-[#8f9298]"
+          className="w-15.5 text-center text-xs text-[#8f9298]"
           numberOfLines={1}
          >
           {card.oppName}
@@ -111,22 +111,22 @@ export const GameReviewCard: React.FC<{
          >
           Players
         </Text>
-        <View className="w-[62px] items-center">
-          <Image className="h-[38px] w-[38px] rounded-[11px]" source={avatar.w} />
+        <View className="w-15.5 items-center">
+          <Image className="h-9.5 w-9.5 rounded-[11px]" source={avatar.w} />
         </View>
         <View className="w-11" />
-        <View className="w-[62px] items-center">
-          <Image className="h-[38px] w-[38px] rounded-[11px]" source={avatar.b} />
+        <View className="w-15.5 items-center">
+          <Image className="h-9.5 w-9.5 rounded-[11px]" source={avatar.b} />
         </View>
       </AnimatedView>
 
-      <AnimatedView className="mb-[2px] h-11 flex-row items-center" entering={enter(135)}>
+      <AnimatedView className="mb-0.5 h-11 flex-row items-center" entering={enter(135)}>
         <Text
           className="flex-1 text-sm text-[#8f9298]"
          >
           Accuracy
         </Text>
-        <View className="w-[62px] items-center">
+        <View className="w-15.5 items-center">
           <View className="w-14 items-center rounded-[9px] bg-[rgba(240,242,245,0.1)] py-2">
             <Text
               className="text-[15px] text-[#f0f2f5]"
@@ -136,7 +136,7 @@ export const GameReviewCard: React.FC<{
           </View>
         </View>
         <View className="w-11" />
-        <View className="w-[62px] items-center">
+        <View className="w-15.5 items-center">
           <View className="w-14 items-center rounded-[9px] bg-[#3a91f8] py-2">
             <Text
               className="text-[15px] text-[#0d0e12]"
@@ -155,7 +155,7 @@ export const GameReviewCard: React.FC<{
         const meta = qualityMeta[row.q];
         return (
           <AnimatedView
-            className="h-[50px] flex-row items-center"
+            className="h-12.5 flex-row items-center"
             entering={enter(210 + index * 50)}
             key={row.q}>
             <Text
@@ -164,7 +164,7 @@ export const GameReviewCard: React.FC<{
               {meta.label}
             </Text>
             <Text
-              className="w-[62px] text-center text-[17px]"
+              className="w-15.5 text-center text-[17px]"
               style={{
                 color: row.you === 0 ? theme.textFaint : meta.color,
               }}>
@@ -180,7 +180,7 @@ export const GameReviewCard: React.FC<{
               </View>
             </View>
             <Text
-              className="w-[62px] text-center text-[17px]"
+              className="w-15.5 text-center text-[17px]"
               style={{
                 color: row.opp === 0 ? theme.textFaint : meta.color,
               }}>

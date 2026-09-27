@@ -98,7 +98,7 @@ export const PlayerCard: React.FC<{ side: Side }> = ({ side }) => {
       className="w-full flex-row items-center gap-3 rounded-[18px] border p-1.5"
       style={cardStyle}>
       <Image className="h-10 w-10 rounded-xl" source={avatar[side]} />
-      <View className="flex-1 gap-[3px]">
+      <View className="flex-1 gap-0.75">
         <View className="flex-row items-center gap-2">
           <Text
             className="text-[15px] tracking-[-0.1px] text-[#f0f2f5]"
@@ -123,7 +123,7 @@ export const PlayerCard: React.FC<{ side: Side }> = ({ side }) => {
         </View>
         <CaptureTray pieces={captured} lead={lead} foe={foe} />
       </View>
-      <View className="relative flex-row items-center overflow-hidden rounded-xl bg-[#202329] px-[9px] py-[9px]">
+      <View className="relative flex-row items-center overflow-hidden rounded-xl bg-[#202329] px-2.25 py-2.25">
         <AnimatedView
           className="absolute inset-0 bg-[#3a91f8]"
           pointerEvents="none"

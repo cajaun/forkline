@@ -172,7 +172,7 @@ export const MoveHistory: React.FC = () => {
   }));
 
   return (
-    <View className="h-[52px] justify-center overflow-hidden rounded-[18px] border border-[#2c2f35] bg-[#202329]">
+    <View className="h-13 justify-center overflow-hidden rounded-[18px] border border-[#2c2f35] bg-[#202329]">
       <AnimatedView className="h-full justify-center" style={listStyle}>
         <Animated.ScrollView
           ref={scrollRef}

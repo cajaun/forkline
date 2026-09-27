@@ -76,8 +76,12 @@ export function BoardCaptures({
     captured.w.length * pieceSize - Math.max(0, captured.w.length - 1) * overlap,
   );
   const bottomValue = captured.w.reduce((sum, piece) => sum + (VALUE[piece] ?? 0), 0);
-  const bottomValueWidth = bottomValue > 0 ? pieceSize * 0.72 + 3 : 0;
+  const bottomValueWidth =
+    bottomValue > 0
+      ? pieceSize * (0.45 * `+${bottomValue}`.length) + 3
+      : 0;
   const bottomWidth = bottomPieceWidth + bottomValueWidth;
+  const bottomRightInset = 4;
   const closedVisualLeft = closedLeft + (boardSize - previewSize) / 2;
   const closedVisualTop = closedTop + (boardSize - previewSize) / 2;
   const topStyle = useAnimatedStyle(() => ({
@@ -91,7 +95,7 @@ export function BoardCaptures({
     top: interpolate(
       progress.value,
       [0, 1],
-      [closedVisualTop - pieceSize - 12, openTop - pieceSize - 12],
+      [closedVisualTop - pieceSize / 2, openTop - pieceSize - 12],
       Extrapolation.CLAMP,
     ),
     transform: [{ scale: interpolate(progress.value, [0, 1], [0.72, 1]) }],
@@ -100,14 +104,17 @@ export function BoardCaptures({
     left: interpolate(
       progress.value,
       [0, 1],
-      [closedVisualLeft + previewSize - bottomWidth, openLeft + boardSize - bottomWidth],
+      [
+        closedVisualLeft + previewSize - bottomWidth - bottomRightInset,
+        openLeft + boardSize - bottomWidth - bottomRightInset,
+      ],
       Extrapolation.CLAMP,
     ),
     opacity: interpolate(progress.value, [0, 1], [0, 1], Extrapolation.CLAMP),
     top: interpolate(
       progress.value,
       [0, 1],
-      [closedVisualTop + previewSize + 8, openTop + boardSize + 8],
+      [closedVisualTop + previewSize - pieceSize / 2, openTop + boardSize + 8],
       Extrapolation.CLAMP,
     ),
     transform: [{ scale: interpolate(progress.value, [0, 1], [0.72, 1]) }],
@@ -116,13 +123,13 @@ export function BoardCaptures({
   return (
     <>
       <AnimatedView
-        className="absolute z-[4]"
+        className="absolute z-1"
         pointerEvents="none"
         style={topStyle}>
         <CapturePieces foe="w" pieces={captured.b} pieceSize={pieceSize} />
       </AnimatedView>
       <AnimatedView
-        className="absolute z-[4]"
+        className="absolute z-1"
         pointerEvents="none"
         style={bottomStyle}>
         <CapturePieces foe="b" pieces={captured.w} pieceSize={pieceSize} />
