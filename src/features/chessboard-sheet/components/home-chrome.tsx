@@ -1,6 +1,3 @@
-import type { ComponentProps } from 'react';
-
-import { Ionicons } from '@expo/vector-icons';
 import { Text, View } from 'react-native';
 import {
   Extrapolation,
@@ -10,19 +7,27 @@ import {
 import type { SharedValue } from 'react-native-reanimated';
 
 import { SHEET_COLORS } from '../config';
+import { SfSymbol } from '../../../shared/sf-symbol';
 import { AnimatedView } from '../../../shared/uniwind';
 
-type IconName = ComponentProps<typeof Ionicons>['name'];
-
-function AppBubble({ color, icon }: { color: string; icon: IconName }) {
+function AppBubble({
+  color,
+  fallback,
+  icon,
+}: {
+  color: string;
+  fallback: Parameters<typeof SfSymbol>[0]['fallback'];
+  icon: Parameters<typeof SfSymbol>[0]['name'];
+}) {
   return (
     <View
       className="h-12 w-12 items-center justify-center rounded-full"
       style={{ backgroundColor: color }}>
-      <Ionicons
+      <SfSymbol
+        fallback={fallback}
         name={icon}
         size={27}
-        color={color === SHEET_COLORS.primary ? '#ffffff' : SHEET_COLORS.icon}
+        tintColor={color === SHEET_COLORS.primary ? '#ffffff' : SHEET_COLORS.icon}
       />
     </View>
   );
@@ -44,12 +49,12 @@ function DateBubble({
       className={`h-full w-full items-center justify-center gap-[5px] rounded-[23px] py-[15px] ${selected ? 'bg-[#dcdcdc]' : ''}`}>
       <Text
         className={`text-[14px] text-[#606166] ${muted ? 'text-[#aeb0b3]' : ''}`}
-        style={{ fontFamily: 'SF-Pro-Rounded-Bold' }}>
+        style={{ fontSize: 14, fontWeight: '800' }}>
         {day}
       </Text>
       <Text
         className={`text-[28px] text-[#53555a] ${muted ? 'text-[#aeb0b3]' : ''}`}
-        style={{ fontFamily: 'SF-Pro-Rounded-Heavy' }}>
+        style={{ fontSize: 28, fontWeight: '900' }}>
         {date}
       </Text>
       <View
@@ -61,21 +66,11 @@ function DateBubble({
 
 export function HomeChrome({ progress }: { progress: SharedValue<number> }) {
   const topChromeStyle = useAnimatedStyle(() => ({
-    opacity: interpolate(
-      progress.value,
-      [0, 0.58, 1],
-      [1, 0.55, 0],
-      Extrapolation.CLAMP,
-    ),
+    opacity: interpolate(progress.value, [0, 1], [1, 0], Extrapolation.CLAMP),
     transform: [{ translateY: interpolate(progress.value, [0, 1], [0, -134]) }],
   }));
   const bottomChromeStyle = useAnimatedStyle(() => ({
-    opacity: interpolate(
-      progress.value,
-      [0, 0.58, 1],
-      [1, 0.55, 0],
-      Extrapolation.CLAMP,
-    ),
+    opacity: interpolate(progress.value, [0, 1], [1, 0], Extrapolation.CLAMP),
     transform: [{ translateY: interpolate(progress.value, [0, 1], [0, 165]) }],
   }));
 
@@ -84,14 +79,26 @@ export function HomeChrome({ progress }: { progress: SharedValue<number> }) {
       <AnimatedView
         className="flex-row items-center gap-3 px-7"
         style={topChromeStyle}>
-        <AppBubble color={SHEET_COLORS.primary} icon="trophy" />
-        <AppBubble color={SHEET_COLORS.lightControl} icon="leaf-outline" />
+        <AppBubble
+          color={SHEET_COLORS.primary}
+          fallback="trophy"
+          icon="trophy.fill"
+        />
+        <AppBubble
+          color={SHEET_COLORS.lightControl}
+          fallback="leaf-outline"
+          icon="laurel.leading.laurel.trailing"
+        />
         <View className="flex-1" />
-        <AppBubble color={SHEET_COLORS.lightControl} icon="people" />
+        <AppBubble
+          color={SHEET_COLORS.lightControl}
+          fallback="people"
+          icon="person.2.fill"
+        />
         <View className="h-12 w-12 items-center justify-center rounded-full bg-[#b2c8dd]">
           <Text
-            className="text-[27px] text-white"
-            style={{ fontFamily: 'SF-Pro-Rounded-Heavy' }}>
+            className="text-white"
+            style={{ fontSize: 27, fontWeight: '800' }}>
             C
           </Text>
         </View>
@@ -112,16 +119,21 @@ export function HomeChrome({ progress }: { progress: SharedValue<number> }) {
         <View className="absolute bottom-0 left-[69.4%] h-full w-[18.5%]">
           <View className="h-full w-full items-center justify-center gap-[7px] rounded-[23px] py-[15px]">
             <Text
-              className="text-[14px] text-[#aeb0b3]"
-              style={{ fontFamily: 'SF-Pro-Rounded-Bold' }}>
+              className="text-[#aeb0b3]"
+              style={{ fontSize: 14, fontWeight: '800' }}>
               Next in
             </Text>
             <Text
-              className="text-[25px] text-[#aeb0b3]"
-              style={{ fontFamily: 'SF-Pro-Rounded-Heavy' }}>
+              className="text-[#aeb0b3]"
+              style={{ fontSize: 25, fontWeight: '900' }}>
               11 hrs
             </Text>
-            <Ionicons name="time-outline" size={20} color="#a8aaad" />
+            <SfSymbol
+              fallback="time-outline"
+              name="clock"
+              size={20}
+              tintColor="#a8aaad"
+            />
           </View>
         </View>
       </AnimatedView>

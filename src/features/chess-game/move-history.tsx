@@ -73,7 +73,7 @@ const MoveCell = memo<{ ply: number; san: string }>(({ ply, san }) => {
         <AnimatedText
           className="text-[13px] text-[#60636a]"
           entering={enterToken}
-          style={{ fontFamily: 'SF-Compact-Rounded-Medium' }}>
+         >
           {ply / 2 + 1}.
         </AnimatedText>
       ) : null}
@@ -85,7 +85,7 @@ const MoveCell = memo<{ ply: number; san: string }>(({ ply, san }) => {
           style={{ borderRadius: 8, paddingHorizontal: 7, paddingVertical: 5 }}>
           <AnimatedText
             className="text-sm text-[#f0f2f5]"
-            style={[{ fontFamily: 'SF-Pro-Rounded-Bold' }, textStyle]}>
+            style={textStyle}>
             {san}
           </AnimatedText>
         </PressableScale>
@@ -225,7 +225,7 @@ export const MoveHistory: React.FC = () => {
         style={emptyStyle}>
         <Text
           className="text-[13px] text-[#60636a]"
-          style={{ fontFamily: 'SF-Compact-Rounded-Medium' }}>
+         >
           No moves yet
         </Text>
       </AnimatedView>

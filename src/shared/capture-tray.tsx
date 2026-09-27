@@ -31,7 +31,7 @@ export function CaptureTray({
       {lead > 0 ? (
         <Text
           className="text-xs text-[#8f9298]"
-          style={{ fontFamily: 'SF-Pro-Rounded-Bold' }}>
+         >
           +{lead}
         </Text>
       ) : null}

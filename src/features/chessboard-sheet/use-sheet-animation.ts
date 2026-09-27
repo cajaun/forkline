@@ -1,5 +1,6 @@
 import { useCallback, useState } from 'react';
 
+import * as Haptics from 'expo-haptics';
 import {
   Extrapolation,
   interpolate,
@@ -16,11 +17,13 @@ export function useSheetAnimation(height: number) {
 
   const openSheet = useCallback(() => {
     setOpen(true);
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     progress.value = withSpring(1, SHEET_SPRING);
   }, [progress]);
 
   const closeSheet = useCallback(() => {
     setOpen(false);
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     progress.value = withSpring(0, SHEET_SPRING);
   }, [progress]);
 

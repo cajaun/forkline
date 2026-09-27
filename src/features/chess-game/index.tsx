@@ -46,7 +46,7 @@ function GameScreen({ initialFen }: { initialFen: string }) {
           <View className="flex-1 items-center">
             <Text
               className="text-[17px] tracking-[-0.3px] text-[#f0f2f5]"
-              style={{ fontFamily: 'SF-Pro-Rounded-Bold' }}>
+             >
               Chessboard
             </Text>
             <StatusCaption />
@@ -107,7 +107,7 @@ function GameScreen({ initialFen }: { initialFen: string }) {
                 <Ionicons name="refresh" size={20} color={theme.text} />
                 <Text
                   className="text-base tracking-[0.1px] text-[#f0f2f5]"
-                  style={{ fontFamily: 'SF-Pro-Rounded-Bold' }}>
+                 >
                   New Game
                 </Text>
               </PressableScale>

@@ -1,6 +1,5 @@
 import { useWindowDimensions, View } from 'react-native';
 
-import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   Extrapolation,
@@ -10,6 +9,7 @@ import {
 import type { SharedValue } from 'react-native-reanimated';
 
 import { SHEET_COLORS } from '../config';
+import { SfSymbol } from '../../../shared/sf-symbol';
 import { AnimatedView } from '../../../shared/uniwind';
 
 const circleClassName =
@@ -21,12 +21,7 @@ export function OpenBottomControls({ progress }: { progress: SharedValue<number>
   const leftTravel = width / 2 - 56;
   const rightTravel = width / 2 - (width - 56);
   const controlsStyle = useAnimatedStyle(() => ({
-    opacity: interpolate(
-      progress.value,
-      [0, 0.56, 0.8, 1],
-      [0, 0, 0.78, 1],
-      Extrapolation.CLAMP,
-    ),
+    opacity: interpolate(progress.value, [0, 1], [0, 1], Extrapolation.CLAMP),
     transform: [{ translateY: interpolate(progress.value, [0, 1], [70, 0]) }],
   }));
   const leftActionStyle = useAnimatedStyle(() => ({
@@ -49,12 +44,22 @@ export function OpenBottomControls({ progress }: { progress: SharedValue<number>
       style={[{ bottom: bottom + 8 }, controlsStyle]}>
       <AnimatedView style={leftActionStyle}>
         <View className={circleClassName}>
-          <Ionicons name="arrow-undo-outline" size={27} color={SHEET_COLORS.icon} />
+          <SfSymbol
+            fallback="arrow-undo-outline"
+            name="arrow.trianglehead.counterclockwise"
+            size={27}
+            tintColor={SHEET_COLORS.icon}
+          />
         </View>
       </AnimatedView>
       <AnimatedView style={rightActionStyle}>
         <View className={circleClassName}>
-          <Ionicons name="flash" size={28} color={SHEET_COLORS.icon} />
+          <SfSymbol
+            fallback="flash"
+            name="bolt.fill"
+            size={28}
+            tintColor={SHEET_COLORS.icon}
+          />
         </View>
       </AnimatedView>
     </AnimatedView>

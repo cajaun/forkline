@@ -13,7 +13,7 @@ export const StatusCaption: React.FC = () => {
     <Text
       className="mt-0.5 text-xs"
       numberOfLines={1}
-      style={{ color: theme.textMuted, fontFamily: 'SF-Compact-Rounded-Medium' }}>
+      style={{ color: theme.textMuted }}>
       {caption}
     </Text>
   );

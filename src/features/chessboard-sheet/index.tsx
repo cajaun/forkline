@@ -18,7 +18,8 @@ export function ChessboardSheet() {
   const [boardFen] = useState(createRandomGameFen);
   const { closeSheet, open, openSheet, progress, sheetStyle } = useSheetAnimation(height);
   const previewSize = Math.round(width * SHEET_LAYOUT.previewBoardRatio);
-  const expandedSize = width * SHEET_LAYOUT.openBoardRatio;
+  const expandedSize =
+    width * SHEET_LAYOUT.openBoardRatio - SHEET_LAYOUT.openBoardGutter * 2;
   const closedCenterY = height * SHEET_LAYOUT.closedBoardCenter;
   const openCenterY = height * SHEET_LAYOUT.openBoardCenter;
 

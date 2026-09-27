@@ -1,6 +1,5 @@
 import { Pressable } from 'react-native';
 
-import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   Extrapolation,
@@ -10,6 +9,7 @@ import {
 import type { SharedValue } from 'react-native-reanimated';
 
 import { SHEET_COLORS } from '../config';
+import { SfSymbol } from '../../../shared/sf-symbol';
 import { AnimatedView } from '../../../shared/uniwind';
 
 const circleClassName =
@@ -26,12 +26,7 @@ export function OpenControls({
 }) {
   const { top } = useSafeAreaInsets();
   const controlsStyle = useAnimatedStyle(() => ({
-    opacity: interpolate(
-      progress.value,
-      [0, 0.52, 0.76, 1],
-      [0, 0, 0.85, 1],
-      Extrapolation.CLAMP,
-    ),
+    opacity: interpolate(progress.value, [0, 1], [0, 1], Extrapolation.CLAMP),
     transform: [{ translateY: interpolate(progress.value, [0, 1], [18, 0]) }],
   }));
 
@@ -44,10 +39,21 @@ export function OpenControls({
         accessibilityLabel="Close chessboard"
         className={circleClassName}
         onPress={onClose}>
-        <Ionicons name="chevron-down" size={31} color={SHEET_COLORS.icon} />
+        <SfSymbol
+          fallback="chevron-down"
+          name="chevron.down"
+          size={25}
+          tintColor={SHEET_COLORS.icon}
+          weight="medium"
+        />
       </Pressable>
       <Pressable accessibilityLabel="Chessboard settings" className={circleClassName}>
-        <Ionicons name="settings-sharp" size={25} color={SHEET_COLORS.icon} />
+        <SfSymbol
+          fallback="settings-sharp"
+          name="gearshape.fill"
+          size={25}
+          tintColor={SHEET_COLORS.icon}
+        />
       </Pressable>
     </AnimatedView>
   );

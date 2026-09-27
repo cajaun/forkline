@@ -6,6 +6,7 @@ export const SHEET_LAYOUT = {
   closedTop: 0.18,
   closedBoardCenter: 0.556,
   openBoardCenter: 0.5,
+  openBoardGutter: 12,
   openBoardRatio: 1,
   previewBoardRatio: 0.53,
   sheetGutter: 24,
@@ -28,8 +29,8 @@ export const SHEET_COLORS = {
 } as const;
 
 export const SHEET_SPRING = {
-  damping: 25,
-  mass: 0.78,
+  damping: 75,
+  mass: 1,
   overshootClamping: true,
-  stiffness: 275,
+  stiffness: 750,
 };

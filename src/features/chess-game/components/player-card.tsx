@@ -102,12 +102,12 @@ export const PlayerCard: React.FC<{ side: Side }> = ({ side }) => {
         <View className="flex-row items-center gap-2">
           <Text
             className="text-[15px] tracking-[-0.1px] text-[#f0f2f5]"
-            style={{ fontFamily: 'SF-Pro-Rounded-Bold' }}>
+           >
             {name}
           </Text>
           <Text
             className="text-[13px] tracking-[0.2px] text-[#8f9298]"
-            style={{ fontFamily: 'SF-Compact-Rounded-Medium', fontVariant: ['tabular-nums'] }}>
+            style={{ fontVariant: ['tabular-nums'] }}>
             {rating}
           </Text>
           {result ? (
@@ -116,7 +116,6 @@ export const PlayerCard: React.FC<{ side: Side }> = ({ side }) => {
               style={{
                 backgroundColor: result === 'win' ? withAlpha(theme.accent, 0.15) : withAlpha(theme.lose, 0.15),
                 color: result === 'win' ? theme.accent : theme.lose,
-                fontFamily: 'SF-Pro-Rounded-Bold',
               }}>
               {result === 'win' ? 'WON' : 'LOST'}
             </Text>
@@ -136,7 +135,6 @@ export const PlayerCard: React.FC<{ side: Side }> = ({ side }) => {
           style={[
             {
               color: theme.textMuted,
-              fontFamily: 'SF-Pro-Rounded-Bold',
               fontSize: 16,
               fontVariant: ['tabular-nums'],
               padding: 0,

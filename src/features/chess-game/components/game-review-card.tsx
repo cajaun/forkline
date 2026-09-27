@@ -79,12 +79,12 @@ export const GameReviewCard: React.FC<{
       <AnimatedView entering={enter(0)}>
         <Text
           className="text-[11px] tracking-[2px] text-[#8f9298]"
-          style={{ fontFamily: 'SF-Pro-Rounded-Heavy' }}>
+         >
           GAME REVIEW
         </Text>
         <Text
           className="mb-4 mt-[5px] text-[26px] tracking-[-0.9px] text-[#f0f2f5]"
-          style={{ fontFamily: 'SF-Pro-Rounded-Heavy' }}>
+         >
           {card.subtitle}
         </Text>
       </AnimatedView>
@@ -93,14 +93,14 @@ export const GameReviewCard: React.FC<{
         <View className="flex-1" />
         <Text
           className="w-[62px] text-center text-xs text-[#8f9298]"
-          style={{ fontFamily: 'SF-Compact-Rounded-Medium' }}>
+         >
           {PLAYERS.w.name}
         </Text>
         <View className="w-11" />
         <Text
           className="w-[62px] text-center text-xs text-[#8f9298]"
           numberOfLines={1}
-          style={{ fontFamily: 'SF-Compact-Rounded-Medium' }}>
+         >
           {card.oppName}
         </Text>
       </AnimatedView>
@@ -108,7 +108,7 @@ export const GameReviewCard: React.FC<{
       <AnimatedView className="h-11 flex-row items-center" entering={enter(95)}>
         <Text
           className="flex-1 text-sm text-[#8f9298]"
-          style={{ fontFamily: 'SF-Compact-Rounded-Medium' }}>
+         >
           Players
         </Text>
         <View className="w-[62px] items-center">
@@ -123,14 +123,14 @@ export const GameReviewCard: React.FC<{
       <AnimatedView className="mb-[2px] h-11 flex-row items-center" entering={enter(135)}>
         <Text
           className="flex-1 text-sm text-[#8f9298]"
-          style={{ fontFamily: 'SF-Compact-Rounded-Medium' }}>
+         >
           Accuracy
         </Text>
         <View className="w-[62px] items-center">
           <View className="w-14 items-center rounded-[9px] bg-[rgba(240,242,245,0.1)] py-2">
             <Text
               className="text-[15px] text-[#f0f2f5]"
-              style={{ fontFamily: 'SF-Pro-Rounded-Bold' }}>
+             >
               {card.accuracy.you.toFixed(1)}
             </Text>
           </View>
@@ -140,7 +140,7 @@ export const GameReviewCard: React.FC<{
           <View className="w-14 items-center rounded-[9px] bg-[#3a91f8] py-2">
             <Text
               className="text-[15px] text-[#0d0e12]"
-              style={{ fontFamily: 'SF-Pro-Rounded-Bold' }}>
+             >
               {card.accuracy.opp.toFixed(1)}
             </Text>
           </View>
@@ -160,14 +160,13 @@ export const GameReviewCard: React.FC<{
             key={row.q}>
             <Text
               className="flex-1 text-base"
-              style={{ color: meta.color, fontFamily: 'SF-Pro-Rounded-Bold' }}>
+              style={{ color: meta.color }}>
               {meta.label}
             </Text>
             <Text
               className="w-[62px] text-center text-[17px]"
               style={{
                 color: row.you === 0 ? theme.textFaint : meta.color,
-                fontFamily: 'SF-Pro-Rounded-Bold',
               }}>
               {row.you}
             </Text>
@@ -184,7 +183,6 @@ export const GameReviewCard: React.FC<{
               className="w-[62px] text-center text-[17px]"
               style={{
                 color: row.opp === 0 ? theme.textFaint : meta.color,
-                fontFamily: 'SF-Pro-Rounded-Bold',
               }}>
               {row.opp}
             </Text>
@@ -213,7 +211,7 @@ export const GameReviewCard: React.FC<{
           <Ionicons name="arrow-back" size={18} color={theme.text} />
           <Text
             className="text-base text-[#f0f2f5]"
-            style={{ fontFamily: 'SF-Pro-Rounded-Bold' }}>
+           >
             Back
           </Text>
         </PressableScale>
@@ -235,7 +233,7 @@ export const GameReviewCard: React.FC<{
           <Ionicons name="reload" size={20} color={theme.bg} />
           <Text
             className="text-base text-[#0d0e12]"
-            style={{ fontFamily: 'SF-Pro-Rounded-Bold' }}>
+           >
             Replay
           </Text>
         </PressableScale>
