@@ -8,7 +8,7 @@ import { ExpandingBoard } from '@/components/sheet/expanding-board';
 import { HomeChrome } from '@/components/sheet/home-chrome';
 import { OpenBottomControls } from '@/components/sheet/open-bottom-controls';
 import { OpenControls } from '@/components/sheet/open-controls';
-import { PreviewCard } from '@/components/sheet/preview-card';
+import { PreviewCard, PreviewTimer } from '@/components/sheet/preview-card';
 import { SHEET_LAYOUT } from '@/constants/sheet';
 import { useSheetAnimation } from '@/hooks/use-sheet-animation';
 import { AnimatedView } from '@/components/shared/uniwind';
@@ -55,6 +55,7 @@ export function ChessboardSheet() {
         <OpenControls onClose={closeSheet} open={open} progress={progress} />
         <OpenBottomControls open={open} progress={progress} />
       </AnimatedView>
+      <PreviewTimer height={height} progress={progress} />
     </View>
   );
 }

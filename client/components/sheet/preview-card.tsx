@@ -8,7 +8,7 @@ import {
 import type { SharedValue } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { SHEET_COLORS } from '@/constants/sheet';
+import { SHEET_COLORS, SHEET_LAYOUT } from '@/constants/sheet';
 import { AnimatedText, AnimatedView } from '@/components/shared/uniwind';
 
 export function PreviewCard({
@@ -46,9 +46,6 @@ export function PreviewCard({
     transform: [
       { scale: interpolate(progress.value, [0, 1], [1, 0.43]) },
     ],
-  }));
-  const timeStyle = useAnimatedStyle(() => ({
-    top: interpolate(progress.value, [0, 1], [151, safeTop + 50]),
   }));
   const handleStyle = useAnimatedStyle(() => ({
     opacity: interpolate(progress.value, [0, 1], [0, 1], Extrapolation.CLAMP),
@@ -103,18 +100,6 @@ export function PreviewCard({
             September 26
           </Text>
         </AnimatedView>
-        <AnimatedView
-          className="absolute left-0 right-0 items-center"
-          style={timeStyle}>
-          <View className="flex-row items-center gap-2">
-            <View className="h-4 w-4 rounded-full border-2 border-[#262626]" />
-            <Text
-              className="text-[#262626]"
-              style={{ fontSize: 22, fontWeight: '700' }}>
-              0:06
-            </Text>
-          </View>
-        </AnimatedView>
       </View>
       <Pressable
         accessibilityLabel="Close chessboard"
@@ -124,5 +109,40 @@ export function PreviewCard({
         style={{ top: 31 }}
       />
     </Pressable>
+  );
+}
+
+export function PreviewTimer({
+  height,
+  progress,
+}: {
+  height: number;
+  progress: SharedValue<number>;
+}) {
+  const { top: safeTop } = useSafeAreaInsets();
+  const style = useAnimatedStyle(() => ({
+    left: 0,
+    right: 0,
+    top: interpolate(
+      progress.value,
+      [0, 1],
+      [height * SHEET_LAYOUT.closedTop + 151, safeTop + 50],
+    ),
+  }));
+
+  return (
+    <AnimatedView
+      className="absolute z-2 items-center"
+      pointerEvents="none"
+      style={style}>
+      <View className="flex-row items-center gap-2">
+        <View className="h-4 w-4 rounded-full border-2 border-[#262626]" />
+        <Text
+          className="text-[#262626]"
+          style={{ fontSize: 22, fontWeight: '700' }}>
+          0:06
+        </Text>
+      </View>
+    </AnimatedView>
   );
 }
