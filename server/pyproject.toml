@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools>=75"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "forkline-chess-backend"
+version = "0.1.0"
+description = "Two Minimax and Alpha-Beta chess agents for Forkline"
+requires-python = ">=3.11"
+dependencies = [
+  "chess>=1.11,<2",
+  "fastapi>=0.115,<1",
+  "uvicorn[standard]>=0.34,<1",
+]
+
+[project.scripts]
+forkline-match = "server.matches.harness:main"
+
+[tool.setuptools.packages.find]
+where = [".."]
+include = ["server*"]
