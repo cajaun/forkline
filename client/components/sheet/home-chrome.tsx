@@ -9,6 +9,7 @@ import type { SharedValue } from 'react-native-reanimated';
 import { SHEET_COLORS } from '@/constants/sheet';
 import { PressableScale } from '@/components/shared/pressable-scale';
 import { SfSymbol } from '@/components/shared/sf-symbol';
+import { SettingsTray } from '@/components/trays/settings';
 import { AnimatedView } from '@/components/shared/uniwind';
 
 function AppBubble({
@@ -93,11 +94,7 @@ export function HomeChrome({ progress }: { progress: SharedValue<number> }) {
           fallback="bar-chart-outline"
           icon="chart.bar.fill"
         />
-        <AppBubble
-          color={SHEET_COLORS.lightControl}
-          fallback="settings-sharp"
-          icon="gearshape.fill"
-        />
+        <SettingsTray size={48} />
       </AnimatedView>
 
       <AnimatedView

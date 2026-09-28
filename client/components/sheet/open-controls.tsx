@@ -9,6 +9,7 @@ import type { SharedValue } from 'react-native-reanimated';
 import { SHEET_COLORS } from '@/constants/sheet';
 import { PressableScale } from '@/components/shared/pressable-scale';
 import { SfSymbol } from '@/components/shared/sf-symbol';
+import { SettingsTray } from '@/components/trays/settings';
 import { AnimatedView } from '@/components/shared/uniwind';
 
 const circleClassName =
@@ -53,14 +54,7 @@ export function OpenControls({
           weight="medium"
         />
       </PressableScale>
-      <PressableScale accessibilityLabel="Chessboard settings" className={circleClassName}>
-        <SfSymbol
-          fallback="settings-sharp"
-          name="gearshape.fill"
-          size={25}
-          tintColor={SHEET_COLORS.icon}
-        />
-      </PressableScale>
+      <SettingsTray />
     </AnimatedView>
   );
 }
