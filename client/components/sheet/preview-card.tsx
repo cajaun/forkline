@@ -65,7 +65,8 @@ export function PreviewCard({
     <Pressable
       accessibilityLabel="Open chessboard sheet"
       className="absolute inset-0 z-1 overflow-visible rounded-[34px] bg-[#FEFFFF]"
-      onPress={onOpen}>
+      onPress={open ? undefined : onOpen}
+      pointerEvents={open ? 'box-none' : 'auto'}>
       <View className="absolute -bottom-4.5 left-6.25 right-6.25 top-4.5 rounded-[34px] bg-[#FEFFFF] opacity-65" />
       <View className="absolute -bottom-2.5 left-3 right-3 top-2.5 rounded-[34px] bg-[#FEFFFF] opacity-90" />
       <View className="absolute inset-0 items-center" pointerEvents="none">

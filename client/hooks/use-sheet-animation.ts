@@ -16,16 +16,18 @@ export function useSheetAnimation(height: number) {
   const progress = useSharedValue(0);
 
   const openSheet = useCallback(() => {
+    if (open) return;
+
     // keep hit testing aligned with the visible sheet state
     setOpen(true);
-    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Soft);
     // drive the sheet and its child layers from one progress value
     progress.value = withSpring(1, SHEET_SPRING);
-  }, [progress]);
+  }, [open, progress]);
 
   const closeSheet = useCallback(() => {
     setOpen(false);
-    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Soft);
     progress.value = withSpring(0, SHEET_SPRING);
   }, [progress]);
 

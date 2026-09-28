@@ -11,7 +11,12 @@ export const PLAYERS: Record<Side, { name: string; rating: string }> = players;
 
 export const CLOCK_START: Record<Side, number> = { w: 180, b: 180 };
 
-export { PIECE_IMG, VALUE } from '@/constants/chess-pieces';
+export {
+  CHECKMATE_KING_IMG,
+  GAME_OVER_KING_IMG,
+  PIECE_IMG,
+  VALUE,
+} from '@/constants/chess-pieces';
 
 export const BOARD_COLORS = {
   white: theme.boardLight,

@@ -18,6 +18,57 @@ export const occupiedCellsFromFen = (fen: string): Set<number> => {
   return occupied;
 };
 
+export const pieceCellsFromFen = (
+  fen: string,
+): Map<number, 'black' | 'gray'> => {
+  const pieces = new Map<number, 'black' | 'gray'>();
+  const ranks = fen.split(' ')[0].split('/');
+
+  ranks.forEach((rank, row) => {
+    let column = 0;
+
+    for (const token of rank) {
+      if (/\d/.test(token)) {
+        column += Number(token);
+        continue;
+      }
+
+      pieces.set(
+        row * 8 + column,
+        token === token.toUpperCase() ? 'gray' : 'black',
+      );
+      column += 1;
+    }
+  });
+
+  return pieces;
+};
+
+export const kingCellFromFen = (fen: string): number | null => {
+  const fields = fen.split(' ');
+  const ranks = fields[0].split('/');
+  const checkedKing = fields[1] === 'w' ? 'K' : 'k';
+
+  for (const [row, rank] of ranks.entries()) {
+    let column = 0;
+
+    for (const token of rank) {
+      if (/\d/.test(token)) {
+        column += Number(token);
+        continue;
+      }
+
+      if (token === checkedKing) {
+        return row * 8 + column;
+      }
+
+      column += 1;
+    }
+  }
+
+  return null;
+};
+
 const STARTING_COUNTS: Record<string, number> = {
   b: 2,
   k: 1,

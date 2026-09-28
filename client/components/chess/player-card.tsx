@@ -1,4 +1,4 @@
-import { Image, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 
 import React from 'react';
 
@@ -25,7 +25,7 @@ import {
   gameResultAtom,
   turnSv,
 } from '@/stores/chess-game';
-import { avatar, theme, withAlpha } from '@/constants/theme';
+import { theme, withAlpha } from '@/constants/theme';
 import { toRgba } from '@/utils/chess-game';
 import { AnimatedView } from '@/components/shared/uniwind';
 
@@ -98,7 +98,11 @@ export const PlayerCard: React.FC<{ side: Side }> = ({ side }) => {
     <AnimatedView
       className="w-full flex-row items-center gap-3 rounded-[18px] border p-1.5"
       style={cardStyle}>
-      <Image className="h-10 w-10 rounded-xl" source={avatar[side]} />
+      <View className="h-10 w-10 items-center justify-center rounded-xl bg-[#2c2f35]">
+        <Text className="text-sm font-bold text-[#f0f2f5]">
+          {side.toUpperCase()}
+        </Text>
+      </View>
       <View className="flex-1 gap-0.75">
         <View className="flex-row items-center gap-2">
           <Text

@@ -1,6 +1,5 @@
 import { BOARD_COLORS } from '@/constants/chess-game';
 
-// keep preview and open geometry in one layout contract
 export const SHEET_LAYOUT = {
   closedBottom: 0.22,
   closedTop: 0.18,
@@ -17,7 +16,7 @@ export const SHEET_BOARD_COLORS = {
   ...BOARD_COLORS,
   black: '#E9EBEB',
   checkmateHighlight: '#e2caca',
-  lastMoveHighlight: '#B7B8B8',
+  lastMoveHighlight: 'transparent',
   white: '#F9FAFA',
 };
 
@@ -36,3 +35,10 @@ export const SHEET_SPRING = {
   overshootClamping: true,
   stiffness: 750,
 };
+
+export const SHEET_BOARD_MOVE_SPRING = {
+  damping: 80,
+  energyThreshold: 1e-4,
+  mass: 1,
+  stiffness: 1600,
+} as const;

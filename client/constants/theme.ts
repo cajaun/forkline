@@ -1,7 +1,5 @@
 import ColorLib from 'color';
 
-import { playerAvatars } from '@/constants/players';
-
 export const theme = {
   bg: '#0d0e12',
   surface: '#17191f',
@@ -32,5 +30,3 @@ export const quality = {
 
 export const withAlpha = (hex: string, alpha: number): string =>
   ColorLib(hex).alpha(alpha).rgb().string();
-
-export const avatar = playerAvatars;

@@ -8,12 +8,21 @@ import {
   GestureHandlerRootView,
 } from 'react-native-gesture-handler';
 
-import { Atlas, Canvas, Group, Skia, rect } from '@shopify/react-native-skia';
+import {
+  Atlas,
+  Canvas,
+  Group,
+  Image as SkiaImage,
+  Path,
+  Rect,
+  Skia,
+  rect,
+  useImage,
+} from '@shopify/react-native-skia';
 import type { SkImage, SkRect, SkRSXform } from '@shopify/react-native-skia';
 import type { PieceSymbol, Square } from 'chess.js';
-import { withSpring } from 'react-native-reanimated';
+import { Easing, withSpring, withTiming } from 'react-native-reanimated';
 import { BoardStateProvider, useBoardConfig, useBoardContext, useBoardStateValues } from 'react-native-chessboard/src/state';
-import { SkiaDots } from 'react-native-chessboard/src/components/skia/skia-dots';
 import { SkiaHighlights } from 'react-native-chessboard/src/components/skia/skia-highlights';
 import { usePieceSpriteSheet } from 'react-native-chessboard/src/assets/piece-images';
 import type { PieceCode } from 'react-native-chessboard/src/state/types';
@@ -31,11 +40,19 @@ import {
 } from 'react-native-reanimated';
 import type { SharedValue } from 'react-native-reanimated';
 
-import { SHEET_BOARD_COLORS } from '@/constants/sheet';
-import { occupiedCellsFromFen } from '@/utils/sheet';
+import {
+  CHECKMATE_KING_IMG,
+  GAME_OVER_KING_IMG,
+  PIECE_SPRITE,
+} from '@/constants/chess-pieces';
+import {
+  SHEET_BOARD_COLORS,
+  SHEET_BOARD_MOVE_SPRING,
+} from '@/constants/sheet';
+import { kingCellFromFen, pieceCellsFromFen } from '@/utils/sheet';
 import { AnimatedView } from '@/components/shared/uniwind';
 
-const SPRITE_CELL_SIZE = 128;
+const SPRITE_CELL_SIZE = 512;
 
 const SPRITE_RECTS: Record<NonNullable<PieceCode>, SkRect> = {
   wp: rect(0, 0, SPRITE_CELL_SIZE, SPRITE_CELL_SIZE),
@@ -52,20 +69,75 @@ const SPRITE_RECTS: Record<NonNullable<PieceCode>, SkRect> = {
   bk: rect(SPRITE_CELL_SIZE * 5, SPRITE_CELL_SIZE, SPRITE_CELL_SIZE, SPRITE_CELL_SIZE),
 };
 
-function NativeBoardSurface({ boardSize, fen, progress }: {
+const MOVE_DOT_RADIUS_SCALE = 0.08;
+const PIECE_REVEAL_OPACITY = [0, 0.12, 0.2, 1] as const;
+const PIECE_REVEAL_OPACITY_VALUES = [0, 0.72, 1, 1] as const;
+const PIECE_REVEAL_SCALE = [0, 0.12, 0.56, 1] as const;
+const PIECE_REVEAL_SCALE_VALUES = [0.12, 0.28, 1, 1] as const;
+const KING_STATE_FADE_OPTIONS = {
+  duration: 180,
+  easing: Easing.linear,
+};
+
+export type KingDisplayState = 'checkmate' | 'gameOver' | null;
+
+function SheetBoardDots({
+  boardState,
+  config,
+}: {
+  boardState: ReturnType<typeof useBoardStateValues>;
+  config: ReturnType<typeof useBoardConfig>;
+}) {
+  const radius = config.pieceSize * MOVE_DOT_RADIUS_SCALE;
+  const half = config.pieceSize / 2;
+  const path = useDerivedValue(() => {
+    const nextPath = Skia.Path.Make();
+    const moves = boardState.validMoves.get();
+
+    for (let index = 0; index < moves.length; index += 1) {
+      const position = squareToPosition(
+        moves[index],
+        config.pieceSize,
+        config.flipped,
+      );
+      nextPath.addCircle(position.x + half, position.y + half, radius);
+    }
+
+    return nextPath;
+  });
+
+  return <Path color="rgba(0, 0, 0, 0.3)" opacity={0.5} path={path} />;
+}
+
+function NativeBoardSurface({
+  boardSize,
+  fen,
+  kingDisplayState,
+  progress,
+}: {
   boardSize: number;
   fen: string;
+  kingDisplayState: KingDisplayState;
   progress: SharedValue<number>;
 }) {
   const cell = boardSize / 8;
 
   // rebuild preview markers only when the board position changes
-  const occupied = useMemo(() => occupiedCellsFromFen(fen), [fen]);
+  const pieces = useMemo(() => pieceCellsFromFen(fen), [fen]);
+  const kingCell = useMemo(() => kingCellFromFen(fen), [fen]);
   const markerStyle = useAnimatedStyle(() => ({
     opacity: interpolate(
       progress.value,
       [0, 0.12, 0.56, 0.86, 1],
       [1, 0.7, 0.25, 0, 0],
+      Extrapolation.CLAMP,
+    ),
+  }));
+  const kingMarkerStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(
+      progress.value,
+      [0, 0.12, 0.2, 1],
+      [1, 0, 0, 0],
       Extrapolation.CLAMP,
     ),
   }));
@@ -81,9 +153,13 @@ function NativeBoardSurface({ boardSize, fen, progress }: {
             key={`square-${index}`}
             style={{
               backgroundColor:
-                (row + column) % 2 === 0
-                  ? SHEET_BOARD_COLORS.white
-                  : SHEET_BOARD_COLORS.black,
+                index === kingCell && kingDisplayState === 'gameOver'
+                  ? '#FEC2C4'
+                  : index === kingCell && kingDisplayState === 'checkmate'
+                    ? '#FFE1C1'
+                    : (row + column) % 2 === 0
+                      ? SHEET_BOARD_COLORS.white
+                      : SHEET_BOARD_COLORS.black,
               height: cell,
               left: column * cell,
               position: 'absolute',
@@ -97,31 +173,48 @@ function NativeBoardSurface({ boardSize, fen, progress }: {
         className="absolute inset-0"
         pointerEvents="none"
         style={markerStyle}>
-        {[...occupied].map(index => {
+        {[...pieces].map(([index, pieceColor]) => {
           const column = index % 8;
           const row = Math.floor(index / 8);
           const markerSize = Math.max(6, cell * 0.4);
 
           return (
-            <View
+            <AnimatedView
               className="absolute items-center justify-center"
               key={`marker-${index}`}
-              style={{
-                height: cell,
-                left: column * cell,
-                top: row * cell,
-                width: cell,
-              }}>
+              style={[
+                {
+                  height: cell,
+                  left: column * cell,
+                  top: row * cell,
+                  width: cell,
+                },
+                index === kingCell && kingDisplayState !== null
+                  ? kingMarkerStyle
+                  : undefined,
+              ]}>
               <Svg
                 height={markerSize}
                 viewBox="0 0 100 100"
                 width={markerSize}>
                 <SvgPath
                   d="M46 4Q50 2 54 4L91 25Q96 28 96 33V67Q96 72 91 75L54 96Q50 98 46 96L9 75Q4 72 4 67V33Q4 28 9 25Z"
-                  fill="#bfbfbf"
+                  fill={
+                    index === kingCell
+                      ? kingDisplayState === 'gameOver'
+                        ? '#FF3F43'
+                        : kingDisplayState === 'checkmate'
+                          ? '#FD8223'
+                          : pieceColor === 'black'
+                            ? '#070707'
+                            : '#BABABA'
+                      : pieceColor === 'black'
+                        ? '#070707'
+                        : '#BABABA'
+                  }
                 />
               </Svg>
-            </View>
+            </AnimatedView>
           );
         })}
       </AnimatedView>
@@ -129,7 +222,12 @@ function NativeBoardSurface({ boardSize, fen, progress }: {
   );
 }
 
-function PieceLayer({ boardSize, boardState, progress, spriteImage }: {
+function PieceLayer({
+  boardSize,
+  boardState,
+  progress,
+  spriteImage,
+}: {
   boardSize: number;
   boardState: ReturnType<typeof useBoardStateValues>;
   progress: SharedValue<number>;
@@ -139,8 +237,8 @@ function PieceLayer({ boardSize, boardState, progress, spriteImage }: {
   const opacity = useDerivedValue(() =>
     interpolate(
       progress.value,
-      [0, 0.12, 0.2, 1],
-      [0, 0.72, 1, 1],
+      PIECE_REVEAL_OPACITY,
+      PIECE_REVEAL_OPACITY_VALUES,
       Extrapolation.CLAMP,
     ),
   );
@@ -169,8 +267,8 @@ function PieceLayer({ boardSize, boardState, progress, spriteImage }: {
   const transforms = useDerivedValue(() => {
     const revealScale = interpolate(
       progress.value,
-      [0, 0.12, 0.56, 1],
-      [0.12, 0.28, 1, 1],
+      PIECE_REVEAL_SCALE,
+      PIECE_REVEAL_SCALE_VALUES,
       Extrapolation.CLAMP,
     );
     const transforms: SkRSXform[] = [];
@@ -215,28 +313,198 @@ function PieceLayer({ boardSize, boardState, progress, spriteImage }: {
   );
 }
 
+function SpecialKingLayer({
+  boardState,
+  config,
+  gameOverImage,
+  kingDisplayState,
+  checkmateImage,
+  progress,
+}: {
+  boardState: ReturnType<typeof useBoardStateValues>;
+  config: ReturnType<typeof useBoardConfig>;
+  gameOverImage: SkImage | null;
+  kingDisplayState: KingDisplayState;
+  checkmateImage: SkImage | null;
+  progress: SharedValue<number>;
+}) {
+  const kingRect = useDerivedValue(() => {
+    const square = boardState.kingInCheckSquare.get();
+    if (!square) return rect(0, 0, 0, 0);
+
+    const position = squareToPosition(
+      square,
+      config.pieceSize,
+      config.flipped,
+    );
+    return rect(position.x, position.y, config.pieceSize, config.pieceSize);
+  });
+  const kingOpacity = useDerivedValue(() => {
+    const square = boardState.kingInCheckSquare.get();
+    const piece = square ? boardState.squares[square].piece.get() : null;
+    const isKing = piece === 'wk' || piece === 'bk';
+
+    return withTiming(
+      isKing && kingDisplayState !== null ? 1 : 0,
+      KING_STATE_FADE_OPTIONS,
+    );
+  });
+  const boardRevealOpacity = useDerivedValue(() =>
+    interpolate(
+      progress.value,
+      PIECE_REVEAL_OPACITY,
+      PIECE_REVEAL_OPACITY_VALUES,
+      Extrapolation.CLAMP,
+    ),
+  );
+  const boardRevealScale = useDerivedValue(() =>
+    interpolate(
+      progress.value,
+      PIECE_REVEAL_SCALE,
+      PIECE_REVEAL_SCALE_VALUES,
+      Extrapolation.CLAMP,
+    ),
+  );
+  const visibleKingRect = useDerivedValue(() => {
+    if (kingRect.value.width === 0 || kingRect.value.height === 0) {
+      return rect(0, 0, 0, 0);
+    }
+
+    const scale = boardRevealScale.value;
+    const size = config.pieceSize * scale;
+
+    return rect(
+      kingRect.value.x + (config.pieceSize - size) / 2,
+      kingRect.value.y + (config.pieceSize - size) / 2,
+      size,
+      size,
+    );
+  });
+  const checkmateStateOpacity = useDerivedValue(() => {
+    const square = boardState.kingInCheckSquare.get();
+    const piece = square ? boardState.squares[square].piece.get() : null;
+    const isKing = piece === 'wk' || piece === 'bk';
+
+    return withTiming(
+      isKing && kingDisplayState === 'checkmate' ? 1 : 0,
+      KING_STATE_FADE_OPTIONS,
+    );
+  });
+  const gameOverStateOpacity = useDerivedValue(() => {
+    const square = boardState.kingInCheckSquare.get();
+    const piece = square ? boardState.squares[square].piece.get() : null;
+    const isKing = piece === 'wk' || piece === 'bk';
+
+    return withTiming(
+      isKing && kingDisplayState === 'gameOver' ? 1 : 0,
+      KING_STATE_FADE_OPTIONS,
+    );
+  });
+  const checkmateKingOpacity = useDerivedValue(
+    () => checkmateStateOpacity.value * boardRevealOpacity.value,
+  );
+  const gameOverKingOpacity = useDerivedValue(
+    () => gameOverStateOpacity.value * boardRevealOpacity.value,
+  );
+  const visibleKingOpacity = useDerivedValue(
+    () => kingOpacity.value * boardRevealOpacity.value,
+  );
+  const kingHighlightColor =
+    kingDisplayState === 'gameOver' ? '#FEC2C4' : '#FFE1C1';
+
+  return (
+    <Group>
+      <Rect
+        color={kingHighlightColor}
+        opacity={visibleKingOpacity}
+        rect={kingRect}
+      />
+      <SkiaImage
+        fit="contain"
+        image={checkmateImage}
+        opacity={checkmateKingOpacity}
+        rect={visibleKingRect}
+      />
+      <SkiaImage
+        fit="contain"
+        image={gameOverImage}
+        opacity={gameOverKingOpacity}
+        rect={visibleKingRect}
+      />
+    </Group>
+  );
+}
+
+function SelectedSquareHighlight({
+  boardState,
+  config,
+}: {
+  boardState: ReturnType<typeof useBoardStateValues>;
+  config: ReturnType<typeof useBoardConfig>;
+}) {
+  const selectedRect = useDerivedValue(() => {
+    const square = boardState.selectedSquare.get();
+    if (!square) return { height: 0, width: 0, x: 0, y: 0 };
+
+    const position = squareToPosition(square, config.pieceSize, config.flipped);
+    return {
+      height: config.pieceSize,
+      width: config.pieceSize,
+      x: position.x,
+      y: position.y,
+    };
+  });
+  const opacity = useDerivedValue(() =>
+    boardState.selectedSquare.get() ? 1 : 0,
+  );
+
+  return (
+    <Rect
+      color={config.colors.lastMoveHighlight}
+      opacity={opacity}
+      rect={selectedRect}
+    />
+  );
+}
+
 const styles = StyleSheet.create({
   container: {
     aspectRatio: 1,
   },
 });
 
-function SheetBoardCanvas({ progress, spriteImage }: {
+function SheetBoardCanvas({
+  kingDisplayState,
+  progress,
+  spriteImage,
+}: {
+  kingDisplayState: KingDisplayState;
   progress: SharedValue<number>;
   spriteImage: SkImage | null;
 }) {
   const config = useBoardConfig();
   const boardState = useBoardStateValues();
+  const checkmateKingImage = useImage(CHECKMATE_KING_IMG);
+  const gameOverKingImage = useImage(GAME_OVER_KING_IMG);
 
   return (
     <Canvas style={{ height: config.boardSize, width: config.boardSize }}>
       <SkiaHighlights config={config} boardState={boardState} />
-      <SkiaDots config={config} boardState={boardState} />
+      <SelectedSquareHighlight boardState={boardState} config={config} />
+      <SheetBoardDots config={config} boardState={boardState} />
       <PieceLayer
         boardSize={config.boardSize}
         boardState={boardState}
         progress={progress}
         spriteImage={spriteImage}
+      />
+      <SpecialKingLayer
+        boardState={boardState}
+        config={config}
+        gameOverImage={gameOverKingImage}
+        kingDisplayState={kingDisplayState}
+        checkmateImage={checkmateKingImage}
+        progress={progress}
       />
     </Canvas>
   );
@@ -251,20 +519,32 @@ interface PromotionInfo {
 }
 
 function SheetGestureBoard({
+  kingDisplayState,
   markerFen,
   onReady,
   onMove,
   progress,
 }: {
+  kingDisplayState: KingDisplayState;
   markerFen: string;
   onReady?: (ready: boolean) => void;
   onMove?: (result: MoveResult) => void;
   progress: SharedValue<number>;
 }) {
   const { chess } = useBoardContext();
-  const config = useBoardConfig();
+  const providerConfig = useBoardConfig();
+  const config = useMemo(
+    () => ({
+      ...providerConfig,
+      animations: {
+        ...providerConfig.animations,
+        move: SHEET_BOARD_MOVE_SPRING,
+      },
+    }),
+    [providerConfig],
+  );
   const boardState = useBoardStateValues();
-  const { image: spriteImage } = usePieceSpriteSheet();
+  const { image: spriteImage } = usePieceSpriteSheet(PIECE_SPRITE);
   const promotionInfoRef = useRef<PromotionInfo | null>(null);
   const [showPromotion, setShowPromotion] = useState(false);
 
@@ -342,9 +622,14 @@ function SheetGestureBoard({
           <NativeBoardSurface
             boardSize={config.boardSize}
             fen={markerFen}
+            kingDisplayState={kingDisplayState}
             progress={progress}
           />
-          <SheetBoardCanvas progress={progress} spriteImage={spriteImage} />
+          <SheetBoardCanvas
+            kingDisplayState={kingDisplayState}
+            progress={progress}
+            spriteImage={spriteImage}
+          />
         </View>
       </GestureDetector>
       {showPromotion && promotionInfoRef.current && (
@@ -362,6 +647,7 @@ function SheetGestureBoard({
 export function SheetBoard({
   boardSize,
   fen,
+  kingDisplayState,
   markerFen,
   open,
   onReady,
@@ -370,6 +656,7 @@ export function SheetBoard({
 }: {
   boardSize: number;
   fen: string;
+  kingDisplayState: KingDisplayState;
   markerFen: string;
   open: boolean;
   onReady?: (ready: boolean) => void;
@@ -379,7 +666,7 @@ export function SheetBoard({
   return (
     <BoardStateProvider
       boardSize={boardSize}
-      colors={SHEET_BOARD_COLORS}
+      colors={{ ...SHEET_BOARD_COLORS, checkmateHighlight: 'transparent' }}
       fen={fen}
       gestureEnabled={open}
       withLetters={false}
@@ -389,6 +676,7 @@ export function SheetBoard({
         onReady={onReady}
         onMove={onMove}
         progress={progress}
+        kingDisplayState={kingDisplayState}
       />
     </BoardStateProvider>
   );

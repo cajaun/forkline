@@ -15,9 +15,8 @@ import { capturedFromFen } from '@/utils/sheet';
 import { PressableScale } from '@/components/shared/pressable-scale';
 import { AnimatedView } from '@/components/shared/uniwind';
 import { SfSymbol } from '@/components/shared/sf-symbol';
-import { BoardCaptures } from './board-captures';
-import { BoardMeta } from './board-meta';
-import { SheetBoard } from './sheet-board';
+import { BoardCaptures, type CaptureSide } from './board-captures';
+import { SheetBoard, type KingDisplayState } from './sheet-board';
 
 export function ExpandingBoard({
   boardFen,
@@ -45,6 +44,10 @@ export function ExpandingBoard({
   const openTop = openCenterY - boardSize / 2;
   const previewScale = previewSize / boardSize;
   const [captured, setCaptured] = useState(() => capturedFromFen(boardFen));
+  const [expandedCaptureSide, setExpandedCaptureSide] =
+    useState<CaptureSide | null>(null);
+  const [kingDisplayState, setKingDisplayState] =
+    useState<KingDisplayState>(null);
   const [markerFen, setMarkerFen] = useState(boardFen);
   const [spriteReady, setSpriteReady] = useState(false);
   const pendingOpenRef = useRef(false);
@@ -70,15 +73,27 @@ export function ExpandingBoard({
   const handleMove = useCallback((result: MoveResult) => {
     setMarkerFen(result.state.fen);
 
+    if (result.state.isCheckmate) {
+      setKingDisplayState('gameOver');
+    } else if (result.state.isCheck) {
+      setKingDisplayState('checkmate');
+    } else {
+      setKingDisplayState(null);
+    }
+
     const piece = result.move.captured;
     if (!piece) return;
 
     // store captures under the side that made the move
     const side = result.move.color === 'w' ? 'w' : 'b';
+    setExpandedCaptureSide(side === 'w' ? 'bottom' : 'top');
     setCaptured(previous => ({
       ...previous,
       [side]: [...previous[side], piece],
     }));
+  }, []);
+  const handleCaptureTrayToggle = useCallback((side: CaptureSide) => {
+    setExpandedCaptureSide(current => (current === side ? null : side));
   }, []);
   const borderWidth = 2;
   const borderRadius = 12;
@@ -106,10 +121,20 @@ export function ExpandingBoard({
     ),
   }));
   const playStyle = useAnimatedStyle(() => ({
-    opacity: interpolate(progress.value, [0, 0.45], [1, 0], Extrapolation.CLAMP),
+    opacity: interpolate(
+      progress.value,
+      [0, 0.45, 0.78, 1],
+      [1, 1, 0.35, 0],
+      Extrapolation.CLAMP,
+    ),
     transform: [
       {
-        translateY: interpolate(progress.value, [0, 0.45], [0, -25], Extrapolation.CLAMP),
+        scale: interpolate(
+          progress.value,
+          [0, 0.45, 0.78, 1],
+          [1, 0.9, 0.35, 0],
+          Extrapolation.CLAMP,
+        ),
       },
     ],
   }));
@@ -165,32 +190,27 @@ export function ExpandingBoard({
 
   return (
     <>
-      <BoardMeta
-        boardSize={boardSize}
-        closedLeft={closedLeft}
-        closedTop={closedTop}
-        openLeft={openLeft}
-        openTop={openTop}
-        previewSize={previewSize}
-        progress={progress}
-      />
       <BoardCaptures
         boardSize={boardSize}
         captured={captured}
         closedLeft={closedLeft}
         closedTop={closedTop}
+        expandedSide={expandedCaptureSide}
         openLeft={openLeft}
         openTop={openTop}
+        onToggleSide={handleCaptureTrayToggle}
+        open={open}
         previewSize={previewSize}
         progress={progress}
       />
       <AnimatedView
         className="absolute z-2 overflow-hidden rounded-xl"
-        pointerEvents="box-none"
+        pointerEvents={open ? 'auto' : 'none'}
         style={[{ height: boardSize, width: boardSize }, boardStyle, boardClipStyle]}>
         <SheetBoard
           boardSize={boardSize}
           fen={boardFen}
+          kingDisplayState={kingDisplayState}
           markerFen={markerFen}
           onReady={handleSpriteReady}
           onMove={handleMove}

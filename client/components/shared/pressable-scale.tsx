@@ -16,6 +16,7 @@ import { AnimatedView } from './uniwind';
 export type PressableScaleProps = {
   accessibilityLabel?: string;
   children: React.ReactNode;
+  hitSlop?: number;
   onPress?: () => void;
   style?: StyleProp<ViewStyle>;
   className?: string;
@@ -29,6 +30,7 @@ const SCALE_ACTIVATION_DELAY_MS = 80;
 export const PressableScale: React.FC<PressableScaleProps> = ({
   accessibilityLabel,
   children,
+  hitSlop,
   onPress,
   style,
   className,
@@ -52,6 +54,10 @@ export const PressableScale: React.FC<PressableScaleProps> = ({
     .onFinalize(() => {
       active.value = false;
     });
+
+  if (hitSlop !== undefined) {
+    gesture.hitSlop(hitSlop);
+  }
 
   // delay the shrink so the tap does not jump on contact
   const animatedStyle = useAnimatedStyle(() => ({

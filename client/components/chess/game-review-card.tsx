@@ -1,4 +1,4 @@
-import { Image, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 
 import React from 'react';
 
@@ -7,7 +7,7 @@ import { PressableScale } from 'pressto';
 import { Easing, withDelay, withTiming } from 'react-native-reanimated';
 
 import { PLAYERS } from '@/constants/chess-game';
-import { avatar, quality, theme } from '@/constants/theme';
+import { quality, theme } from '@/constants/theme';
 import { AnimatedView } from '@/components/shared/uniwind';
 
 import type { Quality, ShowOpts } from '@/types/chess-game';
@@ -113,11 +113,15 @@ export const GameReviewCard: React.FC<{
           Players
         </Text>
         <View className="w-15.5 items-center">
-          <Image className="h-9.5 w-9.5 rounded-[11px]" source={avatar.w} />
+          <View className="h-9.5 w-9.5 items-center justify-center rounded-[11px] bg-[#2c2f35]">
+            <Text className="text-xs font-bold text-[#f0f2f5]">W</Text>
+          </View>
         </View>
         <View className="w-11" />
         <View className="w-15.5 items-center">
-          <Image className="h-9.5 w-9.5 rounded-[11px]" source={avatar.b} />
+          <View className="h-9.5 w-9.5 items-center justify-center rounded-[11px] bg-[#2c2f35]">
+            <Text className="text-xs font-bold text-[#f0f2f5]">B</Text>
+          </View>
         </View>
       </AnimatedView>
 

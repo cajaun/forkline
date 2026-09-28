@@ -1,53 +1,234 @@
-import { Image, Text, View } from 'react-native';
+import { useEffect, useRef } from 'react';
+import { Image, View } from 'react-native';
 
+import * as Haptics from 'expo-haptics';
 import {
+  Easing,
   Extrapolation,
   interpolate,
   useAnimatedStyle,
+  useSharedValue,
+  withTiming,
 } from 'react-native-reanimated';
 import type { SharedValue } from 'react-native-reanimated';
 
-import { PIECE_IMG, VALUE } from '@/constants/chess-pieces';
+import { PIECE_IMG } from '@/constants/chess-pieces';
+import { SHEET_BOARD_COLORS } from '@/constants/sheet';
 import type { Side } from '@/types/chess';
 import { AnimatedView } from '@/components/shared/uniwind';
+import { PressableScale } from '@/components/shared/pressable-scale';
 
-function CapturePieces({
+const MINI_BOARD_COLUMNS = 8;
+const MINI_BOARD_ROWS = 2;
+const MINI_BOARD_COLLAPSED_SCALE = 0.14;
+const MINI_BOARD_EXPANSION_DURATION = 200;
+const MINI_BOARD_RADIUS = 8;
+const MINI_BOARD_EXPANDED_GAP_RATIO = 1 / 16;
+const MINI_BOARD_COLLAPSED_GAP_RATIO = 1 / 3;
+const MINI_BOARD_DOT_COLOR = '#D9D9D9';
+const MINI_BOARD_DOT_SIZE_RATIO = 0.1;
+
+export type CaptureSide = 'top' | 'bottom';
+
+function CaptureMiniBoard({
+  expanded,
   foe,
+  onPress,
   pieces,
-  pieceSize,
+  side,
+  size,
 }: {
+  expanded: boolean;
   foe: Side;
+  onPress: () => void;
   pieces: string[];
-  pieceSize: number;
+  side: CaptureSide;
+  size: { height: number; width: number };
 }) {
-  // sort captures by value so the tray grows in a stable order
-  const sorted = [...pieces].sort((a, b) => (VALUE[a] ?? 0) - (VALUE[b] ?? 0));
-  const overlap = pieceSize * 0.28;
-  const value = pieces.reduce((sum, piece) => sum + (VALUE[piece] ?? 0), 0);
+  const expansion = useSharedValue(expanded ? 1 : 0);
+  const previousExpanded = useRef(expanded);
+  const cellSize = size.width / MINI_BOARD_COLUMNS;
+  const expandedGap = size.height / 2;
+  const collapsedGap = size.height * MINI_BOARD_COLLAPSED_GAP_RATIO;
+  const collapsedTravel =
+    expandedGap +
+    size.height / 2 -
+    (collapsedGap + (size.height * MINI_BOARD_COLLAPSED_SCALE) / 2);
 
+  useEffect(() => {
+    expansion.value = withTiming(expanded ? 1 : 0, {
+      duration: MINI_BOARD_EXPANSION_DURATION,
+      easing: Easing.out(Easing.cubic),
+    });
+
+    if (expanded !== previousExpanded.current) {
+      void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Soft);
+    }
+
+    previousExpanded.current = expanded;
+  }, [expanded, expansion]);
+
+  const translationStyle = useAnimatedStyle(() => ({
+    transform: [
+      {
+        translateY: interpolate(
+          expansion.value,
+          [0, 1],
+          [side === 'top' ? collapsedTravel : -collapsedTravel, 0],
+          Extrapolation.CLAMP,
+        ),
+      },
+    ],
+  }));
+  const scaleStyle = useAnimatedStyle(() => ({
+    transform: [
+      {
+        scale: interpolate(
+          expansion.value,
+          [0, 1],
+          [MINI_BOARD_COLLAPSED_SCALE, 1],
+          Extrapolation.CLAMP,
+        ),
+      },
+    ],
+  }));
+  const dotsStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(
+      expansion.value,
+      [0, 0.42, 0.85],
+      [1, 1, 0],
+      Extrapolation.CLAMP,
+    ),
+  }));
+  const dotScaleStyle = useAnimatedStyle(() => ({
+    transform: [
+      {
+        scale:
+          1 /
+          interpolate(
+            expansion.value,
+            [0, 1],
+            [MINI_BOARD_COLLAPSED_SCALE, 1],
+            Extrapolation.CLAMP,
+          ),
+      },
+    ],
+  }));
+  const piecesStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(
+      expansion.value,
+      [0.55, 0.82, 1],
+      [0, 0.9, 1],
+      Extrapolation.CLAMP,
+    ),
+  }));
+  const cellsStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(
+      expansion.value,
+      [0.1, 0.4, 0.85],
+      [0, 0.7, 1],
+      Extrapolation.CLAMP,
+    ),
+  }));
   return (
-    <View className="flex-row items-center">
-      <View className="flex-row items-center">
-        {sorted.map((piece, index) => (
-          <Image
-            key={`${piece}-${index}`}
-            source={PIECE_IMG[foe][piece]}
+    <AnimatedView
+      style={[
+        {
+          alignSelf: 'center',
+          height: size.height,
+          width: size.width,
+        },
+        translationStyle,
+      ]}>
+      <PressableScale
+        accessibilityLabel={`${foe === 'w' ? 'top' : 'bottom'} captured pieces`}
+        hitSlop={32}
+        onPress={onPress}
+        style={{
+          height: size.height,
+          width: size.width,
+        }}>
+        <AnimatedView
+          pointerEvents="none"
+          style={[
+            {
+              borderRadius: MINI_BOARD_RADIUS,
+              height: size.height,
+              overflow: 'hidden',
+              width: size.width,
+            },
+            scaleStyle,
+          ]}>
+          <View
             style={{
-              height: pieceSize,
-              marginLeft: index > 0 ? -overlap : 0,
-              width: pieceSize,
-            }}
-          />
-        ))}
-      </View>
-      {value > 0 ? (
-        <Text
-          className="text-[#8f9298]"
-          style={{ fontSize: Math.max(9, pieceSize * 0.72), marginLeft: 3 }}>
-          +{value}
-        </Text>
-      ) : null}
-    </View>
+              flexDirection: 'row',
+              flexWrap: 'wrap',
+              height: size.height,
+              width: size.width,
+            }}>
+            {Array.from({ length: MINI_BOARD_ROWS * MINI_BOARD_COLUMNS }).map(
+              (_, squareIndex) => {
+                const piece = pieces[squareIndex];
+                const row = Math.floor(squareIndex / MINI_BOARD_COLUMNS);
+                const column = squareIndex % MINI_BOARD_COLUMNS;
+
+                return (
+                  <View
+                    key={`${foe}-capture-square-${squareIndex}`}
+                    style={{
+                      alignItems: 'center',
+                      height: size.height / MINI_BOARD_ROWS,
+                      justifyContent: 'center',
+                      position: 'relative',
+                      width: cellSize,
+                    }}>
+                    <AnimatedView
+                      pointerEvents="none"
+                      style={[
+                        {
+                          backgroundColor:
+                            (row + column) % 2 === 0
+                              ? SHEET_BOARD_COLORS.white
+                              : SHEET_BOARD_COLORS.black,
+                          bottom: 0,
+                          left: 0,
+                          position: 'absolute',
+                          right: 0,
+                          top: 0,
+                        },
+                        cellsStyle,
+                      ]}
+                    />
+                    <AnimatedView
+                      pointerEvents="none"
+                      style={[
+                        {
+                          backgroundColor: MINI_BOARD_DOT_COLOR,
+                          borderRadius: cellSize * MINI_BOARD_DOT_SIZE_RATIO,
+                          height: cellSize * MINI_BOARD_DOT_SIZE_RATIO,
+                          position: 'absolute',
+                          width: cellSize * MINI_BOARD_DOT_SIZE_RATIO,
+                        },
+                        dotsStyle,
+                        dotScaleStyle,
+                      ]}
+                    />
+                    {piece ? (
+                      <AnimatedView pointerEvents="none" style={piecesStyle}>
+                        <Image
+                          source={PIECE_IMG[foe][piece]}
+                          style={{ height: cellSize, width: cellSize }}
+                        />
+                      </AnimatedView>
+                    ) : null}
+                  </View>
+                );
+              },
+            )}
+          </View>
+        </AnimatedView>
+      </PressableScale>
+    </AnimatedView>
   );
 }
 
@@ -56,8 +237,11 @@ export function BoardCaptures({
   captured,
   closedLeft,
   closedTop,
+  expandedSide,
   openLeft,
   openTop,
+  onToggleSide,
+  open,
   previewSize,
   progress,
 }: {
@@ -65,76 +249,85 @@ export function BoardCaptures({
   captured: Record<'b' | 'w', string[]>;
   closedLeft: number;
   closedTop: number;
+  expandedSide: CaptureSide | null;
   openLeft: number;
   openTop: number;
+  onToggleSide: (side: CaptureSide) => void;
+  open: boolean;
   previewSize: number;
   progress: SharedValue<number>;
 }) {
-  const pieceSize = Math.min(22, boardSize / 16);
-  const overlap = pieceSize * 0.28;
-  const bottomPieceWidth = Math.max(
-    pieceSize,
-    captured.w.length * pieceSize - Math.max(0, captured.w.length - 1) * overlap,
-  );
-  const bottomValue = captured.w.reduce((sum, piece) => sum + (VALUE[piece] ?? 0), 0);
-  const bottomValueWidth =
-    bottomValue > 0
-      ? pieceSize * (0.45 * `+${bottomValue}`.length) + 3
-      : 0;
-  const bottomWidth = bottomPieceWidth + bottomValueWidth;
-  // keep the value label inside the board edge during interpolation
-  const bottomRightInset = 4;
-  const closedVisualLeft = closedLeft + (boardSize - previewSize) / 2;
+  const miniBoardSize = {
+    height: boardSize / 8,
+    width: boardSize / 2,
+  };
+  const expandedGap = boardSize * MINI_BOARD_EXPANDED_GAP_RATIO;
   const closedVisualTop = closedTop + (boardSize - previewSize) / 2;
+
   const topStyle = useAnimatedStyle(() => ({
     left: interpolate(
       progress.value,
       [0, 1],
-      [closedVisualLeft, openLeft],
+      [closedLeft, openLeft],
       Extrapolation.CLAMP,
     ),
     opacity: interpolate(progress.value, [0, 1], [0, 1], Extrapolation.CLAMP),
     top: interpolate(
       progress.value,
       [0, 1],
-      [closedVisualTop - pieceSize / 2, openTop - pieceSize - 12],
+      [
+        closedVisualTop - miniBoardSize.height / 2,
+        openTop - miniBoardSize.height - expandedGap,
+      ],
       Extrapolation.CLAMP,
     ),
-    transform: [{ scale: interpolate(progress.value, [0, 1], [0.72, 1]) }],
   }));
   const bottomStyle = useAnimatedStyle(() => ({
     left: interpolate(
       progress.value,
       [0, 1],
-      [
-        closedVisualLeft + previewSize - bottomWidth - bottomRightInset,
-        openLeft + boardSize - bottomWidth - bottomRightInset,
-      ],
+      [closedLeft, openLeft],
       Extrapolation.CLAMP,
     ),
     opacity: interpolate(progress.value, [0, 1], [0, 1], Extrapolation.CLAMP),
     top: interpolate(
       progress.value,
       [0, 1],
-      [closedVisualTop + previewSize - pieceSize / 2, openTop + boardSize + 8],
+      [
+        closedVisualTop + previewSize - miniBoardSize.height / 2,
+        openTop + boardSize + expandedGap,
+      ],
       Extrapolation.CLAMP,
     ),
-    transform: [{ scale: interpolate(progress.value, [0, 1], [0.72, 1]) }],
   }));
 
   return (
     <>
       <AnimatedView
         className="absolute z-1"
-        pointerEvents="none"
-        style={topStyle}>
-        <CapturePieces foe="w" pieces={captured.b} pieceSize={pieceSize} />
+        pointerEvents={open ? 'box-none' : 'none'}
+        style={[{ height: miniBoardSize.height, width: boardSize }, topStyle]}>
+        <CaptureMiniBoard
+          expanded={expandedSide === 'top'}
+          foe="w"
+          onPress={() => onToggleSide('top')}
+          pieces={captured.b}
+          side="top"
+          size={miniBoardSize}
+        />
       </AnimatedView>
       <AnimatedView
         className="absolute z-1"
-        pointerEvents="none"
-        style={bottomStyle}>
-        <CapturePieces foe="b" pieces={captured.w} pieceSize={pieceSize} />
+        pointerEvents={open ? 'box-none' : 'none'}
+        style={[{ height: miniBoardSize.height, width: boardSize }, bottomStyle]}>
+        <CaptureMiniBoard
+          expanded={expandedSide === 'bottom'}
+          foe="b"
+          onPress={() => onToggleSide('bottom')}
+          pieces={captured.w}
+          side="bottom"
+          size={miniBoardSize}
+        />
       </AnimatedView>
     </>
   );
