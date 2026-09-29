@@ -51,13 +51,14 @@ import type { SharedValue } from 'react-native-reanimated';
 
 import {
   CHECKMATE_KING_IMG,
+  DARK_PIECE_SPRITE,
   GAME_OVER_KING_IMG,
   PIECE_SPRITE,
 } from '@/constants/chess-pieces';
 import {
-  SHEET_BOARD_COLORS,
   SHEET_BOARD_MOVE_SPRING,
 } from '@/constants/sheet';
+import { useSheetColors } from '@/hooks/use-sheet-colors';
 import { kingCellFromFen, pieceCellsFromFen } from '@/utils/sheet';
 import { AnimatedView } from '@/components/shared/uniwind';
 
@@ -84,8 +85,7 @@ const MOVE_DOT_RADIUS_SCALE = 0.08;
 // through its spring.
 const PIECE_REVEAL_OPACITY = [0, 0.2, 0.78, 1] as const;
 const PIECE_REVEAL_OPACITY_VALUES = [0, 0.55, 1, 1] as const;
-const PIECE_REVEAL_SCALE = [0, 0.16, 0.78, 1] as const;
-const PIECE_REVEAL_SCALE_VALUES = [0.12, 0.24, 0.82, 1] as const;
+const PIECE_REVEAL_START_SCALE = 0.12;
 const KING_STATE_FADE_OPTIONS = {
   duration: 180,
   easing: Easing.linear,
@@ -123,15 +123,18 @@ function SheetBoardDots({
 
 function NativeBoardSurface({
   boardSize,
+  colors,
   fen,
   kingDisplayState,
   progress,
 }: {
   boardSize: number;
+  colors: Pick<ReturnType<typeof useBoardConfig>['colors'], 'black' | 'white'>;
   fen: string;
   kingDisplayState: KingDisplayState;
   progress: SharedValue<number>;
 }) {
+  const { colors: sheetColors } = useSheetColors();
   const cell = boardSize / 8;
 
   // rebuild preview markers only when the board position changes
@@ -167,11 +170,11 @@ function NativeBoardSurface({
               backgroundColor:
                 index === kingCell && kingDisplayState === 'gameOver'
                   ? '#FEC2C4'
-                  : index === kingCell && kingDisplayState === 'checkmate'
-                    ? '#FFE1C1'
-                    : (row + column) % 2 === 0
-                      ? SHEET_BOARD_COLORS.white
-                      : SHEET_BOARD_COLORS.black,
+                    : index === kingCell && kingDisplayState === 'checkmate'
+                      ? '#FFE1C1'
+                      : (row + column) % 2 === 0
+                        ? colors.white
+                        : colors.black,
               height: cell,
               left: column * cell,
               position: 'absolute',
@@ -218,11 +221,11 @@ function NativeBoardSurface({
                         : kingDisplayState === 'checkmate'
                           ? '#FD8223'
                           : pieceColor === 'black'
-                            ? '#070707'
-                            : '#BABABA'
+                            ? sheetColors.pieceBlack
+                            : sheetColors.pieceWhite
                       : pieceColor === 'black'
-                        ? '#070707'
-                        : '#BABABA'
+                        ? sheetColors.pieceBlack
+                        : sheetColors.pieceWhite
                   }
                 />
               </Svg>
@@ -238,11 +241,13 @@ function PieceLayer({
   boardSize,
   boardState,
   progress,
+  revealScale,
   spriteImage,
 }: {
   boardSize: number;
   boardState: ReturnType<typeof useBoardStateValues>;
   progress: SharedValue<number>;
+  revealScale: SharedValue<number>;
   spriteImage: SkImage | null;
 }) {
   const pieceScale = boardSize / 8 / SPRITE_CELL_SIZE;
@@ -277,12 +282,6 @@ function PieceLayer({
     return sprites;
   });
   const transforms = useDerivedValue(() => {
-    const revealScale = interpolate(
-      progress.value,
-      PIECE_REVEAL_SCALE,
-      PIECE_REVEAL_SCALE_VALUES,
-      Extrapolation.CLAMP,
-    );
     const transforms: SkRSXform[] = [];
     const pieces: {
       piece: NonNullable<PieceCode>;
@@ -302,7 +301,7 @@ function PieceLayer({
       const state = boardState.squares[square];
       const x = state.translateX.get();
       const y = state.translateY.get();
-      const scale = state.scale.get() * pieceScale * revealScale;
+      const scale = state.scale.get() * pieceScale * revealScale.value;
       const centerX = x + boardSize / 16;
       const centerY = y + boardSize / 16;
       const scaledHalf = (SPRITE_CELL_SIZE / 2) * scale;
@@ -332,6 +331,7 @@ function SpecialKingLayer({
   kingDisplayState,
   checkmateImage,
   progress,
+  revealScale,
 }: {
   boardState: ReturnType<typeof useBoardStateValues>;
   config: ReturnType<typeof useBoardConfig>;
@@ -339,6 +339,7 @@ function SpecialKingLayer({
   kingDisplayState: KingDisplayState;
   checkmateImage: SkImage | null;
   progress: SharedValue<number>;
+  revealScale: SharedValue<number>;
 }) {
   const kingRect = useDerivedValue(() => {
     const square = boardState.kingInCheckSquare.get();
@@ -369,20 +370,12 @@ function SpecialKingLayer({
       Extrapolation.CLAMP,
     ),
   );
-  const boardRevealScale = useDerivedValue(() =>
-    interpolate(
-      progress.value,
-      PIECE_REVEAL_SCALE,
-      PIECE_REVEAL_SCALE_VALUES,
-      Extrapolation.CLAMP,
-    ),
-  );
   const visibleKingRect = useDerivedValue(() => {
     if (kingRect.value.width === 0 || kingRect.value.height === 0) {
       return rect(0, 0, 0, 0);
     }
 
-    const scale = boardRevealScale.value;
+    const scale = revealScale.value;
     const size = config.pieceSize * scale;
 
     return rect(
@@ -486,18 +479,35 @@ const styles = StyleSheet.create({
 });
 
 function SheetBoardCanvas({
+  boardScale,
   kingDisplayState,
   progress,
+  previewScale,
   spriteImage,
 }: {
+  boardScale: SharedValue<number>;
   kingDisplayState: KingDisplayState;
   progress: SharedValue<number>;
+  previewScale: number;
   spriteImage: SkImage | null;
 }) {
   const config = useBoardConfig();
   const boardState = useBoardStateValues();
   const checkmateKingImage = useImage(CHECKMATE_KING_IMG);
   const gameOverKingImage = useImage(GAME_OVER_KING_IMG);
+  const boardRevealScale = useDerivedValue(() => {
+    // First define the desired on-screen piece size from the board size, then
+    // solve for the inner scale. This prevents the board transform from being
+    // multiplied by a second, faster reveal curve.
+    const totalPieceScale = interpolate(
+      boardScale.value,
+      [previewScale, 1],
+      [previewScale * PIECE_REVEAL_START_SCALE, 1],
+      Extrapolation.CLAMP,
+    );
+
+    return totalPieceScale / boardScale.value;
+  });
 
   return (
     <Canvas style={{ height: config.boardSize, width: config.boardSize }}>
@@ -508,6 +518,7 @@ function SheetBoardCanvas({
         boardSize={config.boardSize}
         boardState={boardState}
         progress={progress}
+        revealScale={boardRevealScale}
         spriteImage={spriteImage}
       />
       <SpecialKingLayer
@@ -517,6 +528,7 @@ function SheetBoardCanvas({
         kingDisplayState={kingDisplayState}
         checkmateImage={checkmateKingImage}
         progress={progress}
+        revealScale={boardRevealScale}
       />
     </Canvas>
   );
@@ -532,20 +544,25 @@ interface PromotionInfo {
 
 function SheetGestureBoard({
   boardRef,
+  boardScale,
   kingDisplayState,
   markerFen,
   onReady,
   onMove,
+  previewScale,
   progress,
 }: {
   boardRef: React.Ref<ChessboardRef>;
+  boardScale: SharedValue<number>;
   kingDisplayState: KingDisplayState;
   markerFen: string;
   onReady?: (ready: boolean) => void;
   onMove?: (result: MoveResult) => void;
+  previewScale: number;
   progress: SharedValue<number>;
 }) {
   const { chess } = useBoardContext();
+  const { isDark } = useSheetColors();
   const providerConfig = useBoardConfig();
   const config = useMemo(
     () => ({
@@ -558,7 +575,9 @@ function SheetGestureBoard({
     [providerConfig],
   );
   const boardState = useBoardStateValues();
-  const { image: spriteImage } = usePieceSpriteSheet(PIECE_SPRITE);
+  const { image: spriteImage } = usePieceSpriteSheet(
+    isDark ? DARK_PIECE_SPRITE : PIECE_SPRITE,
+  );
   const promotionInfoRef = useRef<PromotionInfo | null>(null);
   const [showPromotion, setShowPromotion] = useState(false);
 
@@ -642,13 +661,16 @@ function SheetGestureBoard({
         <View style={containerStyle}>
           <NativeBoardSurface
             boardSize={config.boardSize}
+            colors={config.colors}
             fen={markerFen}
             kingDisplayState={kingDisplayState}
             progress={progress}
           />
           <SheetBoardCanvas
+            boardScale={boardScale}
             kingDisplayState={kingDisplayState}
             progress={progress}
+            previewScale={previewScale}
             spriteImage={spriteImage}
           />
         </View>
@@ -666,6 +688,7 @@ function SheetGestureBoard({
 }
 
 type SheetBoardProps = {
+  boardScale: SharedValue<number>;
   boardSize: number;
   fen: string;
   kingDisplayState: KingDisplayState;
@@ -673,6 +696,7 @@ type SheetBoardProps = {
   open: boolean;
   onReady?: (ready: boolean) => void;
   onMove?: (result: MoveResult) => void;
+  previewScale: number;
   progress: SharedValue<number>;
   gestureEnabled?: boolean;
 };
@@ -680,6 +704,7 @@ type SheetBoardProps = {
 export const SheetBoard = forwardRef<ChessboardRef, SheetBoardProps>(
   function SheetBoard(
     {
+      boardScale,
       boardSize,
       fen,
       gestureEnabled,
@@ -689,22 +714,27 @@ export const SheetBoard = forwardRef<ChessboardRef, SheetBoardProps>(
       onReady,
       onMove,
       progress,
+      previewScale,
     },
     ref,
   ) {
+    const { boardColors } = useSheetColors();
+
     return (
       <BoardStateProvider
         boardSize={boardSize}
-        colors={{ ...SHEET_BOARD_COLORS, checkmateHighlight: 'transparent' }}
+        colors={{ ...boardColors, checkmateHighlight: 'transparent' }}
         fen={fen}
         gestureEnabled={gestureEnabled ?? open}
         withLetters={false}
         withNumbers={false}>
         <SheetGestureBoard
           boardRef={ref}
+          boardScale={boardScale}
           markerFen={markerFen}
           onReady={onReady}
           onMove={onMove}
+          previewScale={previewScale}
           progress={progress}
           kingDisplayState={kingDisplayState}
         />

@@ -23,6 +23,26 @@ export const PIECE_IMG: Record<Side, Record<string, ImageSourcePropType>> = {
 };
 
 export const PIECE_SPRITE = require('../assets/images/chess-pieces/sprite.png');
+export const DARK_PIECE_SPRITE = require('../assets/images/chess-pieces/dark/sprite.png');
+
+export const DARK_PIECE_IMG: Record<Side, Record<string, ImageSourcePropType>> = {
+  w: {
+    p: require('../assets/images/chess-pieces/dark/gray/pawn.png'),
+    n: require('../assets/images/chess-pieces/dark/gray/knight.png'),
+    b: require('../assets/images/chess-pieces/dark/gray/bishop.png'),
+    r: require('../assets/images/chess-pieces/dark/gray/rook.png'),
+    q: require('../assets/images/chess-pieces/dark/gray/queen.png'),
+    k: require('../assets/images/chess-pieces/dark/gray/king.png'),
+  },
+  b: {
+    p: require('../assets/images/chess-pieces/dark/black/pawn.png'),
+    n: require('../assets/images/chess-pieces/dark/black/knight.png'),
+    b: require('../assets/images/chess-pieces/dark/black/bishop.png'),
+    r: require('../assets/images/chess-pieces/dark/black/rook.png'),
+    q: require('../assets/images/chess-pieces/dark/black/queen.png'),
+    k: require('../assets/images/chess-pieces/dark/black/king.png'),
+  },
+};
 
 export const CHECKMATE_KING_IMG = require(
   '../assets/images/chess-pieces/orange/king.png',

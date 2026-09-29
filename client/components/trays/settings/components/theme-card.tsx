@@ -2,10 +2,10 @@ import { Text } from 'react-native';
 
 import type { SymbolWeight } from 'expo-symbols';
 
-import { SHEET_COLORS } from '@/constants/sheet';
 import { PressableScale } from '@/components/shared/pressable-scale';
 import { SfSymbol } from '@/components/shared/sf-symbol';
 import { trayText } from '@/components/shared/tokens';
+import { useSheetColors } from '@/hooks/use-sheet-colors';
 
 import { THEME_CARD_STYLE } from '../styles';
 
@@ -25,6 +25,7 @@ export function ThemeCard({
   selected: boolean;
   onPress: () => void;
 }) {
+  const { colors } = useSheetColors();
   const iconWeight: SymbolWeight = icon === 'iphone' ? 'light' : 'regular';
 
   return (
@@ -33,18 +34,28 @@ export function ThemeCard({
       onPress={onPress}
       style={[
         THEME_CARD_STYLE,
+        {
+          backgroundColor: colors.background,
+          borderColor: colors.controlBackground,
+        },
         selected
-          ? { backgroundColor: '#F7F7F7', borderColor: SHEET_COLORS.icon }
+          ? {
+              backgroundColor: colors.controlBackground,
+              borderColor: colors.controlBackground,
+            }
           : null,
       ]}>
       <SfSymbol
         fallback={fallback}
         name={icon}
         size={48}
-        tintColor={SHEET_COLORS.icon}
+        tintColor={colors.icon}
         weight={iconWeight}
       />
-      <Text className="font-semibold text-black" style={trayText.Title3}>
+      <Text
+        className="font-semibold"
+        style={[trayText.Title3, { color: colors.text }]}
+      >
         {label}
       </Text>
     </PressableScale>

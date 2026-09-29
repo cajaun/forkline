@@ -14,11 +14,13 @@ import { PreviewCard, PreviewTimer } from '@/components/sheet/preview-card';
 import { SHEET_LAYOUT } from '@/constants/sheet';
 import { useSheetAnimation } from '@/hooks/use-sheet-animation';
 import { AnimatedView } from '@/components/shared/uniwind';
+import { useSheetColors } from '@/hooks/use-sheet-colors';
 
 import type { ChessboardRef } from 'react-native-chessboard';
 
 export function ChessboardSheet() {
   const { height, width } = useWindowDimensions();
+  const { colors, isDark } = useSheetColors();
   const [boardFen] = useState(createRandomGameFen);
   const boardRef = useRef<ChessboardRef | null>(null);
   const { settings } = useSettingsState();
@@ -33,8 +35,8 @@ export function ChessboardSheet() {
   const openCenterY = height * SHEET_LAYOUT.openBoardCenter;
 
   return (
-    <View className="flex-1">
-      <StatusBar style="dark" />
+    <View className="flex-1" style={{ backgroundColor: colors.appBackground }}>
+      <StatusBar style={isDark ? 'light' : 'dark'} />
 
       <AnimatedView
         className="absolute inset-0"
@@ -42,7 +44,9 @@ export function ChessboardSheet() {
         <HomeChrome progress={progress} />
       </AnimatedView>
 
-      <AnimatedView className="absolute overflow-visible bg-[#FEFFFF]" style={sheetStyle}>
+      <AnimatedView
+        className="absolute overflow-visible"
+        style={[{ backgroundColor: colors.background }, sheetStyle]}>
         <PreviewCard
           onClose={closeSheet}
           onOpen={openSheet}

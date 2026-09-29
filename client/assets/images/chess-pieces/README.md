@@ -4,6 +4,7 @@ These transparent PNGs are independent redraws of the six silhouettes from the s
 
 - Individual files are 512×512: `black/{rook,bishop,queen,king,knight,pawn}.png` and `gray/{...}.png`.
 - Fill colors are `#070707` for black and `#BABABA` for gray.
+- Dark-mode variants are in `dark/`: black-side pieces use `#797979` and gray-side pieces use `#AAAAAA`, with the same 512×512 cells and atlas ordering.
 - `orange/king.png` is a 512×512 checkmate/move-required king in `#FD8223`.
 - `red/king.png` is a 512×512 game-over/checkmate king in `#FF3F43`.
 - `black-atlas.png` and `gray-atlas.png` are 3072×512, ordered left to right as rook, bishop, queen, king, knight, pawn.

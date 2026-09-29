@@ -2,7 +2,7 @@ import { useCallback } from 'react';
 import { View } from 'react-native';
 
 import { Tray } from 'react-native-morpheus';
-import { Uniwind } from 'uniwind';
+import { Uniwind, useUniwind } from 'uniwind';
 
 import { ThemeCard } from '../components/theme-card';
 import { THEME_OPTIONS } from '../constants';
@@ -13,13 +13,15 @@ export type AppearanceOptionsProps = AppearanceSettings & {
 };
 
 export function AppearanceOptions({
-  themeMode,
   onChange,
 }: AppearanceOptionsProps) {
+  const { hasAdaptiveThemes, theme } = useUniwind();
+  const activeTheme: ThemeMode = hasAdaptiveThemes ? 'system' : theme;
+
   const chooseTheme = useCallback(
     (value: ThemeMode) => {
-      onChange({ themeMode: value });
       Uniwind.setTheme(value);
+      onChange({ themeMode: value });
     },
     [onChange],
   );
@@ -34,7 +36,7 @@ export function AppearanceOptions({
               fallback={option.fallback}
               icon={option.icon}
               label={option.label}
-              selected={themeMode === option.value}
+              selected={activeTheme === option.value}
               onPress={() => chooseTheme(option.value)}
             />
           ))}

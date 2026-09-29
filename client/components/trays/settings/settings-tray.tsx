@@ -1,5 +1,5 @@
 import { SfSymbol } from '@/components/shared/sf-symbol';
-import { SHEET_COLORS } from '@/constants/sheet';
+import { useSheetColors } from '@/hooks/use-sheet-colors';
 import { Tray } from 'react-native-morpheus';
 
 import { CategoryOptions } from './category-options';
@@ -15,9 +15,10 @@ import { useSettingsState } from './state';
 
 export function SettingsTray({ size = 56 }: { size?: number }) {
   const { settings, update } = useSettingsState();
+  const { colors } = useSheetColors();
   const triggerStyle = {
     alignItems: 'center' as const,
-    backgroundColor: SHEET_COLORS.lightControl,
+    backgroundColor: colors.controlBackground,
     borderRadius: size / 2,
     height: size,
     justifyContent: 'center' as const,
@@ -49,8 +50,9 @@ export function SettingsTray({ size = 56 }: { size?: number }) {
   return (
     <Tray.Root
       stepOptions={{
-        className: 'bg-white',
-        footerStyle: { backgroundColor: '#FFFFFF' },
+
+        className: 'bg-[#FEFFFF] dark:bg-[#262626]',
+        footerClassName: 'bg-[#FEFFFF] dark:bg-[#262626]',
       }}>
       <Tray.Trigger
         accessibilityLabel="Settings"
@@ -60,7 +62,7 @@ export function SettingsTray({ size = 56 }: { size?: number }) {
           fallback="settings-sharp"
           name="gearshape.fill"
           size={size * 0.48}
-          tintColor={SHEET_COLORS.icon}
+          tintColor={colors.icon}
         />
       </Tray.Trigger>
 

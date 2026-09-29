@@ -1,7 +1,7 @@
 import { Switch, Text, View } from 'react-native';
 
-import { SHEET_COLORS } from '@/constants/sheet';
 import { trayText } from '@/components/shared/tokens';
+import { useSheetColors } from '@/hooks/use-sheet-colors';
 
 import { CATEGORY_ROW_STYLE } from '../styles';
 
@@ -20,25 +20,31 @@ export function ToggleRow({
   value: boolean;
   onValueChange: (value: boolean) => void;
 }) {
+  const { colors } = useSheetColors();
+
   return (
     <View
       style={[
         CATEGORY_ROW_STYLE,
         {
           alignSelf: 'stretch',
+          backgroundColor: colors.controlBackground,
           justifyContent: 'space-between',
         },
       ]}>
-      <Text className="font-semibold text-black" style={trayText.Title2}>
+      <Text
+        className="font-semibold"
+        style={[trayText.Title2, { color: colors.text }]}
+      >
         {label}
       </Text>
       <View style={SWITCH_SLOT_STYLE}>
         <Switch
           accessibilityLabel={label}
-          ios_backgroundColor={value ? SHEET_COLORS.icon : '#D7D7D7'}
+          ios_backgroundColor={value ? colors.icon : '#D7D7D7'}
           onValueChange={onValueChange}
           thumbColor="#FFFFFF"
-          trackColor={{ false: '#D7D7D7', true: SHEET_COLORS.icon }}
+          trackColor={{ false: '#D7D7D7', true: colors.icon }}
           value={value}
         />
       </View>

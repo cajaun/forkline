@@ -1,17 +1,19 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-import { Text, useWindowDimensions } from 'react-native';
+import { PixelRatio, Text, useWindowDimensions } from 'react-native';
 
 import {
   Extrapolation,
   interpolate,
   useAnimatedStyle,
+  useDerivedValue,
 } from 'react-native-reanimated';
 import type { SharedValue } from 'react-native-reanimated';
 import type { MoveResult } from 'react-native-chessboard/src/state/move-executor';
 
 import { SHEET_LAYOUT } from '@/constants/sheet';
 import { capturedFromFen } from '@/utils/sheet';
+import { useSheetColors } from '@/hooks/use-sheet-colors';
 import { PressableScale } from '@/components/shared/pressable-scale';
 import { AnimatedView } from '@/components/shared/uniwind';
 import { SfSymbol } from '@/components/shared/sf-symbol';
@@ -25,6 +27,8 @@ import { SheetBoard, type KingDisplayState } from './sheet-board';
 
 import type { RemoteMove, SyncRequest } from '@/hooks/use-backend-game';
 import type { ChessboardRef } from 'react-native-chessboard';
+
+const DEVICE_PIXEL_RATIO = PixelRatio.get();
 
 export function ExpandingBoard({
   boardRef,
@@ -58,6 +62,7 @@ export function ExpandingBoard({
   syncRequest?: SyncRequest | null;
 }) {
   const { height, width } = useWindowDimensions();
+  const { colors } = useSheetColors();
   const closedLeft = width / 2 - SHEET_LAYOUT.sheetGutter - boardSize / 2;
   const openLeft = (width - boardSize) / 2;
   const closedTop = closedCenterY - height * SHEET_LAYOUT.closedTop - boardSize / 2;
@@ -192,21 +197,39 @@ export function ExpandingBoard({
   );
   const borderWidth = 2;
   const borderRadius = 12;
+  const boardScale = useDerivedValue(() => {
+    const rawScale = interpolate(
+      progress.value,
+      [0, 1],
+      [previewScale, 1],
+      Extrapolation.CLAMP,
+    );
+    const renderedBoardSize =
+      Math.round(boardSize * rawScale * DEVICE_PIXEL_RATIO) /
+      DEVICE_PIXEL_RATIO;
 
-  const boardStyle = useAnimatedStyle(() => ({
-    left: interpolate(progress.value, [0, 1], [closedLeft, openLeft]),
-    top: interpolate(progress.value, [0, 1], [closedTop, openTop]),
-    transform: [
-      {
-        scale: interpolate(
-          progress.value,
-          [0, 1],
-          [previewScale, 1],
-          Extrapolation.CLAMP,
-        ),
-      },
-    ],
-  }));
+    return renderedBoardSize / boardSize;
+  });
+
+  const boardStyle = useAnimatedStyle(() => {
+    const rawLeft = interpolate(
+      progress.value,
+      [0, 1],
+      [closedLeft, openLeft],
+    );
+    const rawTop = interpolate(
+      progress.value,
+      [0, 1],
+      [closedTop, openTop],
+    );
+    // Freeze the board transform between visible device-pixel changes. This
+    // keeps Skia pieces from re-rasterizing while the board looks stationary.
+    return {
+      left: Math.round(rawLeft * DEVICE_PIXEL_RATIO) / DEVICE_PIXEL_RATIO,
+      top: Math.round(rawTop * DEVICE_PIXEL_RATIO) / DEVICE_PIXEL_RATIO,
+      transform: [{ scale: boardScale.value }],
+    };
+  });
   const boardClipStyle = useAnimatedStyle(() => ({
     borderRadius: interpolate(
       progress.value,
@@ -312,6 +335,8 @@ export function ExpandingBoard({
           onReady={handleSpriteReady}
           onMove={handleMove}
           open={open}
+          boardScale={boardScale}
+          previewScale={previewScale}
           progress={progress}
         />
       </AnimatedView>
@@ -321,11 +346,11 @@ export function ExpandingBoard({
         style={playOverlayStyle}>
         <AnimatedView style={playStyle}>
           <PressableScale
-            accessibilityLabel="Open chessboard"
-            onPress={handleOpen}
-            style={{
-              alignItems: 'center',
-              backgroundColor: '#262626',
+              accessibilityLabel="Open chessboard"
+              onPress={handleOpen}
+              style={{
+                alignItems: 'center',
+                backgroundColor: colors.playButton,
               borderRadius: 28,
               flexDirection: 'row',
               gap: 4,
@@ -333,16 +358,15 @@ export function ExpandingBoard({
               justifyContent: 'center',
               width: 110,
             }}>
-            <SfSymbol
+              <SfSymbol
               fallback="play"
               name="play.fill"
               size={22}
-              tintColor="#FEFFFF"
+              tintColor={colors.playButtonForeground}
               weight="medium"
             />
             <Text
-              className="text-[#FEFFFF]"
-              style={{ fontSize: 24, fontWeight: '700' }}>
+              style={{ color: colors.playButtonForeground, fontSize: 24, fontWeight: '700' }}>
               Play
             </Text>
           </PressableScale>
@@ -353,7 +377,7 @@ export function ExpandingBoard({
         pointerEvents="none"
         style={[
           {
-            borderColor: '#262626',
+            borderColor: colors.boardBorder,
             borderCurve: 'continuous',
             height: previewSize + borderWidth * 2,
             width: previewSize + borderWidth * 2,

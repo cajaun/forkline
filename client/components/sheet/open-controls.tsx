@@ -6,14 +6,14 @@ import {
 } from 'react-native-reanimated';
 import type { SharedValue } from 'react-native-reanimated';
 
-import { SHEET_COLORS } from '@/constants/sheet';
+import { useSheetColors } from '@/hooks/use-sheet-colors';
 import { PressableScale } from '@/components/shared/pressable-scale';
 import { SfSymbol } from '@/components/shared/sf-symbol';
 import { SettingsTray } from '@/components/trays/settings';
 import { AnimatedView } from '@/components/shared/uniwind';
 
 const circleClassName =
-  'h-14 w-14 items-center justify-center rounded-full bg-[#F2F2F2]';
+  'h-14 w-14 items-center justify-center rounded-full';
 
 export function OpenControls({
   onClose,
@@ -25,6 +25,7 @@ export function OpenControls({
   progress: SharedValue<number>;
 }) {
   const { top } = useSafeAreaInsets();
+  const { colors } = useSheetColors();
 
   // reveal header controls after the board expansion clears their path
   const controlsStyle = useAnimatedStyle(() => ({
@@ -45,12 +46,13 @@ export function OpenControls({
       <PressableScale
         accessibilityLabel="Close chessboard"
         className={circleClassName}
-        onPress={onClose}>
+        onPress={onClose}
+        style={{ backgroundColor: colors.controlBackground }}>
         <SfSymbol
           fallback="chevron-down"
           name="chevron.down"
           size={25}
-          tintColor={SHEET_COLORS.icon}
+          tintColor={colors.icon}
           weight="medium"
         />
       </PressableScale>

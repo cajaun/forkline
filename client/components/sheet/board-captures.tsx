@@ -12,8 +12,8 @@ import {
 } from 'react-native-reanimated';
 import type { SharedValue } from 'react-native-reanimated';
 
-import { PIECE_IMG } from '@/constants/chess-pieces';
-import { SHEET_BOARD_COLORS } from '@/constants/sheet';
+import { DARK_PIECE_IMG, PIECE_IMG } from '@/constants/chess-pieces';
+import { useSheetColors } from '@/hooks/use-sheet-colors';
 import type { Side } from '@/types/chess';
 import { AnimatedView } from '@/components/shared/uniwind';
 import { PressableScale } from '@/components/shared/pressable-scale';
@@ -26,10 +26,6 @@ const MINI_BOARD_RADIUS = 8;
 const MINI_BOARD_EXPANDED_GAP_RATIO = 1 / 16;
 const MINI_BOARD_COLLAPSED_GAP_RATIO = 1 / 3;
 const MINI_BOARD_DOT_COLOR = '#D9D9D9';
-const MINI_BOARD_PIECE_DOT_COLORS: Record<Side, string> = {
-  b: '#070707',
-  w: '#BABABA',
-};
 const MINI_BOARD_DOT_SIZE_RATIO = 0.1;
 export const CAPTURE_AUTO_COLLAPSE_DELAY = 3000;
 
@@ -41,6 +37,8 @@ function CaptureMiniBoard({
   foe,
   onPress,
   pieces,
+  boardColors,
+  pieceImages,
   side,
   size,
 }: {
@@ -48,9 +46,12 @@ function CaptureMiniBoard({
   foe: Side;
   onPress: () => void;
   pieces: string[];
+  boardColors: { black: string; white: string };
+  pieceImages: typeof PIECE_IMG;
   side: CaptureSide;
   size: { height: number; width: number };
 }) {
+  const { colors: sheetColors } = useSheetColors();
   const expansion = useSharedValue(expanded ? 1 : 0);
   const previousExpanded = useRef(expanded);
   const cellSize = size.width / MINI_BOARD_COLUMNS;
@@ -194,8 +195,8 @@ function CaptureMiniBoard({
                         {
                           backgroundColor:
                             (row + column) % 2 === 0
-                              ? SHEET_BOARD_COLORS.white
-                              : SHEET_BOARD_COLORS.black,
+                              ? boardColors.white
+                              : boardColors.black,
                           bottom: 0,
                           left: 0,
                           position: 'absolute',
@@ -209,8 +210,10 @@ function CaptureMiniBoard({
                       pointerEvents="none"
                       style={[
                         {
-                          backgroundColor: piece
-                            ? MINI_BOARD_PIECE_DOT_COLORS[foe]
+                            backgroundColor: piece
+                            ? foe === 'b'
+                              ? sheetColors.pieceBlack
+                              : sheetColors.pieceWhite
                             : MINI_BOARD_DOT_COLOR,
                           borderRadius: cellSize * MINI_BOARD_DOT_SIZE_RATIO,
                           height: cellSize * MINI_BOARD_DOT_SIZE_RATIO,
@@ -224,7 +227,7 @@ function CaptureMiniBoard({
                     {piece ? (
                       <AnimatedView pointerEvents="none" style={piecesStyle}>
                         <Image
-                          source={PIECE_IMG[foe][piece]}
+                          source={pieceImages[foe][piece]}
                           style={{ height: cellSize, width: cellSize }}
                         />
                       </AnimatedView>
@@ -265,6 +268,7 @@ export function BoardCaptures({
   previewSize: number;
   progress: SharedValue<number>;
 }) {
+  const { boardColors, isDark } = useSheetColors();
   const miniBoardSize = {
     height: boardSize / 8,
     width: boardSize / 2,
@@ -320,6 +324,8 @@ export function BoardCaptures({
           foe="w"
           onPress={() => onToggleSide('top')}
           pieces={captured.b}
+          boardColors={boardColors}
+          pieceImages={isDark ? DARK_PIECE_IMG : PIECE_IMG}
           side="top"
           size={miniBoardSize}
         />
@@ -333,6 +339,8 @@ export function BoardCaptures({
           foe="b"
           onPress={() => onToggleSide('bottom')}
           pieces={captured.w}
+          boardColors={boardColors}
+          pieceImages={isDark ? DARK_PIECE_IMG : PIECE_IMG}
           side="bottom"
           size={miniBoardSize}
         />

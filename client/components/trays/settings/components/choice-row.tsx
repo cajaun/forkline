@@ -1,9 +1,9 @@
 import { Text, View } from 'react-native';
 
-import { SHEET_COLORS } from '@/constants/sheet';
 import { AnimatedCheckmark } from '@/components/shared/animated-checkmark';
 import { PressableScale } from '@/components/shared/pressable-scale';
 import { trayText } from '@/components/shared/tokens';
+import { useSheetColors } from '@/hooks/use-sheet-colors';
 
 import { CATEGORY_ROW_STYLE, CHOICE_ROW_STYLE } from '../styles';
 
@@ -18,20 +18,29 @@ export function ChoiceRow({
   onPress: () => void;
   surface?: boolean;
 }) {
+  const { colors } = useSheetColors();
+
   return (
     <PressableScale
       onPress={onPress}
-      style={surface ? CHOICE_SURFACE_STYLE : CHOICE_ROW_STYLE}
+      style={
+        surface
+          ? [CHOICE_SURFACE_STYLE, { backgroundColor: colors.controlBackground }]
+          : CHOICE_ROW_STYLE
+      }
     >
       <View className="flex-1 pr-3">
         <Text
-          className="font-semibold text-black"
-          style={surface ? trayText.Title3 : trayText.Headline}
+          className="font-semibold"
+          style={[
+            surface ? trayText.Title3 : trayText.Headline,
+            { color: colors.text },
+          ]}
         >
           {label}
         </Text>
       </View>
-      <AnimatedCheckmark color={SHEET_COLORS.icon} selected={selected} />
+      <AnimatedCheckmark color={colors.icon} selected={selected} />
     </PressableScale>
   );
 }

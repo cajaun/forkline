@@ -8,13 +8,13 @@ import {
 } from 'react-native-reanimated';
 import type { SharedValue } from 'react-native-reanimated';
 
-import { SHEET_COLORS } from '@/constants/sheet';
+import { useSheetColors } from '@/hooks/use-sheet-colors';
 import { PressableScale } from '@/components/shared/pressable-scale';
 import { SfSymbol } from '@/components/shared/sf-symbol';
 import { AnimatedView } from '@/components/shared/uniwind';
 
 const circleClassName =
-  'h-14 w-14 items-center justify-center rounded-full bg-[#F2F2F2]';
+  'h-14 w-14 items-center justify-center rounded-full';
 
 export function OpenBottomControls({
   open,
@@ -25,6 +25,7 @@ export function OpenBottomControls({
 }) {
   const { bottom } = useSafeAreaInsets();
   const { width } = useWindowDimensions();
+  const { colors } = useSheetColors();
 
   // move footer controls from the center into their final positions
   const centerTravel = Math.max(0, width / 2 - 56);
@@ -60,22 +61,26 @@ export function OpenBottomControls({
       pointerEvents={open ? 'auto' : 'none'}
       style={[{ bottom: bottom + 8 }, controlsStyle]}>
       <AnimatedView className="absolute left-0 top-0" style={leftActionStyle}>
-        <PressableScale className={circleClassName}>
+        <PressableScale
+          className={circleClassName}
+          style={{ backgroundColor: colors.controlBackground }}>
           <SfSymbol
             fallback="arrow-undo-outline"
             name="arrow.trianglehead.counterclockwise"
             size={27}
-            tintColor={SHEET_COLORS.icon}
+            tintColor={colors.icon}
           />
         </PressableScale>
       </AnimatedView>
       <AnimatedView className="absolute right-0 top-0" style={rightActionStyle}>
-        <PressableScale className={circleClassName}>
+        <PressableScale
+          className={circleClassName}
+          style={{ backgroundColor: colors.controlBackground }}>
           <SfSymbol
             fallback="flash"
             name="bolt.fill"
             size={28}
-            tintColor={SHEET_COLORS.icon}
+            tintColor={colors.icon}
           />
         </PressableScale>
       </AnimatedView>

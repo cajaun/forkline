@@ -1,10 +1,10 @@
 import type { ReactNode } from 'react';
 import { Text, View } from 'react-native';
 
-import { SHEET_COLORS } from '@/constants/sheet';
 import { PressableScale } from '@/components/shared/pressable-scale';
 import { SfSymbol } from '@/components/shared/sf-symbol';
 import { trayText } from '@/components/shared/tokens';
+import { useSheetColors } from '@/hooks/use-sheet-colors';
 
 import { CATEGORY_ROW_STYLE } from '../styles';
 
@@ -24,25 +24,32 @@ export function CategoryRow({
   subtitle?: string;
   onPress: () => void;
 }) {
+  const { colors } = useSheetColors();
+
   return (
     <PressableScale
       accessibilityLabel={`${title} settings`}
       onPress={onPress}
-      style={CATEGORY_ROW_STYLE}>
+      style={[CATEGORY_ROW_STYLE, { backgroundColor: colors.controlBackground }]}>
       <SfSymbol
         fallback={fallback}
         name={icon}
         size={24}
-        tintColor={SHEET_COLORS.icon}
+        tintColor={colors.icon}
       />
       <TextContainer>
         <Text
-          className="font-semibold text-black"
-          style={subtitle ? trayText.Title3 : trayText.Title2}>
+          className="font-semibold"
+          style={[
+            subtitle ? trayText.Title3 : trayText.Title2,
+            { color: colors.text },
+          ]}>
           {title}
         </Text>
         {subtitle ? (
-          <Text className="font-semibold text-[#777777]" style={trayText.Footnote}>
+          <Text
+            className="font-semibold"
+            style={[trayText.Footnote, { color: colors.text, opacity: 0.65 }]}>
             {subtitle}
           </Text>
         ) : null}

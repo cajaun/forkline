@@ -8,8 +8,9 @@ import {
 import type { SharedValue } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { SHEET_COLORS, SHEET_LAYOUT } from '@/constants/sheet';
+import { SHEET_LAYOUT } from '@/constants/sheet';
 import { AnimatedText, AnimatedView } from '@/components/shared/uniwind';
+import { useSheetColors } from '@/hooks/use-sheet-colors';
 
 export function PreviewCard({
   onClose,
@@ -23,6 +24,7 @@ export function PreviewCard({
   progress: SharedValue<number>;
 }) {
   const { top: safeTop } = useSafeAreaInsets();
+  const { colors } = useSheetColors();
 
   // move the preview header pieces into their open-sheet positions
   const morphOriginStyle = useAnimatedStyle(() => ({
@@ -64,18 +66,23 @@ export function PreviewCard({
   return (
     <Pressable
       accessibilityLabel="Open chessboard sheet"
-      className="absolute inset-0 z-1 overflow-visible rounded-[34px] bg-[#FEFFFF]"
+      className="absolute inset-0 z-1 overflow-visible rounded-[34px]"
       onPress={open ? undefined : onOpen}
       pointerEvents={open ? 'box-none' : 'auto'}>
-      <View className="absolute -bottom-4.5 left-6.25 right-6.25 top-4.5 rounded-[34px] bg-[#FEFFFF] opacity-65" />
-      <View className="absolute -bottom-2.5 left-3 right-3 top-2.5 rounded-[34px] bg-[#FEFFFF] opacity-90" />
+      <View
+        className="absolute -bottom-4.5 left-6.25 right-6.25 top-4.5 rounded-[34px] opacity-65"
+        style={{ backgroundColor: colors.background }}
+      />
+      <View
+        className="absolute -bottom-2.5 left-3 right-3 top-2.5 rounded-[34px] opacity-90"
+        style={{ backgroundColor: colors.background }}
+      />
       <View className="absolute inset-0 items-center" pointerEvents="none">
         <AnimatedView
           className="absolute left-0 right-0 items-center"
           style={morphOriginStyle}>
           <AnimatedText
-            className="text-[#d1d1d1]"
-            style={[{ fontWeight: '900', lineHeight: 56 }, weekdayStyle]}>
+            style={[{ color: colors.weekdayText, fontWeight: '900', lineHeight: 56 }, weekdayStyle]}>
             Saturday
           </AnimatedText>
           <AnimatedView
@@ -83,7 +90,7 @@ export function PreviewCard({
             pointerEvents="none">
             <AnimatedView
               className="h-1.5 w-13 rounded-[3px]"
-              style={[{ backgroundColor: SHEET_COLORS.handle }, handleStyle]}
+              style={[{ backgroundColor: colors.handle }, handleStyle]}
             />
           </AnimatedView>
         </AnimatedView>
@@ -91,8 +98,8 @@ export function PreviewCard({
           className="absolute left-0 right-0 items-center"
           style={dateStyle}>
           <Text
-            className="text-[#262626]"
             style={{
+              color: colors.dateText,
               fontSize: 48,
               fontWeight: '900',
               letterSpacing: -1.3,
@@ -121,6 +128,7 @@ export function PreviewTimer({
   progress: SharedValue<number>;
 }) {
   const { top: safeTop } = useSafeAreaInsets();
+  const { colors } = useSheetColors();
   const style = useAnimatedStyle(() => ({
     left: 0,
     right: 0,
@@ -137,10 +145,12 @@ export function PreviewTimer({
       pointerEvents="none"
       style={style}>
       <View className="flex-row items-center gap-2">
-        <View className="h-4 w-4 rounded-full border-2 border-[#262626]" />
+        <View
+          className="h-4 w-4 rounded-full border-2"
+          style={{ borderColor: colors.dateText }}
+        />
         <Text
-          className="text-[#262626]"
-          style={{ fontSize: 22, fontWeight: '700' }}>
+          style={{ color: colors.dateText, fontSize: 22, fontWeight: '700' }}>
           0:06
         </Text>
       </View>
