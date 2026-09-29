@@ -1,9 +1,11 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { View, useWindowDimensions } from 'react-native';
 
 import { StatusBar } from 'expo-status-bar';
 
 import { createRandomGameFen } from '@/utils/random-game';
+import { useBackendGame } from '@/hooks/use-backend-game';
+import { useSettingsState } from '@/components/trays/settings/state';
 import { ExpandingBoard } from '@/components/sheet/expanding-board';
 import { HomeChrome } from '@/components/sheet/home-chrome';
 import { OpenBottomControls } from '@/components/sheet/open-bottom-controls';
@@ -13,9 +15,14 @@ import { SHEET_LAYOUT } from '@/constants/sheet';
 import { useSheetAnimation } from '@/hooks/use-sheet-animation';
 import { AnimatedView } from '@/components/shared/uniwind';
 
+import type { ChessboardRef } from 'react-native-chessboard';
+
 export function ChessboardSheet() {
   const { height, width } = useWindowDimensions();
   const [boardFen] = useState(createRandomGameFen);
+  const boardRef = useRef<ChessboardRef | null>(null);
+  const { settings } = useSettingsState();
+  const backendGame = useBackendGame({ initialFen: boardFen, settings });
   const { closeSheet, open, openSheet, progress, sheetStyle } = useSheetAnimation(height);
   // keep the preview geometry tied to the device width
   const previewSize = Math.round(width * SHEET_LAYOUT.previewBoardRatio);
@@ -43,14 +50,20 @@ export function ChessboardSheet() {
           progress={progress}
         />
         <ExpandingBoard
-          boardFen={boardFen}
+          boardFen={backendGame.boardFen}
           boardSize={expandedSize}
+          boardRef={boardRef}
+          boardInputEnabled={!backendGame.busy && !backendGame.error}
           closedCenterY={closedCenterY}
           onOpen={openSheet}
           open={open}
           openCenterY={openCenterY}
           previewSize={previewSize}
           progress={progress}
+          onRemoteMoveApplied={backendGame.acknowledgeRemoteMove}
+          onUserMove={backendGame.onUserMove}
+          remoteMove={backendGame.remoteMove}
+          syncRequest={backendGame.syncRequest}
         />
         <OpenControls onClose={closeSheet} open={open} progress={progress} />
         <OpenBottomControls open={open} progress={progress} />

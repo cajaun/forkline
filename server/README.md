@@ -57,6 +57,8 @@ The initial API surface is:
 - `GET /games/{id}` reads the current state.
 - `DELETE /games/{id}` releases a human game session.
 - `GET /agents` returns the selectable agent strategies.
-- `POST /matches/sessions` creates a stepwise agent-vs-agent session.
+- `POST /matches/sessions` creates a stepwise agent-vs-agent session. It
+  accepts `white_depth` and `black_depth` so the two evaluation strategies can
+  use their configured gameplay depths independently.
 - `POST /matches/sessions/{id}/step` advances one agent move.
 - `POST /matches` runs the assignment's agent-vs-agent harness.

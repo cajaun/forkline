@@ -26,9 +26,15 @@ const MINI_BOARD_RADIUS = 8;
 const MINI_BOARD_EXPANDED_GAP_RATIO = 1 / 16;
 const MINI_BOARD_COLLAPSED_GAP_RATIO = 1 / 3;
 const MINI_BOARD_DOT_COLOR = '#D9D9D9';
+const MINI_BOARD_PIECE_DOT_COLORS: Record<Side, string> = {
+  b: '#070707',
+  w: '#BABABA',
+};
 const MINI_BOARD_DOT_SIZE_RATIO = 0.1;
+export const CAPTURE_AUTO_COLLAPSE_DELAY = 3000;
 
 export type CaptureSide = 'top' | 'bottom';
+export type CaptureExpansion = CaptureSide | 'both' | null;
 
 function CaptureMiniBoard({
   expanded,
@@ -203,7 +209,9 @@ function CaptureMiniBoard({
                       pointerEvents="none"
                       style={[
                         {
-                          backgroundColor: MINI_BOARD_DOT_COLOR,
+                          backgroundColor: piece
+                            ? MINI_BOARD_PIECE_DOT_COLORS[foe]
+                            : MINI_BOARD_DOT_COLOR,
                           borderRadius: cellSize * MINI_BOARD_DOT_SIZE_RATIO,
                           height: cellSize * MINI_BOARD_DOT_SIZE_RATIO,
                           position: 'absolute',
@@ -249,7 +257,7 @@ export function BoardCaptures({
   captured: Record<'b' | 'w', string[]>;
   closedLeft: number;
   closedTop: number;
-  expandedSide: CaptureSide | null;
+  expandedSide: CaptureExpansion;
   openLeft: number;
   openTop: number;
   onToggleSide: (side: CaptureSide) => void;
@@ -308,7 +316,7 @@ export function BoardCaptures({
         pointerEvents={open ? 'box-none' : 'none'}
         style={[{ height: miniBoardSize.height, width: boardSize }, topStyle]}>
         <CaptureMiniBoard
-          expanded={expandedSide === 'top'}
+          expanded={expandedSide === 'top' || expandedSide === 'both'}
           foe="w"
           onPress={() => onToggleSide('top')}
           pieces={captured.b}
@@ -321,7 +329,7 @@ export function BoardCaptures({
         pointerEvents={open ? 'box-none' : 'none'}
         style={[{ height: miniBoardSize.height, width: boardSize }, bottomStyle]}>
         <CaptureMiniBoard
-          expanded={expandedSide === 'bottom'}
+          expanded={expandedSide === 'bottom' || expandedSide === 'both'}
           foe="b"
           onPress={() => onToggleSide('bottom')}
           pieces={captured.w}

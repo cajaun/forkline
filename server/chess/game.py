@@ -52,7 +52,7 @@ class GameSession:
     board: chess.Board
     players: dict[chess.Color, Player]
     human_color: chess.Color | None
-    depth: int
+    depth: int | None
     moves: list[MoveRecord] = field(default_factory=list)
     lock: RLock = field(default_factory=RLock, repr=False)
 
@@ -67,6 +67,14 @@ class GameSession:
             outcome = self.board.outcome(claim_draw=True)
             players = {
                 color_name(color): self.players[color].name if color in self.players else "human"
+                for color in (chess.WHITE, chess.BLACK)
+            }
+            depths = {
+                color_name(color): (
+                    self.depth
+                    if self.depth is not None
+                    else getattr(self.players[color], "default_depth", None)
+                )
                 for color in (chess.WHITE, chess.BLACK)
             }
             return {
@@ -84,6 +92,7 @@ class GameSession:
                 "players": players,
                 "human_color": color_name(self.human_color) if self.human_color is not None else None,
                 "depth": self.depth,
+                "depths": depths,
                 "moves": [move.to_dict() for move in self.moves],
             }
 

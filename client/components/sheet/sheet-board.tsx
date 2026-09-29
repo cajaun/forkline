@@ -1,4 +1,11 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, {
+  forwardRef,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 
 import { StyleSheet, View } from 'react-native';
 import Svg, { Path as SvgPath } from 'react-native-svg';
@@ -27,6 +34,8 @@ import { SkiaHighlights } from 'react-native-chessboard/src/components/skia/skia
 import { usePieceSpriteSheet } from 'react-native-chessboard/src/assets/piece-images';
 import type { PieceCode } from 'react-native-chessboard/src/state/types';
 import { SQUARES } from 'react-native-chessboard/src/state/types';
+import { useChessboardRef } from 'react-native-chessboard/src/hooks/use-chessboard-ref';
+import type { ChessboardRef } from 'react-native-chessboard/src/hooks/use-chessboard-ref';
 import { createMoveExecutor } from 'react-native-chessboard/src/state/move-executor';
 import type { MoveResult } from 'react-native-chessboard/src/state/move-executor';
 import { squareToPosition } from 'react-native-chessboard/src/state/use-board-state';
@@ -70,10 +79,13 @@ const SPRITE_RECTS: Record<NonNullable<PieceCode>, SkRect> = {
 };
 
 const MOVE_DOT_RADIUS_SCALE = 0.08;
-const PIECE_REVEAL_OPACITY = [0, 0.12, 0.2, 1] as const;
-const PIECE_REVEAL_OPACITY_VALUES = [0, 0.72, 1, 1] as const;
-const PIECE_REVEAL_SCALE = [0, 0.12, 0.56, 1] as const;
-const PIECE_REVEAL_SCALE_VALUES = [0.12, 0.28, 1, 1] as const;
+// Keep the preview markers visible until the board is nearly open, then let
+// the full pieces finish their reveal with the sheet rather than halfway
+// through its spring.
+const PIECE_REVEAL_OPACITY = [0, 0.2, 0.78, 1] as const;
+const PIECE_REVEAL_OPACITY_VALUES = [0, 0.55, 1, 1] as const;
+const PIECE_REVEAL_SCALE = [0, 0.16, 0.78, 1] as const;
+const PIECE_REVEAL_SCALE_VALUES = [0.12, 0.24, 0.82, 1] as const;
 const KING_STATE_FADE_OPTIONS = {
   duration: 180,
   easing: Easing.linear,
@@ -128,8 +140,8 @@ function NativeBoardSurface({
   const markerStyle = useAnimatedStyle(() => ({
     opacity: interpolate(
       progress.value,
-      [0, 0.12, 0.56, 0.86, 1],
-      [1, 0.7, 0.25, 0, 0],
+      [0, 0.2, 0.7, 0.96, 1],
+      [1, 0.85, 0.35, 0, 0],
       Extrapolation.CLAMP,
     ),
   }));
@@ -519,12 +531,14 @@ interface PromotionInfo {
 }
 
 function SheetGestureBoard({
+  boardRef,
   kingDisplayState,
   markerFen,
   onReady,
   onMove,
   progress,
 }: {
+  boardRef: React.Ref<ChessboardRef>;
   kingDisplayState: KingDisplayState;
   markerFen: string;
   onReady?: (ready: boolean) => void;
@@ -599,6 +613,13 @@ function SheetGestureBoard({
     [chess, boardState, config, handlePromotionRequired, onMove],
   );
 
+  useChessboardRef({
+    boardState,
+    chess,
+    moveExecutor,
+    ref: boardRef,
+  });
+
   const gesture = useBoardGesture({
     boardState,
     config,
@@ -644,16 +665,7 @@ function SheetGestureBoard({
   );
 }
 
-export function SheetBoard({
-  boardSize,
-  fen,
-  kingDisplayState,
-  markerFen,
-  open,
-  onReady,
-  onMove,
-  progress,
-}: {
+type SheetBoardProps = {
   boardSize: number;
   fen: string;
   kingDisplayState: KingDisplayState;
@@ -662,22 +674,43 @@ export function SheetBoard({
   onReady?: (ready: boolean) => void;
   onMove?: (result: MoveResult) => void;
   progress: SharedValue<number>;
-}) {
-  return (
-    <BoardStateProvider
-      boardSize={boardSize}
-      colors={{ ...SHEET_BOARD_COLORS, checkmateHighlight: 'transparent' }}
-      fen={fen}
-      gestureEnabled={open}
-      withLetters={false}
-      withNumbers={false}>
-      <SheetGestureBoard
-        markerFen={markerFen}
-        onReady={onReady}
-        onMove={onMove}
-        progress={progress}
-        kingDisplayState={kingDisplayState}
-      />
-    </BoardStateProvider>
-  );
-}
+  gestureEnabled?: boolean;
+};
+
+export const SheetBoard = forwardRef<ChessboardRef, SheetBoardProps>(
+  function SheetBoard(
+    {
+      boardSize,
+      fen,
+      gestureEnabled,
+      kingDisplayState,
+      markerFen,
+      open,
+      onReady,
+      onMove,
+      progress,
+    },
+    ref,
+  ) {
+    return (
+      <BoardStateProvider
+        boardSize={boardSize}
+        colors={{ ...SHEET_BOARD_COLORS, checkmateHighlight: 'transparent' }}
+        fen={fen}
+        gestureEnabled={gestureEnabled ?? open}
+        withLetters={false}
+        withNumbers={false}>
+        <SheetGestureBoard
+          boardRef={ref}
+          markerFen={markerFen}
+          onReady={onReady}
+          onMove={onMove}
+          progress={progress}
+          kingDisplayState={kingDisplayState}
+        />
+      </BoardStateProvider>
+    );
+  },
+);
+
+SheetBoard.displayName = 'SheetBoard';

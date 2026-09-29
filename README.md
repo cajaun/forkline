@@ -81,6 +81,10 @@ The API is available at:
 http://localhost:8000
 ~~~
 
+The client uses `http://localhost:8000` on iOS and web, and
+`http://10.0.2.2:8000` on the Android emulator. For a physical device, set
+`EXPO_PUBLIC_API_URL` to the machine's LAN address before starting Expo.
+
 ## API
 
 The server exposes health, agent, human-game, and agent-match routes:

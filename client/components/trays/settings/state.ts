@@ -1,4 +1,6 @@
-import { useCallback, useState } from 'react';
+import { useCallback } from 'react';
+
+import { atom, useAtom } from 'jotai';
 
 import type { SettingsState } from './types';
 
@@ -23,8 +25,10 @@ export const INITIAL_SETTINGS: SettingsState = {
   },
 };
 
+export const settingsAtom = atom<SettingsState>(INITIAL_SETTINGS);
+
 export function useSettingsState() {
-  const [settings, setSettings] = useState<SettingsState>(INITIAL_SETTINGS);
+  const [settings, setSettings] = useAtom(settingsAtom);
 
   const update = useCallback(
     <Section extends keyof SettingsState>(
@@ -39,7 +43,7 @@ export function useSettingsState() {
         },
       }));
     },
-    [],
+    [setSettings],
   );
 
   return { settings, update };

@@ -34,6 +34,8 @@ class CreateMatchSessionRequest(BaseModel):
     white_agent: AgentName = "material-mobility"
     black_agent: AgentName = "king-safety-position"
     depth: int = Field(default=2, ge=1, le=5)
+    white_depth: int | None = Field(default=None, ge=1, le=5)
+    black_depth: int | None = Field(default=None, ge=1, le=5)
     fen: str | None = None
 
 
@@ -162,14 +164,16 @@ def request_ai_move(game_id: str) -> dict[str, object]:
 def create_match_session(request: CreateMatchSessionRequest) -> dict[str, object]:
     board = _board_from_fen(request.fen)
     # match sessions assign one agent to each color
+    white_depth = request.white_depth or request.depth
+    black_depth = request.black_depth or request.depth
     session = GameSession(
         board=board,
         players={
-            chess.WHITE: create_agent(request.white_agent, request.depth),
-            chess.BLACK: create_agent(request.black_agent, request.depth),
+            chess.WHITE: create_agent(request.white_agent, white_depth),
+            chess.BLACK: create_agent(request.black_agent, black_depth),
         },
         human_color=None,
-        depth=request.depth,
+        depth=None if request.white_depth or request.black_depth else request.depth,
     )
     match_id = matches.create(session)
     return {"match_id": match_id, **session.state()}

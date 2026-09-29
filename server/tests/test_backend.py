@@ -115,6 +115,17 @@ class BackendTests(unittest.TestCase):
         self.assertIn("search", stepped)
         self.assertTrue(api.delete_match_session(created["match_id"])["deleted"])
 
+    def test_agent_match_session_keeps_independent_search_depths(self) -> None:
+        created = api.create_match_session(
+            api.CreateMatchSessionRequest(
+                white_depth=1,
+                black_depth=3,
+            )
+        )
+
+        self.assertIsNone(created["depth"])
+        self.assertEqual(created["depths"], {"white": 1, "black": 3})
+
 
 if __name__ == "__main__":
     unittest.main()

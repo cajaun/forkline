@@ -15,10 +15,19 @@ import { capturedFromFen } from '@/utils/sheet';
 import { PressableScale } from '@/components/shared/pressable-scale';
 import { AnimatedView } from '@/components/shared/uniwind';
 import { SfSymbol } from '@/components/shared/sf-symbol';
-import { BoardCaptures, type CaptureSide } from './board-captures';
+import {
+  BoardCaptures,
+  CAPTURE_AUTO_COLLAPSE_DELAY,
+  type CaptureExpansion,
+  type CaptureSide,
+} from './board-captures';
 import { SheetBoard, type KingDisplayState } from './sheet-board';
 
+import type { RemoteMove, SyncRequest } from '@/hooks/use-backend-game';
+import type { ChessboardRef } from 'react-native-chessboard';
+
 export function ExpandingBoard({
+  boardRef,
   boardFen,
   boardSize,
   closedCenterY,
@@ -27,7 +36,13 @@ export function ExpandingBoard({
   openCenterY,
   previewSize,
   progress,
+  boardInputEnabled = true,
+  onRemoteMoveApplied,
+  onUserMove,
+  remoteMove,
+  syncRequest,
 }: {
+  boardRef: React.RefObject<ChessboardRef | null>;
   boardFen: string;
   boardSize: number;
   closedCenterY: number;
@@ -36,6 +51,11 @@ export function ExpandingBoard({
   openCenterY: number;
   previewSize: number;
   progress: SharedValue<number>;
+  boardInputEnabled?: boolean;
+  onRemoteMoveApplied?: (id: string) => void;
+  onUserMove?: (result: MoveResult) => void;
+  remoteMove?: RemoteMove | null;
+  syncRequest?: SyncRequest | null;
 }) {
   const { height, width } = useWindowDimensions();
   const closedLeft = width / 2 - SHEET_LAYOUT.sheetGutter - boardSize / 2;
@@ -45,12 +65,17 @@ export function ExpandingBoard({
   const previewScale = previewSize / boardSize;
   const [captured, setCaptured] = useState(() => capturedFromFen(boardFen));
   const [expandedCaptureSide, setExpandedCaptureSide] =
-    useState<CaptureSide | null>(null);
+    useState<CaptureExpansion>(null);
   const [kingDisplayState, setKingDisplayState] =
     useState<KingDisplayState>(null);
   const [markerFen, setMarkerFen] = useState(boardFen);
   const [spriteReady, setSpriteReady] = useState(false);
   const pendingOpenRef = useRef(false);
+  const appliedRemoteMoveRef = useRef<string | null>(null);
+  const remoteMoveInProgressRef = useRef(false);
+  const captureCollapseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  );
   const handleSpriteReady = useCallback((ready: boolean) => {
     setSpriteReady(ready);
   }, []);
@@ -70,31 +95,101 @@ export function ExpandingBoard({
     // hold the tap until the board can render its first frame
     pendingOpenRef.current = true;
   }, [onOpen, spriteReady]);
-  const handleMove = useCallback((result: MoveResult) => {
-    setMarkerFen(result.state.fen);
+  const clearCaptureCollapseTimer = useCallback(() => {
+    if (captureCollapseTimerRef.current == null) return;
+    clearTimeout(captureCollapseTimerRef.current);
+    captureCollapseTimerRef.current = null;
+  }, []);
+  const expandCaptureAfterMove = useCallback(
+    (side: CaptureSide) => {
+      clearCaptureCollapseTimer();
+      setExpandedCaptureSide(side);
+      captureCollapseTimerRef.current = setTimeout(() => {
+        captureCollapseTimerRef.current = null;
+        setExpandedCaptureSide(null);
+      }, CAPTURE_AUTO_COLLAPSE_DELAY);
+    },
+    [clearCaptureCollapseTimer],
+  );
+  const handleCaptureTrayToggle = useCallback(
+    (side: CaptureSide) => {
+      clearCaptureCollapseTimer();
+      setExpandedCaptureSide(current => {
+        if (current === null) return 'both';
+        if (current === 'both') return null;
+        return current === side ? null : side;
+      });
+    },
+    [clearCaptureCollapseTimer],
+  );
+  const handleMove = useCallback(
+    (result: MoveResult) => {
+      setMarkerFen(result.state.fen);
 
-    if (result.state.isCheckmate) {
-      setKingDisplayState('gameOver');
-    } else if (result.state.isCheck) {
-      setKingDisplayState('checkmate');
-    } else {
-      setKingDisplayState(null);
+      if (result.state.isCheckmate) {
+        setKingDisplayState('gameOver');
+      } else if (result.state.isCheck) {
+        setKingDisplayState('checkmate');
+      } else {
+        setKingDisplayState(null);
+      }
+
+      const piece = result.move.captured;
+      if (piece) {
+        // store captures under the side that made the move
+        const side = result.move.color === 'w' ? 'w' : 'b';
+        expandCaptureAfterMove(side === 'w' ? 'bottom' : 'top');
+        setCaptured(previous => ({
+          ...previous,
+          [side]: [...previous[side], piece],
+        }));
+      }
+
+      if (!remoteMoveInProgressRef.current) onUserMove?.(result);
+    },
+    [expandCaptureAfterMove, onUserMove],
+  );
+
+  useEffect(() => {
+    if (!syncRequest) return;
+    boardRef.current?.resetBoard(syncRequest.fen);
+    setMarkerFen(syncRequest.fen);
+  }, [boardRef, syncRequest]);
+
+  useEffect(() => {
+    if (
+      !remoteMove ||
+      !spriteReady ||
+      remoteMove.id === appliedRemoteMoveRef.current
+    ) {
+      return;
     }
 
-    const piece = result.move.captured;
-    if (!piece) return;
+    const board = boardRef.current;
+    if (!board) return;
 
-    // store captures under the side that made the move
-    const side = result.move.color === 'w' ? 'w' : 'b';
-    setExpandedCaptureSide(side === 'w' ? 'bottom' : 'top');
-    setCaptured(previous => ({
-      ...previous,
-      [side]: [...previous[side], piece],
-    }));
-  }, []);
-  const handleCaptureTrayToggle = useCallback((side: CaptureSide) => {
-    setExpandedCaptureSide(current => (current === side ? null : side));
-  }, []);
+    appliedRemoteMoveRef.current = remoteMove.id;
+    remoteMoveInProgressRef.current = true;
+    void board.move(remoteMove.move).finally(() => {
+      remoteMoveInProgressRef.current = false;
+      onRemoteMoveApplied?.(remoteMove.id);
+    });
+  }, [boardRef, onRemoteMoveApplied, remoteMove, spriteReady]);
+
+  useEffect(() => {
+    setMarkerFen(boardFen);
+    setCaptured(capturedFromFen(boardFen));
+    setExpandedCaptureSide(null);
+    setKingDisplayState(null);
+    if (captureCollapseTimerRef.current != null) {
+      clearTimeout(captureCollapseTimerRef.current);
+      captureCollapseTimerRef.current = null;
+    }
+  }, [boardFen, clearCaptureCollapseTimer]);
+  useEffect(
+    () => () => clearCaptureCollapseTimer(),
+    [clearCaptureCollapseTimer],
+  );
   const borderWidth = 2;
   const borderRadius = 12;
 
@@ -208,8 +303,10 @@ export function ExpandingBoard({
         pointerEvents={open ? 'auto' : 'none'}
         style={[{ height: boardSize, width: boardSize }, boardStyle, boardClipStyle]}>
         <SheetBoard
+          ref={boardRef}
           boardSize={boardSize}
           fen={boardFen}
+          gestureEnabled={open && boardInputEnabled}
           kingDisplayState={kingDisplayState}
           markerFen={markerFen}
           onReady={handleSpriteReady}
