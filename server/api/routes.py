@@ -40,7 +40,8 @@ app.add_middleware(
 )
 
 
-@app.get("/health")
+# HEAD is allowed too, since uptime monitors ping with it by default
+@app.api_route("/health", methods=["GET", "HEAD"])
 def health() -> dict[str, object]:
     return {"status": "ok", "agents": describe_agents()}
 
