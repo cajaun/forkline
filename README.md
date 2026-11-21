@@ -15,8 +15,9 @@ source references below for the detailed implementation.
 | Client application | [`client/app/`](client/app/) |
 | Client components | [`client/components/`](client/components/) |
 | Client state and hooks | [`client/stores/`](client/stores/) and [`client/hooks/`](client/hooks/) |
+| Game sheet and board | [`client/components/sheet/`](client/components/sheet/), with the board layers in [`board/`](client/components/sheet/board/) |
 | Server quickstart | [`server/README.md`](server/README.md) |
-| API routes | [`server/api/routes.py`](server/api/routes.py) |
+| API routes | [`server/api/routes.py`](server/api/routes.py), with request bodies in [`schemas.py`](server/api/schemas.py) and error mapping in [`responses.py`](server/api/responses.py) |
 | Game sessions | [`server/chess/game.py`](server/chess/game.py) |
 | Agents and evaluators | [`server/chess/agents.py`](server/chess/agents.py) and [`server/chess/evaluation.py`](server/chess/evaluation.py) |
 | Search engine | [`server/chess/search.py`](server/chess/search.py) |
@@ -105,7 +106,8 @@ POST   /matches
 ~~~
 
 Human moves use UCI notation such as `e2e4`. Game and match creation accepts an
-optional FEN position. Search depth is bounded by the API request models to
+optional FEN position and an optional `moves` list (UCI) played from it, which
+the client uses to resume a saved game; an illegal history is rejected with 422. Search depth is bounded by the API request models to
 keep local responses predictable.
 
 ## Configuration

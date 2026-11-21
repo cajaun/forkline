@@ -8,17 +8,6 @@ export const INITIAL_SETTINGS: SettingsState = {
   appearance: {
     themeMode: 'light',
   },
-  game: {
-    agent: 'material-mobility',
-    gameMode: 'human-vs-agent',
-    humanColor: 'white',
-  },
-  gameplay: {
-    depths: {
-      'king-safety-position': 2,
-      'material-mobility': 2,
-    },
-  },
   match: {
     alternateColors: true,
     games: 5,

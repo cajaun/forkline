@@ -3,64 +3,63 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import type { MoveResult } from 'react-native-chessboard/src/state/move-executor';
 
 import {
-  createAgentMatch,
-  createHumanGame,
-  moveFromUci,
   requestHumanGameAiMove,
   requestMatchAiMove,
   submitHumanMove,
-  type BackendMove,
-  type BackendMoveResponse,
   type BackendState,
 } from '@/services/chess-api';
-import type {
-  GameSettings,
-  SettingsState,
-} from '@/components/trays/settings/types';
+import type { GameConfig, GameMoves, GameSummary, RecordedState } from '@/types/games';
 
-type ActiveSession =
-  | { id: string; kind: 'game'; state: BackendState }
-  | { id: string; kind: 'match'; state: BackendState };
+import {
+  errorMessage,
+  isAiTurn,
+  openSession,
+  remoteMoveFrom,
+  sessionKey,
+  toRecordedState,
+  type ActiveSession,
+  type RemoteMove,
+  type SyncRequest,
+} from './backend-game/session';
+import { useSessionValue } from './backend-game/use-session-value';
 
-export type RemoteMove = {
-  id: string;
-  move: ReturnType<typeof moveFromUci>;
-};
+export type { RemoteMove, SyncRequest } from './backend-game/session';
 
-export type SyncRequest = {
-  id: number;
-  fen: string;
-};
-
-function moveId(sessionId: string, move: BackendMove) {
-  return `${sessionId}:${move.ply}:${move.uci}`;
-}
-
-function isAiTurn(state: BackendState, game: GameSettings) {
-  if (state.is_game_over) return false;
-  if (game.gameMode === 'agent-vs-agent') return true;
-  return state.turn !== game.humanColor;
-}
-
+// runs the selected game on the server, rebuilding the session when its settings change, and lets the AI play only while `active`
 export function useBackendGame({
-  initialFen,
-  settings,
+  active,
+  game,
+  getMoves,
+  recordState,
 }: {
-  initialFen: string;
-  settings: SettingsState;
+  active: boolean;
+  game: GameSummary | null;
+  getMoves: (id: string) => Promise<GameMoves>;
+  recordState: (id: string, state: RecordedState) => void;
 }) {
-  const { game, gameplay } = settings;
-  const [, setActiveSession] = useState<ActiveSession | null>(null);
-  const [boardFen, setBoardFen] = useState(initialFen);
-  const [busy, setBusy] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [remoteMove, setRemoteMove] = useState<RemoteMove | null>(null);
+  const key = sessionKey(game);
+  const keyRef = useRef(key);
+  const [sessionFen, setSessionFen] = useSessionValue<string>(key, keyRef);
+  const [error, setError] = useSessionValue<string>(key, keyRef);
+  const [remoteMove, setRemoteMove] = useSessionValue<RemoteMove>(key, keyRef);
+  const [readyKey, setReadyKey] = useState<string | null>(null);
+  const [busyState, setBusy] = useState(false);
   const [syncRequest, setSyncRequest] = useState<SyncRequest | null>(null);
+  // each new session bumps the generation, so replies from an older one are dropped
   const generationRef = useRef(0);
   const sessionRef = useRef<ActiveSession | null>(null);
   const busyRef = useRef(true);
+  const activeRef = useRef(active);
+  const configRef = useRef<GameConfig | null>(game?.config ?? null);
   const remoteMoveRef = useRef<RemoteMove | null>(null);
   const syncIdRef = useRef(0);
+
+  // mirrors the latest props for the async callbacks, declared first so it runs before the effects below
+  useEffect(() => {
+    activeRef.current = active;
+    configRef.current = game?.config ?? null;
+    keyRef.current = key;
+  });
 
   const setBusyState = useCallback((value: boolean) => {
     busyRef.current = value;
@@ -69,37 +68,30 @@ export function useBackendGame({
 
   const queueBoardSync = useCallback((fen: string) => {
     syncIdRef.current += 1;
-    setSyncRequest({ id: syncIdRef.current, fen });
+    setSyncRequest({ fen, id: syncIdRef.current });
   }, []);
 
-  const updateSession = useCallback((session: ActiveSession) => {
-    sessionRef.current = session;
-    setActiveSession(session);
-  }, []);
-
-  const applyAiResponse = useCallback(
-    (session: ActiveSession, response: BackendMoveResponse) => {
-      const nextSession: ActiveSession = { ...session, state: response };
-      updateSession(nextSession);
-      const nextMove = {
-        id: moveId(session.id, response.move),
-        move: moveFromUci(response.move.uci),
-      };
-      remoteMoveRef.current = nextMove;
-      setRemoteMove(nextMove);
+  const storeState = useCallback(
+    (session: ActiveSession, state: BackendState) => {
+      sessionRef.current = { ...session, state };
+      recordState(session.gameId, toRecordedState(state));
     },
-    [updateSession],
+    [recordState],
   );
 
+  // asks the server for an AI move when it's the AI's turn, and reports whether it tried
   const requestAiMove = useCallback(
-    async (generation: number, force = false) => {
+    async (generation: number) => {
       const session = sessionRef.current;
+      const config = configRef.current;
       if (
         !session ||
+        !config ||
         generation !== generationRef.current ||
-        (!force && busyRef.current)
+        !activeRef.current ||
+        !isAiTurn(session.state, config)
       ) {
-        return;
+        return false;
       }
 
       setBusyState(true);
@@ -108,44 +100,40 @@ export function useBackendGame({
           session.kind === 'game'
             ? await requestHumanGameAiMove(session.id)
             : await requestMatchAiMove(session.id);
-        if (generation !== generationRef.current) return;
-        applyAiResponse(session, response);
+        if (generation !== generationRef.current) return true;
+        storeState(session, response);
+        const nextMove = remoteMoveFrom(session.id, response.move);
+        remoteMoveRef.current = nextMove;
+        setRemoteMove(nextMove);
         setError(null);
-        // Keep the board locked until the animated server move is acknowledged.
+        // the board stays locked until the animated move is acknowledged
       } catch (requestError) {
-        if (generation !== generationRef.current) return;
-        setError(
-          requestError instanceof Error
-            ? requestError.message
-            : 'The AI could not make a move.',
-        );
+        if (generation !== generationRef.current) return true;
+        setError(errorMessage(requestError, 'The AI could not make a move.'));
         setBusyState(false);
       }
+      return true;
     },
-    [applyAiResponse, setBusyState],
+    [setBusyState, setError, setRemoteMove, storeState],
   );
 
+  const continueOrUnlock = useCallback(
+    async (generation: number) => {
+      const requested = await requestAiMove(generation);
+      if (!requested && generation === generationRef.current) setBusyState(false);
+    },
+    [requestAiMove, setBusyState],
+  );
+
+  // the board finished animating a server move, so the next AI move may follow
   const acknowledgeRemoteMove = useCallback(
     (id: string) => {
       if (remoteMoveRef.current?.id !== id) return;
       remoteMoveRef.current = null;
       setRemoteMove(null);
-      const session = sessionRef.current;
-      if (!session) {
-        setBusyState(false);
-        return;
-      }
-      if (session.state.is_game_over) {
-        setBusyState(false);
-        return;
-      }
-      if (session.kind === 'match' || isAiTurn(session.state, game)) {
-        void requestAiMove(generationRef.current, true);
-        return;
-      }
-      setBusyState(false);
+      void continueOrUnlock(generationRef.current);
     },
-    [game, requestAiMove, setBusyState],
+    [continueOrUnlock, setRemoteMove],
   );
 
   const onUserMove = useCallback(
@@ -156,112 +144,72 @@ export function useBackendGame({
       const generation = generationRef.current;
       setBusyState(true);
       try {
-        const response = await submitHumanMove(
-          session.id,
-          result.move.from + result.move.to + (result.move.promotion ?? ''),
-        );
+        const { from, promotion, to } = result.move;
+        const response = await submitHumanMove(session.id, from + to + (promotion ?? ''));
         if (generation !== generationRef.current) return;
-        updateSession({ ...session, state: response });
+        storeState(session, response);
         setError(null);
-        if (isAiTurn(response, game)) {
-          await requestAiMove(generation, true);
-        } else {
-          setBusyState(false);
-        }
+        await continueOrUnlock(generation);
       } catch (requestError) {
+        // a rejected move snaps the board back to the server's position
         const current = sessionRef.current;
-        if (current) {
-          queueBoardSync(current.state.fen);
-        }
-        setError(
-          requestError instanceof Error
-            ? requestError.message
-            : 'The move could not be sent to the chess server.',
-        );
+        if (current) queueBoardSync(current.state.fen);
+        setError(errorMessage(requestError, 'The move could not be sent to the chess server.'));
         setBusyState(false);
       }
     },
-    [game, queueBoardSync, requestAiMove, setBusyState, updateSession],
+    [continueOrUnlock, queueBoardSync, setBusyState, setError, storeState],
   );
 
-  const createSession = useCallback(async () => {
+  // (re)builds the server session for the selected game
+  useEffect(() => {
+    if (!game || !key) return;
     const generation = ++generationRef.current;
-    setBusyState(true);
-    setError(null);
-    setRemoteMove(null);
+    const { config, fen: savedFen, id: gameId } = game;
+    busyRef.current = true;
     remoteMoveRef.current = null;
     sessionRef.current = null;
-    setActiveSession(null);
 
-    try {
-      if (game.gameMode === 'agent-vs-agent') {
-        const response = await createAgentMatch(
-          game,
-          gameplay,
-          initialFen,
-        );
+    void (async () => {
+      try {
+        const history = await getMoves(gameId);
         if (generation !== generationRef.current) return;
-        const session: ActiveSession = {
-          id: response.match_id,
-          kind: 'match',
-          state: response,
-        };
-        setBoardFen(response.fen);
-        queueBoardSync(response.fen);
-        updateSession(session);
-        await requestAiMove(generation, true);
-        return;
-      }
-
-      const response = await createHumanGame(
-        game,
-        gameplay,
-        initialFen,
-      );
-      if (generation !== generationRef.current) return;
-      const session: ActiveSession = {
-        id: response.game_id,
-        kind: 'game',
-        state: response,
-      };
-      setBoardFen(response.fen);
-      queueBoardSync(response.fen);
-      updateSession(session);
-      if (isAiTurn(response, game)) {
-        await requestAiMove(generation, true);
-      } else {
+        // the board shows the saved position while the server replays it
+        queueBoardSync(savedFen);
+        const session = await openSession(gameId, config, history);
+        if (generation !== generationRef.current) return;
+        storeState(session, session.state);
+        setSessionFen(session.state.fen, key);
+        if (session.state.fen !== savedFen) queueBoardSync(session.state.fen);
+        setReadyKey(key);
+        setBusyState(false);
+        await continueOrUnlock(generation);
+      } catch (requestError) {
+        if (generation !== generationRef.current) return;
+        setError(errorMessage(requestError, 'The chess server could not resume this game.'));
+        setReadyKey(key);
         setBusyState(false);
       }
-    } catch (requestError) {
-      if (generation !== generationRef.current) return;
-      setError(
-        requestError instanceof Error
-          ? requestError.message
-          : 'The chess server could not create a game.',
-      );
-      setBusyState(false);
-    }
-  }, [
-    initialFen,
-    queueBoardSync,
-    requestAiMove,
-    setBusyState,
-    game,
-    gameplay,
-    updateSession,
-  ]);
+    })();
 
-  useEffect(() => {
-    void createSession();
     return () => {
       generationRef.current += 1;
     };
-  }, [createSession]);
+    // the session depends only on the game's identity and settings
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [key]);
+
+  // resumes AI play when the sheet opens on the AI's turn
+  useEffect(() => {
+    if (!active || busyRef.current || remoteMoveRef.current) return;
+    void continueOrUnlock(generationRef.current);
+  }, [active, continueOrUnlock]);
 
   return {
     acknowledgeRemoteMove,
-    boardFen,
-    busy,
+    // until the session exists, the board shows the saved position and stays locked
+    boardFen: sessionFen ?? game?.fen ?? '',
+    busy: busyState || readyKey !== key,
     error,
     onUserMove,
     remoteMove,

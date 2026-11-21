@@ -117,6 +117,24 @@ class GameSession:
             search = player.choose_move(self.board, self.depth)
             return self._push(search.move, player.name), search
 
+    def replay(self, ucis: list[str]) -> None:
+        """Re-apply a saved move list, e.g. when a client resumes a game.
+
+        Moves are pushed through the same validation as live moves, so the
+        board's move stack (repetition and fifty-move detection) and the ply
+        numbering continue exactly where the saved game left off.
+        """
+
+        with self.lock:
+            for uci in ucis:
+                self._ensure_open()
+                move = self.board.parse_uci(uci)
+                self._push(move, self._player_name(self.board.turn))
+
+    def _player_name(self, color: chess.Color) -> str:
+        player = self.players.get(color)
+        return player.name if player is not None else "human"
+
     def _ensure_open(self) -> None:
         if self.board.is_game_over(claim_draw=True):
             raise GameOverError("Game is already over")

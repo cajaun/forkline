@@ -2,11 +2,8 @@ import { Platform } from 'react-native';
 
 import type { PieceSymbol, Square } from 'chess.js';
 
-import type {
-  AgentName,
-  GameSettings,
-  GameplaySettings,
-} from '@/components/trays/settings/types';
+import type { AgentName } from '@/components/trays/settings/types';
+import type { GameConfig, GameMoves } from '@/types/games';
 
 const configuredApiUrl = process.env.EXPO_PUBLIC_API_URL?.trim();
 export const CHESS_API_URL =
@@ -106,35 +103,36 @@ export function moveFromUci(uci: string): {
   };
 }
 
+// a session replays the saved start position and moves, so any game can resume with new settings
 export async function createHumanGame(
-  game: GameSettings,
-  gameplay: GameplaySettings,
-  fen: string,
+  config: GameConfig,
+  history: GameMoves,
 ): Promise<BackendGameResponse> {
   return request<BackendGameResponse>('/games', {
     body: JSON.stringify({
-      agent: game.agent,
-      depth: gameplay.depths[game.agent],
-      fen,
-      human_color: game.humanColor,
+      agent: config.agent,
+      depth: config.depths[config.agent],
+      fen: history.startFen,
+      human_color: config.humanColor,
+      moves: history.moves,
     }),
     method: 'POST',
   });
 }
 
 export async function createAgentMatch(
-  game: GameSettings,
-  gameplay: GameplaySettings,
-  fen: string,
+  config: GameConfig,
+  history: GameMoves,
 ): Promise<BackendMatchResponse> {
-  const opposingAgent = opponentAgent(game.agent);
+  const opposingAgent = opponentAgent(config.agent);
   return request<BackendMatchResponse>('/matches/sessions', {
     body: JSON.stringify({
       black_agent: opposingAgent,
-      black_depth: gameplay.depths[opposingAgent],
-      fen,
-      white_agent: game.agent,
-      white_depth: gameplay.depths[game.agent],
+      black_depth: config.depths[opposingAgent],
+      fen: history.startFen,
+      moves: history.moves,
+      white_agent: config.agent,
+      white_depth: config.depths[config.agent],
     }),
     method: 'POST',
   });

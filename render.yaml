@@ -1,0 +1,21 @@
+# Render Blueprint for the Forkline chess API (free web service).
+# Deploy: Render dashboard -> New -> Blueprint -> pick this repo.
+services:
+  - type: web
+    name: forkline-api
+    runtime: python
+    plan: free
+    # The code imports itself as `server.*`, so build and run from the repo root.
+    rootDir: .
+    buildCommand: pip install -r server/requirements.txt
+    # One worker: games and match sessions live in memory.
+    startCommand: uvicorn server.api.routes:app --host 0.0.0.0 --port $PORT --workers 1
+    healthCheckPath: /health
+    # Only redeploy when the server changes, not on client commits.
+    buildFilter:
+      paths:
+        - server/**
+        - render.yaml
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.13"

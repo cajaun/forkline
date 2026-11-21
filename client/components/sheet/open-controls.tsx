@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   Extrapolation,
@@ -15,7 +16,7 @@ import { AnimatedView } from '@/components/shared/uniwind';
 const circleClassName =
   'h-14 w-14 items-center justify-center rounded-full';
 
-export function OpenControls({
+export const OpenControls = memo(function OpenControls({
   onClose,
   open,
   progress,
@@ -56,7 +57,7 @@ export function OpenControls({
           weight="medium"
         />
       </PressableScale>
-      <SettingsTray />
+      <SettingsTray scope="game" />
     </AnimatedView>
   );
-}
+});

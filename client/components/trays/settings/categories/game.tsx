@@ -1,6 +1,11 @@
 import type { ReactNode } from 'react';
+import { Text } from 'react-native';
 
-import { Tray, useTrayFlow } from 'react-native-morpheus';
+import {
+  Tray,
+  useTrayNavigation,
+  useTrayNavigationState,
+} from 'react-native-morpheus';
 
 import { CategoryRow } from '../components/category-row';
 import { ChoiceRow } from '../components/choice-row';
@@ -10,11 +15,18 @@ import {
   HUMAN_COLOR_OPTIONS,
   SETTINGS_STEP_INDEX,
 } from '../constants';
+import { trayText } from '@/components/shared/tokens';
+import { useSheetColors } from '@/hooks/use-sheet-colors';
+
 import type { GameSettings } from '../types';
 
 export type GameOptionsProps = GameSettings & {
+  // in a game with moves, changing mode or colour starts a new game
+  modeLocked?: boolean;
   onChange: (changes: Partial<GameSettings>) => void;
 };
+
+const NEW_GAME_NOTE = 'Changing this starts a new game with these settings.';
 
 export function GameOptions({
   gameMode,
@@ -22,7 +34,8 @@ export function GameOptions({
   agent,
   onChange,
 }: GameOptionsProps) {
-  const { index, next } = useTrayFlow();
+  const { next } = useTrayNavigation();
+  const index = useTrayNavigationState((state) => state.index);
   const openStep = (targetStep: number) => {
     for (let step = index; step < targetStep; step += 1) {
       next();
@@ -62,13 +75,16 @@ export function GameOptions({
 
 export function GameModeOptions({
   gameMode,
+  modeLocked,
   onChange,
 }: GameOptionsProps) {
   return (
-    <ChoiceOptions>
+    <ChoiceOptions note={modeLocked ? NEW_GAME_NOTE : undefined}>
       {GAME_MODE_OPTIONS.map((option) => (
         <ChoiceRow
           key={option.value}
+          fallback={option.fallback}
+          icon={option.icon}
           label={option.label}
           selected={gameMode === option.value}
           onPress={() => onChange({ gameMode: option.value })}
@@ -81,13 +97,16 @@ export function GameModeOptions({
 
 export function HumanColorOptions({
   humanColor,
+  modeLocked,
   onChange,
 }: GameOptionsProps) {
   return (
-    <ChoiceOptions>
+    <ChoiceOptions note={modeLocked ? NEW_GAME_NOTE : undefined}>
       {HUMAN_COLOR_OPTIONS.map((option) => (
         <ChoiceRow
           key={option.value}
+          fallback={option.fallback}
+          icon={option.icon}
           label={option.label}
           selected={humanColor === option.value}
           onPress={() => onChange({ humanColor: option.value })}
@@ -104,6 +123,8 @@ export function AgentOptions({ agent, onChange }: GameOptionsProps) {
       {AGENT_OPTIONS.map((option) => (
         <ChoiceRow
           key={option.value}
+          fallback={option.fallback}
+          icon={option.icon}
           label={option.label}
           selected={agent === option.value}
           onPress={() => onChange({ agent: option.value })}
@@ -114,10 +135,29 @@ export function AgentOptions({ agent, onChange }: GameOptionsProps) {
   );
 }
 
-function ChoiceOptions({ children }: { children: ReactNode }) {
+function ChoiceOptions({
+  children,
+  note,
+}: {
+  children: ReactNode;
+  note?: string;
+}) {
+  const { colors } = useSheetColors();
+
   return (
     <Tray.Body>
-      <Tray.Section>{children}</Tray.Section>
+      <Tray.Section>
+        {children}
+        {note ? (
+          <Text
+            style={[
+              trayText.Subheadline,
+              { color: colors.weekdayText, paddingHorizontal: 4 },
+            ]}>
+            {note}
+          </Text>
+        ) : null}
+      </Tray.Section>
     </Tray.Body>
   );
 }

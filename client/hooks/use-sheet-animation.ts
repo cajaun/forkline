@@ -25,13 +25,13 @@ export function useSheetAnimation(height: number) {
     setOpen(true);
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Soft);
     // drive the sheet and its child layers from one progress value
-    progress.value = withSpring(1, SHEET_SPRING);
+    progress.set(withSpring(1, SHEET_SPRING));
   }, [open, progress]);
 
   const closeSheet = useCallback(() => {
     setOpen(false);
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Soft);
-    progress.value = withSpring(0, SHEET_SPRING);
+    progress.set(withSpring(0, SHEET_SPRING));
   }, [progress]);
 
   const sheetStyle = useAnimatedStyle(() => {

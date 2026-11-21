@@ -10,8 +10,7 @@ import { useEffect } from 'react';
 
 const AnimatedPath = Animated.createAnimatedComponent(Path);
 
-// These values mirror the reference recording: the circle arrives quickly,
-// while the check stroke finishes drawing a little after the scale settles.
+// the circle lands fast and the stroke finishes a beat after it, as in the reference recording
 const CIRCLE_ENTER_DURATION = 100;
 const CIRCLE_EXIT_DURATION = 100;
 const CHECK_DRAW_DURATION = 180;

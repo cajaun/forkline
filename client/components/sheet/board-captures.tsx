@@ -1,350 +1,137 @@
-import { useEffect, useRef } from 'react';
-import { Image, View } from 'react-native';
+import { memo, useDeferredValue, useMemo } from 'react';
 
-import * as Haptics from 'expo-haptics';
-import {
-  Easing,
-  Extrapolation,
-  interpolate,
-  useAnimatedStyle,
-  useSharedValue,
-  withTiming,
-} from 'react-native-reanimated';
+import { Extrapolation, interpolate, useAnimatedStyle } from 'react-native-reanimated';
 import type { SharedValue } from 'react-native-reanimated';
 
+import { AnimatedView } from '@/components/shared/uniwind';
 import { DARK_PIECE_IMG, PIECE_IMG } from '@/constants/chess-pieces';
 import { useSheetColors } from '@/hooks/use-sheet-colors';
 import type { Side } from '@/types/chess';
-import { AnimatedView } from '@/components/shared/uniwind';
-import { PressableScale } from '@/components/shared/pressable-scale';
 
-const MINI_BOARD_COLUMNS = 8;
-const MINI_BOARD_ROWS = 2;
-const MINI_BOARD_COLLAPSED_SCALE = 0.14;
-const MINI_BOARD_EXPANSION_DURATION = 200;
-const MINI_BOARD_RADIUS = 8;
-const MINI_BOARD_EXPANDED_GAP_RATIO = 1 / 16;
-const MINI_BOARD_COLLAPSED_GAP_RATIO = 1 / 3;
-const MINI_BOARD_DOT_COLOR = '#D9D9D9';
-const MINI_BOARD_DOT_SIZE_RATIO = 0.1;
-export const CAPTURE_AUTO_COLLAPSE_DELAY = 3000;
+import { CaptureMiniBoard, type CaptureSide } from './captures/mini-board';
 
-export type CaptureSide = 'top' | 'bottom';
+export type { CaptureSide } from './captures/mini-board';
 export type CaptureExpansion = CaptureSide | 'both' | null;
 
-function CaptureMiniBoard({
+export const CAPTURE_AUTO_COLLAPSE_DELAY = 3000;
+const EXPANDED_GAP_RATIO = 1 / 16;
+
+// one tray, sliding from the preview's edge to its slot beside the open board
+function CaptureTray({
+  closedY,
   expanded,
   foe,
-  onPress,
+  left,
+  miniBoardSize,
+  onToggle,
+  open,
+  openY,
   pieces,
-  boardColors,
-  pieceImages,
+  progress,
   side,
-  size,
+  width,
 }: {
+  closedY: number;
   expanded: boolean;
   foe: Side;
-  onPress: () => void;
+  left: number;
+  miniBoardSize: { height: number; width: number };
+  onToggle: (side: CaptureSide) => void;
+  open: boolean;
+  openY: number;
   pieces: string[];
-  boardColors: { black: string; white: string };
-  pieceImages: typeof PIECE_IMG;
+  progress: SharedValue<number>;
   side: CaptureSide;
-  size: { height: number; width: number };
+  width: number;
 }) {
-  const { colors: sheetColors } = useSheetColors();
-  const expansion = useSharedValue(expanded ? 1 : 0);
-  const previousExpanded = useRef(expanded);
-  const cellSize = size.width / MINI_BOARD_COLUMNS;
-  const expandedGap = size.height / 2;
-  const collapsedGap = size.height * MINI_BOARD_COLLAPSED_GAP_RATIO;
-  const collapsedTravel =
-    expandedGap +
-    size.height / 2 -
-    (collapsedGap + (size.height * MINI_BOARD_COLLAPSED_SCALE) / 2);
-
-  useEffect(() => {
-    expansion.value = withTiming(expanded ? 1 : 0, {
-      duration: MINI_BOARD_EXPANSION_DURATION,
-      easing: Easing.out(Easing.cubic),
-    });
-
-    if (expanded !== previousExpanded.current) {
-      void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Soft);
-    }
-
-    previousExpanded.current = expanded;
-  }, [expanded, expansion]);
-
-  const translationStyle = useAnimatedStyle(() => ({
+  const { boardColors, isDark } = useSheetColors();
+  // transform-only, so the tray stays locked to the transform-driven board
+  const trayStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(progress.value, [0, 1], [0, 1], Extrapolation.CLAMP),
     transform: [
       {
-        translateY: interpolate(
-          expansion.value,
-          [0, 1],
-          [side === 'top' ? collapsedTravel : -collapsedTravel, 0],
-          Extrapolation.CLAMP,
-        ),
+        translateY:
+          interpolate(progress.value, [0, 1], [closedY, openY], Extrapolation.CLAMP) - openY,
       },
     ],
   }));
-  const scaleStyle = useAnimatedStyle(() => ({
-    transform: [
-      {
-        scale: interpolate(
-          expansion.value,
-          [0, 1],
-          [MINI_BOARD_COLLAPSED_SCALE, 1],
-          Extrapolation.CLAMP,
-        ),
-      },
-    ],
-  }));
-  const dotsStyle = useAnimatedStyle(() => ({
-    opacity: interpolate(
-      expansion.value,
-      [0, 0.42, 0.85],
-      [1, 1, 0],
-      Extrapolation.CLAMP,
-    ),
-  }));
-  const dotScaleStyle = useAnimatedStyle(() => ({
-    transform: [
-      {
-        scale:
-          1 /
-          interpolate(
-            expansion.value,
-            [0, 1],
-            [MINI_BOARD_COLLAPSED_SCALE, 1],
-            Extrapolation.CLAMP,
-          ),
-      },
-    ],
-  }));
-  const piecesStyle = useAnimatedStyle(() => ({
-    opacity: interpolate(
-      expansion.value,
-      [0.55, 0.82, 1],
-      [0, 0.9, 1],
-      Extrapolation.CLAMP,
-    ),
-  }));
-  const cellsStyle = useAnimatedStyle(() => ({
-    opacity: interpolate(
-      expansion.value,
-      [0.1, 0.4, 0.85],
-      [0, 0.7, 1],
-      Extrapolation.CLAMP,
-    ),
-  }));
+
   return (
     <AnimatedView
-      style={[
-        {
-          alignSelf: 'center',
-          height: size.height,
-          width: size.width,
-        },
-        translationStyle,
-      ]}>
-      <PressableScale
-        accessibilityLabel={`${foe === 'w' ? 'top' : 'bottom'} captured pieces`}
-        hitSlop={32}
-        onPress={onPress}
-        style={{
-          height: size.height,
-          width: size.width,
-        }}>
-        <AnimatedView
-          pointerEvents="none"
-          style={[
-            {
-              borderRadius: MINI_BOARD_RADIUS,
-              height: size.height,
-              overflow: 'hidden',
-              width: size.width,
-            },
-            scaleStyle,
-          ]}>
-          <View
-            style={{
-              flexDirection: 'row',
-              flexWrap: 'wrap',
-              height: size.height,
-              width: size.width,
-            }}>
-            {Array.from({ length: MINI_BOARD_ROWS * MINI_BOARD_COLUMNS }).map(
-              (_, squareIndex) => {
-                const piece = pieces[squareIndex];
-                const row = Math.floor(squareIndex / MINI_BOARD_COLUMNS);
-                const column = squareIndex % MINI_BOARD_COLUMNS;
-
-                return (
-                  <View
-                    key={`${foe}-capture-square-${squareIndex}`}
-                    style={{
-                      alignItems: 'center',
-                      height: size.height / MINI_BOARD_ROWS,
-                      justifyContent: 'center',
-                      position: 'relative',
-                      width: cellSize,
-                    }}>
-                    <AnimatedView
-                      pointerEvents="none"
-                      style={[
-                        {
-                          backgroundColor:
-                            (row + column) % 2 === 0
-                              ? boardColors.white
-                              : boardColors.black,
-                          bottom: 0,
-                          left: 0,
-                          position: 'absolute',
-                          right: 0,
-                          top: 0,
-                        },
-                        cellsStyle,
-                      ]}
-                    />
-                    <AnimatedView
-                      pointerEvents="none"
-                      style={[
-                        {
-                            backgroundColor: piece
-                            ? foe === 'b'
-                              ? sheetColors.pieceBlack
-                              : sheetColors.pieceWhite
-                            : MINI_BOARD_DOT_COLOR,
-                          borderRadius: cellSize * MINI_BOARD_DOT_SIZE_RATIO,
-                          height: cellSize * MINI_BOARD_DOT_SIZE_RATIO,
-                          position: 'absolute',
-                          width: cellSize * MINI_BOARD_DOT_SIZE_RATIO,
-                        },
-                        dotsStyle,
-                        dotScaleStyle,
-                      ]}
-                    />
-                    {piece ? (
-                      <AnimatedView pointerEvents="none" style={piecesStyle}>
-                        <Image
-                          source={pieceImages[foe][piece]}
-                          style={{ height: cellSize, width: cellSize }}
-                        />
-                      </AnimatedView>
-                    ) : null}
-                  </View>
-                );
-              },
-            )}
-          </View>
-        </AnimatedView>
-      </PressableScale>
+      className="absolute z-1"
+      pointerEvents={open ? 'box-none' : 'none'}
+      style={[{ height: miniBoardSize.height, left, top: openY, width }, trayStyle]}>
+      <CaptureMiniBoard
+        boardColors={boardColors}
+        expanded={expanded}
+        foe={foe}
+        onToggle={onToggle}
+        pieceImages={isDark ? DARK_PIECE_IMG : PIECE_IMG}
+        pieces={pieces}
+        side={side}
+        size={miniBoardSize}
+      />
     </AnimatedView>
   );
 }
 
-export function BoardCaptures({
+// the captured-piece trays above and below the board, re-rendering only when captures or expansion change
+export const BoardCaptures = memo(function BoardCaptures({
   boardSize,
   captured,
-  closedLeft,
   closedTop,
   expandedSide,
-  openLeft,
-  openTop,
+  left,
   onToggleSide,
   open,
+  openTop,
   previewSize,
   progress,
 }: {
   boardSize: number;
   captured: Record<'b' | 'w', string[]>;
-  closedLeft: number;
   closedTop: number;
   expandedSide: CaptureExpansion;
-  openLeft: number;
-  openTop: number;
+  left: number;
   onToggleSide: (side: CaptureSide) => void;
   open: boolean;
+  openTop: number;
   previewSize: number;
   progress: SharedValue<number>;
 }) {
-  const { boardColors, isDark } = useSheetColors();
-  const miniBoardSize = {
-    height: boardSize / 8,
-    width: boardSize / 2,
-  };
-  const expandedGap = boardSize * MINI_BOARD_EXPANDED_GAP_RATIO;
-  const closedVisualTop = closedTop + (boardSize - previewSize) / 2;
-
-  const topStyle = useAnimatedStyle(() => ({
-    left: interpolate(
-      progress.value,
-      [0, 1],
-      [closedLeft, openLeft],
-      Extrapolation.CLAMP,
-    ),
-    opacity: interpolate(progress.value, [0, 1], [0, 1], Extrapolation.CLAMP),
-    top: interpolate(
-      progress.value,
-      [0, 1],
-      [
-        closedVisualTop - miniBoardSize.height / 2,
-        openTop - miniBoardSize.height - expandedGap,
-      ],
-      Extrapolation.CLAMP,
-    ),
-  }));
-  const bottomStyle = useAnimatedStyle(() => ({
-    left: interpolate(
-      progress.value,
-      [0, 1],
-      [closedLeft, openLeft],
-      Extrapolation.CLAMP,
-    ),
-    opacity: interpolate(progress.value, [0, 1], [0, 1], Extrapolation.CLAMP),
-    top: interpolate(
-      progress.value,
-      [0, 1],
-      [
-        closedVisualTop + previewSize - miniBoardSize.height / 2,
-        openTop + boardSize + expandedGap,
-      ],
-      Extrapolation.CLAMP,
-    ),
-  }));
+  // the trays are hidden during a game switch, so new captures can render in the background
+  const shownCaptured = useDeferredValue(captured);
+  // a stable size object keeps the memoised mini boards from re-rendering
+  const miniBoardSize = useMemo(
+    () => ({ height: boardSize / 8, width: boardSize / 2 }),
+    [boardSize],
+  );
+  const expandedGap = boardSize * EXPANDED_GAP_RATIO;
+  // the preview is centred in the board's closed rect, so its visible top sits lower
+  const previewTop = closedTop + (boardSize - previewSize) / 2;
+  const halfTray = miniBoardSize.height / 2;
+  const shared = { left, miniBoardSize, onToggle: onToggleSide, open, progress, width: boardSize };
 
   return (
     <>
-      <AnimatedView
-        className="absolute z-1"
-        pointerEvents={open ? 'box-none' : 'none'}
-        style={[{ height: miniBoardSize.height, width: boardSize }, topStyle]}>
-        <CaptureMiniBoard
-          expanded={expandedSide === 'top' || expandedSide === 'both'}
-          foe="w"
-          onPress={() => onToggleSide('top')}
-          pieces={captured.b}
-          boardColors={boardColors}
-          pieceImages={isDark ? DARK_PIECE_IMG : PIECE_IMG}
-          side="top"
-          size={miniBoardSize}
-        />
-      </AnimatedView>
-      <AnimatedView
-        className="absolute z-1"
-        pointerEvents={open ? 'box-none' : 'none'}
-        style={[{ height: miniBoardSize.height, width: boardSize }, bottomStyle]}>
-        <CaptureMiniBoard
-          expanded={expandedSide === 'bottom' || expandedSide === 'both'}
-          foe="b"
-          onPress={() => onToggleSide('bottom')}
-          pieces={captured.w}
-          boardColors={boardColors}
-          pieceImages={isDark ? DARK_PIECE_IMG : PIECE_IMG}
-          side="bottom"
-          size={miniBoardSize}
-        />
-      </AnimatedView>
+      <CaptureTray
+        {...shared}
+        closedY={previewTop - halfTray}
+        expanded={expandedSide === 'top' || expandedSide === 'both'}
+        foe="w"
+        openY={openTop - miniBoardSize.height - expandedGap}
+        pieces={shownCaptured.b}
+        side="top"
+      />
+      <CaptureTray
+        {...shared}
+        closedY={previewTop + previewSize - halfTray}
+        expanded={expandedSide === 'bottom' || expandedSide === 'both'}
+        foe="b"
+        openY={openTop + boardSize + expandedGap}
+        pieces={shownCaptured.w}
+        side="bottom"
+      />
     </>
   );
-}
+});

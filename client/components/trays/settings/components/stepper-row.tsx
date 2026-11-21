@@ -1,14 +1,12 @@
 import { Text, View } from 'react-native';
 
 import { PressableScale } from '@/components/shared/pressable-scale';
-import { SfSymbol } from '@/components/shared/sf-symbol';
+import { SfSymbol, type SymbolFallback, type SymbolName } from '@/components/shared/sf-symbol';
 import { trayText } from '@/components/shared/tokens';
 import { useSheetColors } from '@/hooks/use-sheet-colors';
 
 import { STEPPER_BUTTON_STYLE, STEPPER_SHELL_STYLE } from '../styles';
 
-type SymbolName = Parameters<typeof SfSymbol>[0]['name'];
-type SymbolFallback = Parameters<typeof SfSymbol>[0]['fallback'];
 
 export function StepperRow({
   icon,

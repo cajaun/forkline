@@ -3,14 +3,12 @@ import { Text } from 'react-native';
 import type { SymbolWeight } from 'expo-symbols';
 
 import { PressableScale } from '@/components/shared/pressable-scale';
-import { SfSymbol } from '@/components/shared/sf-symbol';
+import { SfSymbol, type SymbolFallback, type SymbolName } from '@/components/shared/sf-symbol';
 import { trayText } from '@/components/shared/tokens';
 import { useSheetColors } from '@/hooks/use-sheet-colors';
 
 import { THEME_CARD_STYLE } from '../styles';
 
-type SymbolName = Parameters<typeof SfSymbol>[0]['name'];
-type SymbolFallback = Parameters<typeof SfSymbol>[0]['fallback'];
 
 export function ThemeCard({
   icon,

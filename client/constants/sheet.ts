@@ -51,7 +51,11 @@ const LIGHT_SHEET_COLORS = {
   primary: '#1f70f7',
   selectedDateBackground: '#DCDCDC',
   selectedDateText: '#262626',
+  stackBack: '#F0F0F0',
+  stackFront: '#F6F6F6',
   text: '#262626',
+  trayIcon: '#787878',
+  traySeparator: '#F6F6F6',
   weekdayText: '#777777',
 } as const;
 
@@ -71,7 +75,11 @@ const DARK_SHEET_COLORS = {
   primary: '#1f70f7',
   selectedDateBackground: '#232323',
   selectedDateText: '#D9D9D9',
+  stackBack: '#1F1F1F',
+  stackFront: '#222222',
   text: '#D9D9D9',
+  trayIcon: '#D9D9D9',
+  traySeparator: '#333333',
   weekdayText: '#393939',
 } as const;
 
@@ -90,11 +98,30 @@ export function getSheetBoardColors(theme: string) {
   return SHEET_BOARD_COLORS_BY_THEME[theme === 'dark' ? 'dark' : 'light'];
 }
 
+// matches the reference, damping ratio 0.85 with half the travel at 70ms and 90% at 140ms
 export const SHEET_SPRING = {
-  damping: 75,
+  damping: 38,
   mass: 1,
-  overshootClamping: true,
-  stiffness: 750,
+  stiffness: 500,
+};
+
+// closed-card stack peeking out under the sheet (measured from the reference)
+export const SHEET_STACK = {
+  front: { inset: 14.5, peek: 8, radius: 31 },
+  back: { inset: 35.5, peek: 14, radius: 31 },
+} as const;
+
+// each layer's shadow falls on the one behind it, darkening the stacked cards' top edges
+export const SHEET_SHADOWS = {
+  sheet: '0px 0px 24px rgba(0, 0, 0, 0.08)',
+  front: '0px 2px 12px rgba(0, 0, 0, 0.06)',
+  back: '0px 6px 16px rgba(0, 0, 0, 0.10)',
+} as const;
+
+// the home background fades to the sheet colour so the sheet reads as becoming the screen
+export const SHEET_BACKDROP_FADE: { input: number[]; output: number[] } = {
+  input: [0, 0.36, 0.68, 0.9],
+  output: [0, 0.53, 0.77, 1],
 };
 
 export const SHEET_BOARD_MOVE_SPRING = {

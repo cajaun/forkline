@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { useWindowDimensions } from 'react-native';
 
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -13,10 +14,12 @@ import { PressableScale } from '@/components/shared/pressable-scale';
 import { SfSymbol } from '@/components/shared/sf-symbol';
 import { AnimatedView } from '@/components/shared/uniwind';
 
+import { RestartTray } from './restart-tray';
+
 const circleClassName =
   'h-14 w-14 items-center justify-center rounded-full';
 
-export function OpenBottomControls({
+export const OpenBottomControls = memo(function OpenBottomControls({
   open,
   progress,
 }: {
@@ -61,16 +64,7 @@ export function OpenBottomControls({
       pointerEvents={open ? 'auto' : 'none'}
       style={[{ bottom: bottom + 8 }, controlsStyle]}>
       <AnimatedView className="absolute left-0 top-0" style={leftActionStyle}>
-        <PressableScale
-          className={circleClassName}
-          style={{ backgroundColor: colors.controlBackground }}>
-          <SfSymbol
-            fallback="arrow-undo-outline"
-            name="arrow.trianglehead.counterclockwise"
-            size={27}
-            tintColor={colors.icon}
-          />
-        </PressableScale>
+        <RestartTray />
       </AnimatedView>
       <AnimatedView className="absolute right-0 top-0" style={rightActionStyle}>
         <PressableScale
@@ -86,4 +80,4 @@ export function OpenBottomControls({
       </AnimatedView>
     </AnimatedView>
   );
-}
+});

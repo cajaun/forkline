@@ -127,5 +127,27 @@ class BackendTests(unittest.TestCase):
         self.assertEqual(created["depths"], {"white": 1, "black": 3})
 
 
+    def test_game_resumes_from_saved_moves(self) -> None:
+        state = api.create_game(api.CreateGameRequest(moves=["e2e4", "e7e5", "g1f3"]))
+        self.assertEqual(len(state["moves"]), 3)
+        self.assertEqual(state["turn"], "black")
+        self.assertEqual(state["moves"][2]["ply"], 3)
+        # the agent can continue from the restored position
+        reply = api.request_ai_move(state["game_id"])
+        self.assertEqual(reply["moves"][-1]["ply"], 4)
+
+    def test_resumed_history_keeps_repetition_state(self) -> None:
+        # live games end where python-chess first allows the threefold claim, one move before the third repetition
+        shuffle = (["g1f3", "g8f6", "f3g1", "f6g8"] * 2)[:7]
+        state = api.create_match_session(api.CreateMatchSessionRequest(moves=shuffle))
+        self.assertTrue(state["is_game_over"])
+        self.assertEqual(state["termination"], "threefold-repetition")
+
+    def test_invalid_move_history_is_rejected(self) -> None:
+        with self.assertRaises(HTTPException) as raised:
+            api.create_game(api.CreateGameRequest(moves=["e2e4", "e2e4"]))
+        self.assertEqual(raised.exception.status_code, 422)
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -6,6 +6,9 @@ import { SymbolView, type SFSymbol, type SymbolWeight } from 'expo-symbols';
 type ExtendedSymbol = SFSymbol | 'laurel.leading.laurel.trailing';
 type FallbackName = ComponentProps<typeof Ionicons>['name'];
 
+export type SymbolName = ExtendedSymbol;
+export type SymbolFallback = FallbackName;
+
 export function SfSymbol({
   fallback,
   name,

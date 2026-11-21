@@ -5,10 +5,8 @@ import type {
   HumanColor,
   ThemeMode,
 } from './types';
-import { SfSymbol } from '@/components/shared/sf-symbol';
+import type { SymbolFallback, SymbolName } from '@/components/shared/sf-symbol';
 
-type SymbolName = Parameters<typeof SfSymbol>[0]['name'];
-type SymbolFallback = Parameters<typeof SfSymbol>[0]['fallback'];
 
 export const AGENT_LABELS: Record<AgentName, string> = {
   'material-mobility': 'Material + Mobility',
@@ -22,15 +20,16 @@ export const CATEGORY_TITLES: Record<Category, string> = {
   appearance: 'Appearance',
 };
 
+// steps sit in one flat list, each settings step followed by its info step at index + 1
 export const SETTINGS_STEP_INDEX = {
   settings: 0,
   game: 1,
-  gameMode: 2,
-  playAs: 3,
-  aiStrategy: 4,
-  gameplay: 5,
-  match: 6,
-  appearance: 7,
+  gameMode: 3,
+  playAs: 5,
+  aiStrategy: 7,
+  gameplay: 9,
+  match: 11,
+  appearance: 13,
 } as const;
 
 export const CATEGORY_STEP_INDEX: Record<Category, number> = {
@@ -72,35 +71,43 @@ export const CATEGORY_OPTIONS = [
   title: string;
 }[];
 
+type ChoiceIcon = { fallback: SymbolFallback; icon: SymbolName };
+
 export const GAME_MODE_OPTIONS = [
-  { label: 'Human vs AI', value: 'human-vs-agent' },
-  { label: 'AI vs AI', value: 'agent-vs-agent' },
-] as const satisfies readonly {
+  { fallback: 'person-outline', icon: 'person', label: 'Human vs AI', value: 'human-vs-agent' },
+  { fallback: 'hardware-chip-outline', icon: 'cpu', label: 'AI vs AI', value: 'agent-vs-agent' },
+] as const satisfies readonly (ChoiceIcon & {
   label: string;
   value: GameMode;
-}[];
+})[];
 
 export const HUMAN_COLOR_OPTIONS = [
-  { label: 'Play as White', value: 'white' },
-  { label: 'Play as Black', value: 'black' },
-] as const satisfies readonly {
+  { fallback: 'ellipse-outline', icon: 'circle', label: 'Play as White', value: 'white' },
+  { fallback: 'ellipse', icon: 'circle.fill', label: 'Play as Black', value: 'black' },
+] as const satisfies readonly (ChoiceIcon & {
   label: string;
   value: HumanColor;
-}[];
+})[];
 
 export const AGENT_OPTIONS = [
   {
+    // aggressive: material, mobility and the centre
+    fallback: 'flash-outline',
+    icon: 'bolt',
     label: AGENT_LABELS['material-mobility'],
     value: 'material-mobility',
   },
   {
+    // positional: king shelter and pawn structure
+    fallback: 'shield-outline',
+    icon: 'shield.lefthalf.filled',
     label: AGENT_LABELS['king-safety-position'],
     value: 'king-safety-position',
   },
-] as const satisfies readonly {
+] as const satisfies readonly (ChoiceIcon & {
   label: string;
   value: AgentName;
-}[];
+})[];
 
 export const THEME_OPTIONS = [
   {

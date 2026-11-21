@@ -1,23 +1,38 @@
-import { Pressable, Text, View } from 'react-native';
+import { memo, useCallback } from 'react';
+import { Pressable, View } from 'react-native';
 
 import {
   Extrapolation,
   interpolate,
   useAnimatedStyle,
+  useSharedValue,
 } from 'react-native-reanimated';
 import type { SharedValue } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { SHEET_LAYOUT } from '@/constants/sheet';
-import { AnimatedText, AnimatedView } from '@/components/shared/uniwind';
+import { dateFromDayKey, dayLabels } from '@/utils/days';
+import { TransitionText } from '@/components/shared/numeric-text';
+import { AnimatedView } from '@/components/shared/uniwind';
 import { useSheetColors } from '@/hooks/use-sheet-colors';
 
-export function PreviewCard({
+// the handle starts on the weekday's centre line, 75pt below the sheet's top, and ends under the status bar
+const HANDLE_HEIGHT = 6;
+const HANDLE_WIDTH = 52;
+const WEEKDAY_LINE_HEIGHT = 56;
+const WEEKDAY_CLOSED_CENTER = 47 + WEEKDAY_LINE_HEIGHT / 2;
+// replaced by the measured width after the first layout
+const WEEKDAY_FALLBACK_WIDTH = 200;
+// the word hands over near the handle's width, which (1 - p)^1.5 reaches around p = 0.6 for a 200pt word
+const MORPH_CROSSFADE = [0.42, 0.64];
+
+export const PreviewCard = memo(function PreviewCard({
+  dayKey,
   onClose,
   onOpen,
   open,
   progress,
 }: {
+  dayKey: string;
   onClose: () => void;
   onOpen: () => void;
   open: boolean;
@@ -25,39 +40,66 @@ export function PreviewCard({
 }) {
   const { top: safeTop } = useSafeAreaInsets();
   const { colors } = useSheetColors();
+  const { monthDay, weekday } = dayLabels(dayKey);
+  // whole days since the epoch, so an earlier date rolls the other way
+  const dayNumber = Math.round(dateFromDayKey(dayKey).getTime() / 86_400_000);
 
-  // move the preview header pieces into their open-sheet positions
-  const morphOriginStyle = useAnimatedStyle(() => ({
-    top: interpolate(progress.value, [0, 1], [47, safeTop + 25]),
-  }));
-  const weekdayStyle = useAnimatedStyle(() => ({
-    opacity: interpolate(progress.value, [0, 1], [1, 0], Extrapolation.CLAMP),
-    transform: [
-      {
-        translateY: interpolate(progress.value, [0, 1], [0, -25]),
-      },
-      {
-        scaleX: interpolate(progress.value, [0, 1], [1, 0], Extrapolation.CLAMP),
-      },
-    ],
-    fontSize: interpolate(progress.value, [0, 1], [46, 3]),
-    marginTop: interpolate(progress.value, [0, 1], [0, -24]),
-  }));
+  // the weekday shrinks on the handle's line and cross-fades into the handle at matching width
+  const weekdayWidth = useSharedValue(WEEKDAY_FALLBACK_WIDTH);
+  // stable, so the memoised weekday text isn't re-rendered by the card
+  const setWeekdayWidth = useCallback(
+    (width: number) => {
+      weekdayWidth.set(width);
+    },
+    [weekdayWidth],
+  );
+  const anchorY = (p: number) => {
+    'worklet';
+    return interpolate(
+      p,
+      [0, 1],
+      [WEEKDAY_CLOSED_CENTER, safeTop + HANDLE_HEIGHT / 2],
+    );
+  };
+  const weekdayShrink = (p: number) => {
+    'worklet';
+    return Math.pow(Math.min(Math.max(1 - p, 0), 1), 1.5);
+  };
+  const weekdayStyle = useAnimatedStyle(() => {
+    const p = progress.value;
+    return {
+      opacity: interpolate(
+        p,
+        MORPH_CROSSFADE,
+        [1, 0],
+        Extrapolation.CLAMP,
+      ),
+      transform: [
+        { translateY: anchorY(p) - WEEKDAY_CLOSED_CENTER },
+        { scale: weekdayShrink(p) },
+      ],
+    };
+  });
+  const handleStyle = useAnimatedStyle(() => {
+    const p = progress.value;
+    const wordWidth = weekdayWidth.value * weekdayShrink(p);
+    return {
+      opacity: interpolate(
+        p,
+        MORPH_CROSSFADE,
+        [0, 1],
+        Extrapolation.CLAMP,
+      ),
+      transform: [
+        { translateY: anchorY(p) - WEEKDAY_CLOSED_CENTER },
+        { scaleX: Math.max(wordWidth / HANDLE_WIDTH, 1) },
+      ],
+    };
+  });
   const dateStyle = useAnimatedStyle(() => ({
     top: interpolate(progress.value, [0, 1], [95, safeTop + 15]),
     transform: [
       { scale: interpolate(progress.value, [0, 1], [1, 0.43]) },
-    ],
-  }));
-  const handleStyle = useAnimatedStyle(() => ({
-    opacity: interpolate(progress.value, [0, 1], [0, 1], Extrapolation.CLAMP),
-    transform: [
-      {
-        translateY: interpolate(progress.value, [0, 1], [0, -25]),
-      },
-      {
-        scaleX: interpolate(progress.value, [0, 1], [0, 1], Extrapolation.CLAMP),
-      },
     ],
   }));
 
@@ -69,44 +111,44 @@ export function PreviewCard({
       className="absolute inset-0 z-1 overflow-visible rounded-[34px]"
       onPress={open ? undefined : onOpen}
       pointerEvents={open ? 'box-none' : 'auto'}>
-      <View
-        className="absolute -bottom-4.5 left-6.25 right-6.25 top-4.5 rounded-[34px] opacity-65"
-        style={{ backgroundColor: colors.background }}
-      />
-      <View
-        className="absolute -bottom-2.5 left-3 right-3 top-2.5 rounded-[34px] opacity-90"
-        style={{ backgroundColor: colors.background }}
-      />
       <View className="absolute inset-0 items-center" pointerEvents="none">
         <AnimatedView
           className="absolute left-0 right-0 items-center"
-          style={morphOriginStyle}>
-          <AnimatedText
-            style={[{ color: colors.weekdayText, fontWeight: '900', lineHeight: 56 }, weekdayStyle]}>
-            Saturday
-          </AnimatedText>
-          <AnimatedView
-            className="absolute left-0 right-0 items-center"
-            pointerEvents="none">
-            <AnimatedView
-              className="h-1.5 w-13 rounded-[3px]"
-              style={[{ backgroundColor: colors.handle }, handleStyle]}
-            />
-          </AnimatedView>
+          style={[{ top: WEEKDAY_CLOSED_CENTER - WEEKDAY_LINE_HEIGHT / 2 }, weekdayStyle]}>
+          <TransitionText
+            color={colors.weekdayText}
+            lineHeight={WEEKDAY_LINE_HEIGHT}
+            onWidth={setWeekdayWidth}
+            size={46}
+            text={weekday}
+            value={dayNumber}
+            weight="black"
+          />
+        </AnimatedView>
+        <AnimatedView
+          className="absolute left-0 right-0 items-center"
+          style={[{ top: WEEKDAY_CLOSED_CENTER - HANDLE_HEIGHT / 2 }, handleStyle]}>
+          <View
+            className="rounded-[3px]"
+            style={{
+              backgroundColor: colors.handle,
+              height: HANDLE_HEIGHT,
+              width: HANDLE_WIDTH,
+            }}
+          />
         </AnimatedView>
         <AnimatedView
           className="absolute left-0 right-0 items-center"
           style={dateStyle}>
-          <Text
-            style={{
-              color: colors.dateText,
-              fontSize: 48,
-              fontWeight: '900',
-              letterSpacing: -1.3,
-              lineHeight: 56,
-            }}>
-            September 26
-          </Text>
+          <TransitionText
+            color={colors.dateText}
+            letterSpacing={-1.3}
+            lineHeight={56}
+            size={48}
+            text={monthDay}
+            value={dayNumber}
+            weight="black"
+          />
         </AnimatedView>
       </View>
       <Pressable
@@ -118,42 +160,4 @@ export function PreviewCard({
       />
     </Pressable>
   );
-}
-
-export function PreviewTimer({
-  height,
-  progress,
-}: {
-  height: number;
-  progress: SharedValue<number>;
-}) {
-  const { top: safeTop } = useSafeAreaInsets();
-  const { colors } = useSheetColors();
-  const style = useAnimatedStyle(() => ({
-    left: 0,
-    right: 0,
-    top: interpolate(
-      progress.value,
-      [0, 1],
-      [height * SHEET_LAYOUT.closedTop + 151, safeTop + 50],
-    ),
-  }));
-
-  return (
-    <AnimatedView
-      className="absolute z-2 items-center"
-      pointerEvents="none"
-      style={style}>
-      <View className="flex-row items-center gap-2">
-        <View
-          className="h-4 w-4 rounded-full border-2"
-          style={{ borderColor: colors.dateText }}
-        />
-        <Text
-          style={{ color: colors.dateText, fontSize: 22, fontWeight: '700' }}>
-          0:06
-        </Text>
-      </View>
-    </AnimatedView>
-  );
-}
+});
