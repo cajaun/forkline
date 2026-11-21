@@ -42,7 +42,7 @@ result, and termination reason.
 ## Run the API
 
 ```bash
-python -m uvicorn server.api.routes:app --reload --port 8000
+../server/.venv/bin/python -m uvicorn server.api.routes:app --reload --port 8000 --app-dir ..
 ```
 
 The React Native client can use `http://localhost:8000` from the iOS

@@ -72,7 +72,7 @@ server/.venv/bin/python -m pip install -r server/requirements.txt
 Start the API from the repository root in another terminal:
 
 ~~~bash
-server/.venv/bin/uvicorn server.api.routes:app --reload --host 0.0.0.0 --port 8000
+server/.venv/bin/python -m uvicorn server.api.routes:app --reload --host 0.0.0.0 --port 8000
 ~~~
 
 The API is available at:
@@ -118,7 +118,7 @@ Example:
 
 ~~~bash
 FORKLINE_CORS_ORIGINS=http://localhost:8081 \
-  server/.venv/bin/uvicorn server.api.routes:app --reload
+  server/.venv/bin/python -m uvicorn server.api.routes:app --reload
 ~~~
 
 The server uses in-memory stores for active games and match sessions. It does

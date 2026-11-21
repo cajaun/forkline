@@ -50,7 +50,6 @@ export function SettingsTray({ size = 56 }: { size?: number }) {
   return (
     <Tray.Root
       stepOptions={{
-
         className: 'bg-[#FEFFFF] dark:bg-[#262626]',
         footerClassName: 'bg-[#FEFFFF] dark:bg-[#262626]',
       }}>
