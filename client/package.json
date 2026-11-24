@@ -51,7 +51,7 @@
     "react-native-gesture-handler": "~2.32.0",
     "react-native-keyboard-controller": "1.21.9",
     "react-native-laminar": "^1.5.0",
-    "react-native-morpheus": "^3.0.0",
+    "react-native-morpheus": "^4.0.0",
     "react-native-pulsar": "^1.7.0",
     "react-native-reanimated": "4.5.1",
     "react-native-redash": "^18.1.5",

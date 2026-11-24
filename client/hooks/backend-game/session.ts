@@ -24,8 +24,7 @@ export type SyncRequest = {
   fen: string;
 };
 
-// unique per session and ply, so the board applies each server move once
-export const moveId = (sessionId: string, move: BackendMove) =>
+const moveId = (sessionId: string, move: BackendMove) =>
   `${sessionId}:${move.ply}:${move.uci}`;
 
 export const remoteMoveFrom = (sessionId: string, move: BackendMove): RemoteMove => ({
@@ -33,20 +32,21 @@ export const remoteMoveFrom = (sessionId: string, move: BackendMove): RemoteMove
   move: moveFromUci(move.uci),
 });
 
-// in AI vs AI every turn belongs to an AI, otherwise the side the human isn't playing
+// both turns belong to an AI in a match and the other side belongs to the AI in a human game
 export function isAiTurn(state: BackendState, config: GameConfig) {
   if (state.is_game_over) return false;
   if (config.gameMode === 'agent-vs-agent') return true;
   return state.turn !== config.humanColor;
 }
 
-// everything that needs a fresh server session when it changes
+// a change in these fields needs a fresh server session
 export function sessionKey(game: GameSummary | null) {
   if (!game) return null;
   const { agent, depths, gameMode, humanColor } = game.config;
   return [
     game.id,
     game.revision ?? 0,
+    game.undoCount ?? 0,
     gameMode,
     humanColor,
     agent,

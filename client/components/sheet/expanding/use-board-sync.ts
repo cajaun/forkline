@@ -6,7 +6,7 @@ import type { RemoteMove, SyncRequest } from '@/hooks/use-backend-game';
 
 import type { FastReset } from '../board/use-fast-reset';
 
-// holds an Open tap until the sprite atlas can draw the board's first frame
+// holds an open tap until the sprite atlas can draw the first frame
 export function useOpenGate(onOpen: () => void) {
   const [ready, setReady] = useState(false);
   const pendingRef = useRef(false);
@@ -25,7 +25,7 @@ export function useOpenGate(onOpen: () => void) {
   return { onReady: setReady, ready, requestOpen };
 }
 
-// applies each sync request once, waiting for an idle moment while the closed sheet hides the board
+// applies each sync once and waits for an idle moment while the sheet is closed
 export function useSyncRequests({
   boardRef,
   onSynced,
@@ -44,7 +44,6 @@ export function useSyncRequests({
     if (!syncRequest || appliedIdRef.current === syncRequest.id) return;
     const apply = () => {
       appliedIdRef.current = syncRequest.id;
-      // one UI-thread pass when the board registered it, else the library's slower reset
       if (fastResetRef.current) fastResetRef.current(syncRequest.fen);
       else boardRef.current?.resetBoard(syncRequest.fen);
       onSynced(syncRequest.fen);
@@ -60,7 +59,7 @@ export function useSyncRequests({
   return fastResetRef;
 }
 
-// plays each server move once and flags it in progress, so the board doesn't report it as the user's
+// plays each server move once and flags it so the board does not report it as the player
 export function useRemoteMoves({
   boardRef,
   boardReady,

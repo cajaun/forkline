@@ -9,10 +9,13 @@ import type { SharedValue } from 'react-native-reanimated';
 
 import { PressableScale } from '@/components/shared/pressable-scale';
 import { SfSymbol, type SymbolFallback, type SymbolName } from '@/components/shared/sf-symbol';
+import { StatsTray } from '@/components/trays/stats/stats-tray';
 import { SettingsTray } from '@/components/trays/settings';
 import type { GameSummary } from '@/types/games';
 
-import { DateStrip } from './date-strip';
+import { PromotionPreview } from './board/promotion-tray';
+import { DeleteGameTray } from './delete-game-tray';
+import { GameStrip } from './game-strip';
 import { AnimatedView } from '@/components/shared/uniwind';
 import { useSheetColors } from '@/hooks/use-sheet-colors';
 
@@ -41,21 +44,21 @@ function AppBubble({
   );
 }
 
+// the home buttons and the game strip slide away as the sheet opens
 export const HomeChrome = memo(function HomeChrome({
   days,
   gamesByDay,
-  onSelectDay,
+  onSelectGame,
   progress,
-  selectedDayKey,
+  selectedGameId,
 }: {
   days: string[];
   gamesByDay: Record<string, GameSummary[]>;
-  onSelectDay: (dayKey: string) => void;
+  onSelectGame: (gameId: string) => void;
   progress: SharedValue<number>;
-  selectedDayKey: string | null;
+  selectedGameId: string | null;
 }) {
   const { colors } = useSheetColors();
-  // move closed-sheet chrome away as the sheet takes over the screen
   const topChromeStyle = useAnimatedStyle(() => ({
     opacity: interpolate(progress.value, [0, 1], [1, 0], Extrapolation.CLAMP),
     transform: [{ translateY: interpolate(progress.value, [0, 1], [0, -134]) }],
@@ -77,23 +80,20 @@ export const HomeChrome = memo(function HomeChrome({
           iconColor={colors.controlIcon}
         />
         <View className="flex-1" />
-        <AppBubble
-          color={colors.controlBackground}
-          fallback="bar-chart-outline"
-          icon="chart.bar.fill"
-          iconColor={colors.controlIcon}
-        />
+        <StatsTray size={48} />
         <SettingsTray size={48} />
+        {__DEV__ ? <PromotionPreview /> : null}
+        <DeleteGameTray />
       </AnimatedView>
 
       <AnimatedView
         className="absolute bottom-8.5 left-0 right-0 h-30.75"
         style={bottomChromeStyle}>
-        <DateStrip
+        <GameStrip
           days={days}
           gamesByDay={gamesByDay}
-          onSelectDay={onSelectDay}
-          selectedDayKey={selectedDayKey}
+          onSelectGame={onSelectGame}
+          selectedGameId={selectedGameId}
         />
       </AnimatedView>
     </View>

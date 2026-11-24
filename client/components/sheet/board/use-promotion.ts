@@ -13,12 +13,11 @@ export interface PromotionInfo {
   cancel: () => void;
 }
 
-// owns the promotion dialog: the move executor pauses on a pawn reaching the last rank until the user picks
+// holds a pawn move until the player picks its new piece
 export function usePromotion(
   boardState: ReturnType<typeof useBoardStateValues>,
   config: ReturnType<typeof useBoardConfig>,
 ) {
-  // the ref serves the callbacks and the state drives the dialog's render
   const pendingRef = useRef<PromotionInfo | null>(null);
   const [pending, setPending] = useState<PromotionInfo | null>(null);
 
@@ -28,7 +27,6 @@ export function usePromotion(
   }, []);
 
   const onPromotionRequired = useCallback((info: PromotionInfo) => {
-    // a new promotion replaces one still waiting for an answer
     pendingRef.current?.cancel();
     pendingRef.current = info;
     setPending(info);
@@ -45,7 +43,6 @@ export function usePromotion(
   const onCancel = useCallback(() => {
     const info = pendingRef.current;
     if (info) {
-      // spring the pawn back to its square and clear the selection
       const fromState = boardState.squares[info.from];
       const origin = squareToPosition(info.from, config.pieceSize, config.flipped);
       fromState.translateX.set(withSpring(origin.x, config.animations.snapBack));

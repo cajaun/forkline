@@ -1,0 +1,131 @@
+{
+  "games": 10,
+  "depth": 2,
+  "agents": [
+    "material-mobility",
+    "king-safety-position"
+  ],
+  "scores": {
+    "material-mobility": {
+      "wins": 6,
+      "draws": 3,
+      "losses": 1,
+      "points": 7.5
+    },
+    "king-safety-position": {
+      "wins": 1,
+      "draws": 3,
+      "losses": 6,
+      "points": 2.5
+    }
+  },
+  "search": {
+    "material-mobility": {
+      "moves": 269,
+      "avg_nodes": 175.3,
+      "avg_cutoffs": 36.3
+    },
+    "king-safety-position": {
+      "moves": 266,
+      "avg_nodes": 155.8,
+      "avg_cutoffs": 22.3
+    }
+  },
+  "terminations": {
+    "threefold-repetition": 3,
+    "checkmate": 7
+  },
+  "average_plies": 53.5,
+  "results": [
+    {
+      "game_number": 1,
+      "opening": "Italian Game",
+      "white_agent": "material-mobility",
+      "black_agent": "king-safety-position",
+      "result": "1/2-1/2",
+      "termination": "threefold-repetition",
+      "plies": 36
+    },
+    {
+      "game_number": 2,
+      "opening": "Italian Game",
+      "white_agent": "king-safety-position",
+      "black_agent": "material-mobility",
+      "result": "0-1",
+      "termination": "checkmate",
+      "plies": 47
+    },
+    {
+      "game_number": 3,
+      "opening": "Sicilian Defence",
+      "white_agent": "material-mobility",
+      "black_agent": "king-safety-position",
+      "result": "1/2-1/2",
+      "termination": "threefold-repetition",
+      "plies": 49
+    },
+    {
+      "game_number": 4,
+      "opening": "Sicilian Defence",
+      "white_agent": "king-safety-position",
+      "black_agent": "material-mobility",
+      "result": "0-1",
+      "termination": "checkmate",
+      "plies": 76
+    },
+    {
+      "game_number": 5,
+      "opening": "French Defence",
+      "white_agent": "material-mobility",
+      "black_agent": "king-safety-position",
+      "result": "1-0",
+      "termination": "checkmate",
+      "plies": 35
+    },
+    {
+      "game_number": 6,
+      "opening": "French Defence",
+      "white_agent": "king-safety-position",
+      "black_agent": "material-mobility",
+      "result": "0-1",
+      "termination": "checkmate",
+      "plies": 78
+    },
+    {
+      "game_number": 7,
+      "opening": "Queen's Gambit",
+      "white_agent": "material-mobility",
+      "black_agent": "king-safety-position",
+      "result": "1/2-1/2",
+      "termination": "threefold-repetition",
+      "plies": 15
+    },
+    {
+      "game_number": 8,
+      "opening": "Queen's Gambit",
+      "white_agent": "king-safety-position",
+      "black_agent": "material-mobility",
+      "result": "0-1",
+      "termination": "checkmate",
+      "plies": 75
+    },
+    {
+      "game_number": 9,
+      "opening": "King's Indian Defence",
+      "white_agent": "material-mobility",
+      "black_agent": "king-safety-position",
+      "result": "0-1",
+      "termination": "checkmate",
+      "plies": 74
+    },
+    {
+      "game_number": 10,
+      "opening": "King's Indian Defence",
+      "white_agent": "king-safety-position",
+      "black_agent": "material-mobility",
+      "result": "0-1",
+      "termination": "checkmate",
+      "plies": 50
+    }
+  ]
+}

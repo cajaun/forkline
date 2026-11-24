@@ -2,7 +2,6 @@ import type { ImageSourcePropType } from 'react-native';
 
 import type { Side } from '@/types/chess';
 
-// map chess piece codes to the board image assets
 export const PIECE_IMG: Record<Side, Record<string, ImageSourcePropType>> = {
   w: {
     p: require('../assets/images/chess-pieces/gray/pawn.png'),
@@ -50,5 +49,10 @@ export const CHECKMATE_KING_IMG = require(
 export const GAME_OVER_KING_IMG = require(
   '../assets/images/chess-pieces/red/king.png',
 );
+export const DARK_CHECKMATE_KING_IMG = require(
+  '../assets/images/chess-pieces/dark/orange/king.png',
+);
+export const DARK_GAME_OVER_KING_IMG = require(
+  '../assets/images/chess-pieces/dark/red/king.png',
+);
 
-export const VALUE: Record<string, number> = { p: 1, n: 3, b: 3, r: 5, q: 9 };

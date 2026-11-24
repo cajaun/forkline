@@ -4,6 +4,8 @@ import { View } from 'react-native';
 import { Tray } from 'react-native-morpheus';
 import { Uniwind, useUniwind } from 'uniwind';
 
+import { saveThemeMode } from '@/services/preferences';
+
 import { ThemeCard } from '../components/theme-card';
 import { THEME_OPTIONS } from '../constants';
 import type { AppearanceSettings, ThemeMode } from '../types';
@@ -22,6 +24,7 @@ export function AppearanceOptions({
     (value: ThemeMode) => {
       Uniwind.setTheme(value);
       onChange({ themeMode: value });
+      void saveThemeMode(value);
     },
     [onChange],
   );

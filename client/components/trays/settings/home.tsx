@@ -1,83 +1,72 @@
+import { View } from 'react-native';
+
+import { useSetAtom } from 'jotai';
 import { Tray, useTrayNavigation } from 'react-native-morpheus';
 
+import { promotionPreviewAtom } from '@/components/sheet/board/promotion-tray';
+import { OptionGrid, OptionLink, OptionTile } from '@/components/trays/shared/option-ui';
 import { gameActions } from '@/stores/games';
 
+import { CATEGORY_OPTIONS, CATEGORY_STEP_INDEX } from './constants';
 import type { SettingsScope } from './types';
 
-import { CategoryRow } from './components/category-row';
-import { CATEGORY_OPTIONS, CATEGORY_STEP_INDEX } from './constants';
+// waits for Settings to slide away so the promotion tray opens on a clear screen
+const PREVIEW_DELAY_MS = 400;
 
-export function SettingsHomeBody({
-  onNewGame,
-  scope,
-}: {
-  onNewGame: () => void;
-  scope: SettingsScope;
-}) {
+export function SettingsHomeBody({ scope }: { scope: SettingsScope }) {
   const { close, next } = useTrayNavigation();
   const { resetLibrary, seedSampleHistory } = gameActions;
+  const previewPromotion = useSetAtom(promotionPreviewAtom);
   const openCategory = (category: keyof typeof CATEGORY_STEP_INDEX) => {
-    const targetStep = CATEGORY_STEP_INDEX[category];
-
-    for (let step = 0; step < targetStep; step += 1) {
-      next();
-    }
+    for (let step = 0; step < CATEGORY_STEP_INDEX[category]; step += 1) next();
   };
 
   return (
     <Tray.Body>
-      <Tray.Section>
-        {CATEGORY_OPTIONS.map((option) => (
-          <CategoryRow
-            key={option.key}
-            fallback={option.fallback}
-            icon={option.icon}
-            title={option.title}
-            subtitle={
-              scope === 'defaults' &&
-              (option.key === 'game' || option.key === 'gameplay')
-                ? 'Default for new games'
-                : undefined
-            }
-            onPress={() => openCategory(option.key)}
-          />
-        ))}
-        {scope === 'game' ? (
-          <CategoryRow
-            fallback="add-circle-outline"
-            icon="plus.circle"
-            title="New game"
-            subtitle="Same settings, fresh board"
-            onPress={() => {
-              onNewGame();
-              close();
-            }}
-          />
-        ) : null}
-        {/* development tools for testing the history strip */}
+      <Tray.Section style={{ gap: 14 }}>
+        <OptionGrid>
+          {CATEGORY_OPTIONS.map(option => (
+            <OptionTile
+              key={option.key}
+              label={option.title}
+              onPress={() => openCategory(option.key)}
+              visual={{ fallback: option.fallback, icon: option.icon }}
+            />
+          ))}
+        </OptionGrid>
         {__DEV__ && scope === 'defaults' ? (
-          <>
-            <CategoryRow
+          <View style={{ gap: 10 }}>
+            <OptionLink
               fallback="time-outline"
               icon="clock.arrow.circlepath"
-              title="Add sample history"
-              subtitle="Dev · games on the past six days"
               onPress={() => {
                 seedSampleHistory();
                 close();
               }}
+              title="Add sample history"
+              value="Dev · games on the past six days"
             />
-            <CategoryRow
+            <OptionLink
+              fallback="arrow-up-circle-outline"
+              icon="arrow.up.circle"
+              onPress={() => {
+                close();
+                setTimeout(() => previewPromotion('w'), PREVIEW_DELAY_MS);
+              }}
+              title="Show promotion tray"
+              value="Dev · the piece picker for a pawn's last square"
+            />
+            <OptionLink
               fallback="refresh-outline"
               icon="arrow.counterclockwise"
-              title="Reset app"
-              subtitle="Dev · delete all games, show onboarding"
               onPress={() => {
                 close();
                 void resetLibrary();
               }}
+              title="Reset app"
+              value="Dev · delete all games and show onboarding"
             />
-          </>
+          </View>
         ) : null}
       </Tray.Section>
     </Tray.Body>

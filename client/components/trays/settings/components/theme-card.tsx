@@ -9,7 +9,6 @@ import { useSheetColors } from '@/hooks/use-sheet-colors';
 
 import { THEME_CARD_STYLE } from '../styles';
 
-
 export function ThemeCard({
   icon,
   fallback,

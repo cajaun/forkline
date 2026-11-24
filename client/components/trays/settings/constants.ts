@@ -7,7 +7,6 @@ import type {
 } from './types';
 import type { SymbolFallback, SymbolName } from '@/components/shared/sf-symbol';
 
-
 export const AGENT_LABELS: Record<AgentName, string> = {
   'material-mobility': 'Material + Mobility',
   'king-safety-position': 'King Safety + Position',
@@ -20,7 +19,7 @@ export const CATEGORY_TITLES: Record<Category, string> = {
   appearance: 'Appearance',
 };
 
-// steps sit in one flat list, each settings step followed by its info step at index + 1
+// step positions inside the flat Settings tray
 export const SETTINGS_STEP_INDEX = {
   settings: 0,
   game: 1,
@@ -82,8 +81,8 @@ export const GAME_MODE_OPTIONS = [
 })[];
 
 export const HUMAN_COLOR_OPTIONS = [
-  { fallback: 'ellipse-outline', icon: 'circle', label: 'Play as White', value: 'white' },
-  { fallback: 'ellipse', icon: 'circle.fill', label: 'Play as Black', value: 'black' },
+  { fallback: 'ellipse-outline', icon: 'circle', label: 'White', value: 'white' },
+  { fallback: 'ellipse', icon: 'circle.fill', label: 'Black', value: 'black' },
 ] as const satisfies readonly (ChoiceIcon & {
   label: string;
   value: HumanColor;
@@ -91,14 +90,12 @@ export const HUMAN_COLOR_OPTIONS = [
 
 export const AGENT_OPTIONS = [
   {
-    // aggressive: material, mobility and the centre
     fallback: 'flash-outline',
     icon: 'bolt',
     label: AGENT_LABELS['material-mobility'],
     value: 'material-mobility',
   },
   {
-    // positional: king shelter and pawn structure
     fallback: 'shield-outline',
     icon: 'shield.lefthalf.filled',
     label: AGENT_LABELS['king-safety-position'],

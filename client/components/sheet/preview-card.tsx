@@ -10,19 +10,19 @@ import {
 import type { SharedValue } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { SHEET_CARD_TEXT } from '@/constants/sheet';
+
 import { dateFromDayKey, dayLabels } from '@/utils/days';
 import { TransitionText } from '@/components/shared/numeric-text';
 import { AnimatedView } from '@/components/shared/uniwind';
 import { useSheetColors } from '@/hooks/use-sheet-colors';
 
-// the handle starts on the weekday's centre line, 75pt below the sheet's top, and ends under the status bar
 const HANDLE_HEIGHT = 6;
 const HANDLE_WIDTH = 52;
-const WEEKDAY_LINE_HEIGHT = 56;
-const WEEKDAY_CLOSED_CENTER = 47 + WEEKDAY_LINE_HEIGHT / 2;
-// replaced by the measured width after the first layout
+const WEEKDAY_LINE_HEIGHT = SHEET_CARD_TEXT.weekdayLineHeight;
+const WEEKDAY_CLOSED_CENTER = SHEET_CARD_TEXT.weekdayTop + WEEKDAY_LINE_HEIGHT / 2;
 const WEEKDAY_FALLBACK_WIDTH = 200;
-// the word hands over near the handle's width, which (1 - p)^1.5 reaches around p = 0.6 for a 200pt word
+// the weekday hands over to the handle near the handle width
 const MORPH_CROSSFADE = [0.42, 0.64];
 
 export const PreviewCard = memo(function PreviewCard({
@@ -41,12 +41,9 @@ export const PreviewCard = memo(function PreviewCard({
   const { top: safeTop } = useSafeAreaInsets();
   const { colors } = useSheetColors();
   const { monthDay, weekday } = dayLabels(dayKey);
-  // whole days since the epoch, so an earlier date rolls the other way
   const dayNumber = Math.round(dateFromDayKey(dayKey).getTime() / 86_400_000);
 
-  // the weekday shrinks on the handle's line and cross-fades into the handle at matching width
   const weekdayWidth = useSharedValue(WEEKDAY_FALLBACK_WIDTH);
-  // stable, so the memoised weekday text isn't re-rendered by the card
   const setWeekdayWidth = useCallback(
     (width: number) => {
       weekdayWidth.set(width);
@@ -61,6 +58,7 @@ export const PreviewCard = memo(function PreviewCard({
       [WEEKDAY_CLOSED_CENTER, safeTop + HANDLE_HEIGHT / 2],
     );
   };
+  // the weekday shrinks on the handle line as the sheet opens
   const weekdayShrink = (p: number) => {
     'worklet';
     return Math.pow(Math.min(Math.max(1 - p, 0), 1), 1.5);
@@ -97,13 +95,11 @@ export const PreviewCard = memo(function PreviewCard({
     };
   });
   const dateStyle = useAnimatedStyle(() => ({
-    top: interpolate(progress.value, [0, 1], [95, safeTop + 15]),
+    top: interpolate(progress.value, [0, 1], [SHEET_CARD_TEXT.dateTop, safeTop + 15]),
     transform: [
       { scale: interpolate(progress.value, [0, 1], [1, 0.43]) },
     ],
   }));
-
-  // keep the close target inactive until the sheet is open
 
   return (
     <Pressable
@@ -117,6 +113,7 @@ export const PreviewCard = memo(function PreviewCard({
           style={[{ top: WEEKDAY_CLOSED_CENTER - WEEKDAY_LINE_HEIGHT / 2 }, weekdayStyle]}>
           <TransitionText
             color={colors.weekdayText}
+            fillWidth
             lineHeight={WEEKDAY_LINE_HEIGHT}
             onWidth={setWeekdayWidth}
             size={46}
@@ -142,6 +139,7 @@ export const PreviewCard = memo(function PreviewCard({
           style={dateStyle}>
           <TransitionText
             color={colors.dateText}
+            fillWidth
             letterSpacing={-1.3}
             lineHeight={56}
             size={48}

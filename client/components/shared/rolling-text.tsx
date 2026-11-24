@@ -14,12 +14,12 @@ import Animated, {
 import type { SharedValue } from 'react-native-reanimated';
 
 const ROLL_DURATION = 420;
-// each changed character starts this share of the roll after the previous one
 const STAGGER = 0.14;
 const TRAVEL = 0.55;
 
 type Roll = { from: string; id: number; to: string };
 
+// each changed character slides out as its replacement slides in
 function RollingChar({
   char,
   lineHeight,
@@ -37,7 +37,6 @@ function RollingChar({
   steps: number;
   style: StyleProp<TextStyle>;
 }) {
-  // squeeze every changed character's roll into the shared clock, staggered
   const span = 1 - STAGGER * Math.max(steps - 1, 0);
   const start = STAGGER * order;
   const local = (value: number) => {
@@ -78,7 +77,7 @@ function RollingChar({
   );
 }
 
-// rolls only the changed characters in turn, then settles into one Text so kerning matches the UI
+// the non iOS fallback for TransitionText
 export function RollingText({
   lineHeight,
   onLayout,
@@ -96,7 +95,6 @@ export function RollingText({
   const progress = useSharedValue(1);
 
   const finishRoll = useCallback((id: number) => {
-    // a newer roll may have started in the meantime
     if (id === rollId.current) setRoll(null);
   }, []);
 
@@ -127,7 +125,6 @@ export function RollingText({
 
   const target = Array.from(roll.to);
   const source = Array.from(roll.from);
-  // walk the longer string so characters that disappear still roll out
   const slots = Array.from(
     { length: Math.max(target.length, source.length) },
     (_, index) => target[index] ?? '',

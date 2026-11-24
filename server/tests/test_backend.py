@@ -34,7 +34,6 @@ class BackendTests(unittest.TestCase):
         self.assertGreater(result.stats.nodes, 0)
 
     def test_each_agent_can_play_against_the_reference_player(self) -> None:
-        # exercise both evaluators against the same deterministic opponent
         for agent_name in AGENT_NAMES:
             result = play_game(
                 create_agent(agent_name, depth=1),
@@ -62,6 +61,14 @@ class BackendTests(unittest.TestCase):
         self.assertEqual(len(results[1]["moves"]), 4)
         self.assertIn("nodes", results[0]["moves"][0])
 
+    def test_match_pairs_openings_and_swaps_colours(self) -> None:
+        report = run_match(games=4, depth=1, max_plies=2)
+        results = report["results"]
+        self.assertEqual(results[0]["opening"], results[1]["opening"])
+        self.assertNotEqual(results[0]["white_agent"], results[1]["white_agent"])
+        self.assertNotEqual(results[0]["opening"], results[2]["opening"])
+        self.assertIn("avg_nodes", report["search"][AGENT_NAMES[0]])
+
     def test_api_session_accepts_human_then_agent_move(self) -> None:
         created = api.create_game(
             api.CreateGameRequest(
@@ -81,8 +88,22 @@ class BackendTests(unittest.TestCase):
         self.assertEqual(after_agent["turn"], "white")
         self.assertIn("search", after_agent)
 
+    def test_hint_suggests_a_legal_move_without_playing_it(self) -> None:
+        created = api.create_game(
+            api.CreateGameRequest(agent="king-safety-position", human_color="white", depth=1)
+        )
+        hint = api.request_hint(created["game_id"])
+        self.assertIn(hint["uci"], created["legal_moves"])
+        self.assertEqual(api.get_game(created["game_id"])["fen"], chess.STARTING_FEN)
+
+    def test_hint_is_refused_on_the_agents_turn(self) -> None:
+        created = api.create_game(
+            api.CreateGameRequest(agent="material-mobility", human_color="black", depth=1)
+        )
+        with self.assertRaises(HTTPException):
+            api.request_hint(created["game_id"])
+
     def test_illegal_human_move_does_not_change_the_game(self) -> None:
-        # verify validation preserves the session snapshot
         created = api.create_game(api.CreateGameRequest(depth=1))
         before = api.get_game(created["game_id"])
 
@@ -132,12 +153,10 @@ class BackendTests(unittest.TestCase):
         self.assertEqual(len(state["moves"]), 3)
         self.assertEqual(state["turn"], "black")
         self.assertEqual(state["moves"][2]["ply"], 3)
-        # the agent can continue from the restored position
         reply = api.request_ai_move(state["game_id"])
         self.assertEqual(reply["moves"][-1]["ply"], 4)
 
     def test_resumed_history_keeps_repetition_state(self) -> None:
-        # live games end where python-chess first allows the threefold claim, one move before the third repetition
         shuffle = (["g1f3", "g8f6", "f3g1", "f6g8"] * 2)[:7]
         state = api.create_match_session(api.CreateMatchSessionRequest(moves=shuffle))
         self.assertTrue(state["is_game_over"])

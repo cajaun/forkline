@@ -18,6 +18,7 @@ export type PressableScaleProps = {
   children: React.ReactNode;
   hitSlop?: number;
   onPress?: () => void;
+  onLongPress?: () => void;
   style?: StyleProp<ViewStyle>;
   className?: string;
   layout?: React.ComponentProps<typeof Animated.View>['layout'];
@@ -26,11 +27,13 @@ export type PressableScaleProps = {
 const ANIMATION_DURATION = 250;
 const TAP_MAX_DISTANCE = 8;
 const SCALE_ACTIVATION_DELAY_MS = 80;
+const LONG_PRESS_MS = 450;
 
 export const PressableScale: React.FC<PressableScaleProps> = ({
   accessibilityLabel,
   children,
   hitSlop,
+  onLongPress,
   onPress,
   style,
   className,
@@ -59,7 +62,19 @@ export const PressableScale: React.FC<PressableScaleProps> = ({
     gesture.hitSlop(hitSlop);
   }
 
-  // delay the shrink so the tap does not jump on contact
+  // a hold wins over the tap so a cell can offer a second action
+  const longPress = onLongPress
+    ? Gesture.LongPress()
+        .minDuration(LONG_PRESS_MS)
+        .maxDistance(TAP_MAX_DISTANCE)
+        .onStart(() => {
+          active.value = false;
+          runOnJS(onLongPress)();
+        })
+    : null;
+  const composed = longPress ? Gesture.Exclusive(longPress, gesture) : gesture;
+
+  // the shrink waits a moment so a quick tap does not flicker
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [
       {
@@ -80,7 +95,7 @@ export const PressableScale: React.FC<PressableScaleProps> = ({
   }));
 
   return (
-    <GestureDetector gesture={gesture}>
+    <GestureDetector gesture={composed}>
       <AnimatedView
         accessibilityLabel={accessibilityLabel}
         className={className}

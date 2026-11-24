@@ -14,6 +14,7 @@ import { SHEET_LAYOUT, SHEET_SPRING } from '@/constants/sheet';
 
 const DEVICE_PIXEL_RATIO = PixelRatio.get();
 
+// springs the sheet between the closed card and full screen
 export function useSheetAnimation(height: number) {
   const [open, setOpen] = useState(false);
   const progress = useSharedValue(0);
@@ -21,10 +22,8 @@ export function useSheetAnimation(height: number) {
   const openSheet = useCallback(() => {
     if (open) return;
 
-    // keep hit testing aligned with the visible sheet state
     setOpen(true);
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Soft);
-    // drive the sheet and its child layers from one progress value
     progress.set(withSpring(1, SHEET_SPRING));
   }, [open, progress]);
 

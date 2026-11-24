@@ -26,9 +26,9 @@ const COLLAPSED_SCALE = 0.14;
 const EXPANSION_DURATION = 200;
 const RADIUS = 8;
 const COLLAPSED_GAP_RATIO = 1 / 3;
-const EMPTY_DOT_COLOR = '#D9D9D9';
 const DOT_SIZE_RATIO = 0.1;
 
+// fades a layer across part of the expansion
 const fade = (expansion: SharedValue<number>, input: number[], output: number[]) => {
   'worklet';
   return interpolate(expansion.value, input, output, Extrapolation.CLAMP);
@@ -42,6 +42,7 @@ type SquareProps = {
   cellsStyle: LayerStyle;
   dotColor: string;
   dotStyles: LayerStyle[];
+  emptyDotColor: string;
   foe: Side;
   height: number;
   index: number;
@@ -50,13 +51,13 @@ type SquareProps = {
   piecesStyle: LayerStyle;
 };
 
-// one square of the mini board, a dot when collapsed and a piece once expanded
 function MiniSquare({
   boardColors,
   cellSize,
   cellsStyle,
   dotColor,
   dotStyles,
+  emptyDotColor,
   foe,
   height,
   index,
@@ -87,7 +88,7 @@ function MiniSquare({
         pointerEvents="none"
         style={[
           {
-            backgroundColor: piece ? dotColor : EMPTY_DOT_COLOR,
+            backgroundColor: piece ? dotColor : emptyDotColor,
             borderRadius: dotSize,
             height: dotSize,
             position: 'absolute',
@@ -105,7 +106,7 @@ function MiniSquare({
   );
 }
 
-// a 2x8 board of captured pieces that collapses into a sliver of dots against the main board
+// a two row board of captured pieces that collapses into a dot strip
 export const CaptureMiniBoard = memo(function CaptureMiniBoard({
   boardColors,
   expanded,
@@ -119,7 +120,6 @@ export const CaptureMiniBoard = memo(function CaptureMiniBoard({
   boardColors: { black: string; white: string };
   expanded: boolean;
   foe: Side;
-  // stable and called with this board's side, so memo holds
   onToggle: (side: CaptureSide) => void;
   pieceImages: typeof PIECE_IMG;
   pieces: string[];
@@ -131,7 +131,6 @@ export const CaptureMiniBoard = memo(function CaptureMiniBoard({
   const previousExpanded = useRef(expanded);
   const cellSize = size.width / COLUMNS;
   const collapsedGap = size.height * COLLAPSED_GAP_RATIO;
-  // the distance from the expanded slot to the collapsed sliver's centre
   const collapsedTravel = size.height - (collapsedGap + (size.height * COLLAPSED_SCALE) / 2);
 
   useEffect(() => {
@@ -160,7 +159,6 @@ export const CaptureMiniBoard = memo(function CaptureMiniBoard({
   const dotsStyle = useAnimatedStyle(() => ({
     opacity: fade(expansion, [0, 0.42, 0.85], [1, 1, 0]),
   }));
-  // undoes the board's scale, so the dots stay round and full size while collapsed
   const dotScaleStyle = useAnimatedStyle(() => ({
     transform: [{ scale: 1 / fade(expansion, [0, 1], [COLLAPSED_SCALE, 1]) }],
   }));
@@ -195,6 +193,7 @@ export const CaptureMiniBoard = memo(function CaptureMiniBoard({
                 cellsStyle={cellsStyle}
                 dotColor={foe === 'b' ? colors.pieceBlack : colors.pieceWhite}
                 dotStyles={[dotsStyle, dotScaleStyle]}
+                emptyDotColor={colors.captureEmptyDot}
                 foe={foe}
                 height={size.height / ROWS}
                 index={index}

@@ -1,5 +1,3 @@
-"""Request bodies for the HTTP API"""
-
 from __future__ import annotations
 
 from typing import Literal
@@ -36,6 +34,6 @@ class CreateMatchSessionRequest(BaseModel):
 
 
 class BatchMatchRequest(BaseModel):
-    games: int = Field(default=5, ge=1, le=100)
+    games: int = Field(default=10, ge=1, le=100)
     depth: int = Field(default=2, ge=1, le=4)
     max_plies: int = Field(default=300, ge=1, le=1000)

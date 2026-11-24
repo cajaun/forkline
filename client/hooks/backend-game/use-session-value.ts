@@ -2,7 +2,7 @@ import { useCallback, useState } from 'react';
 
 type Tagged<T> = { key: string | null; value: T };
 
-// state stamped with its session, so a value from another game reads as null with no reset
+// a value tagged with its session so a reply from an old session reads as empty
 export function useSessionValue<T>(currentKey: string | null, keyRef: { current: string | null }) {
   const [tagged, setTagged] = useState<Tagged<T> | null>(null);
 

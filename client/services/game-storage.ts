@@ -2,7 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import type { GameLibrary, GameMoves } from '@/types/games';
 
-// the index holds settings and game summaries, and each move list gets its own key so a move never rewrites the history
+// the library holds summaries and each move list gets its own key
 const LIBRARY_KEY = 'forkline/library/v1';
 const movesKey = (gameId: string) => `forkline/game/v1/${gameId}`;
 
@@ -31,10 +31,13 @@ export async function loadMoves(gameId: string): Promise<GameMoves | null> {
   }
 }
 
-// development only: forget every saved game and setting
 export async function clearAllGames(): Promise<void> {
   const keys = await AsyncStorage.getAllKeys();
   await AsyncStorage.multiRemove(keys.filter(key => key.startsWith('forkline/')));
+}
+
+export async function deleteMoves(gameId: string): Promise<void> {
+  await AsyncStorage.removeItem(movesKey(gameId));
 }
 
 export async function saveMoves(gameId: string, moves: GameMoves): Promise<void> {

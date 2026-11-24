@@ -8,7 +8,6 @@ import type { BoardMotion } from './use-board-motion';
 
 const BORDER_WIDTH = 2;
 
-// a 2pt outline that sits outside the preview when closed and over the board's edge when open
 export function BoardOutline({
   left,
   motion,
@@ -25,7 +24,6 @@ export function BoardOutline({
   const { colors } = useSheetColors();
   const { radius, scale, translate } = motion;
 
-  // width and offset are divided by the board's scale, so the stroke stays 2pt on screen
   const outlineStyle = useAnimatedStyle(() => ({
     borderRadius: radius.value,
     outlineOffset:

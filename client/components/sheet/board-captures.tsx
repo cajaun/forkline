@@ -16,7 +16,7 @@ export type CaptureExpansion = CaptureSide | 'both' | null;
 export const CAPTURE_AUTO_COLLAPSE_DELAY = 3000;
 const EXPANDED_GAP_RATIO = 1 / 16;
 
-// one tray, sliding from the preview's edge to its slot beside the open board
+// a mini board of captured pieces that grows out from beside the board
 function CaptureTray({
   closedY,
   expanded,
@@ -45,7 +45,6 @@ function CaptureTray({
   width: number;
 }) {
   const { boardColors, isDark } = useSheetColors();
-  // transform-only, so the tray stays locked to the transform-driven board
   const trayStyle = useAnimatedStyle(() => ({
     opacity: interpolate(progress.value, [0, 1], [0, 1], Extrapolation.CLAMP),
     transform: [
@@ -75,7 +74,7 @@ function CaptureTray({
   );
 }
 
-// the captured-piece trays above and below the board, re-rendering only when captures or expansion change
+// the two capture trays above and below the open board
 export const BoardCaptures = memo(function BoardCaptures({
   boardSize,
   captured,
@@ -99,15 +98,12 @@ export const BoardCaptures = memo(function BoardCaptures({
   previewSize: number;
   progress: SharedValue<number>;
 }) {
-  // the trays are hidden during a game switch, so new captures can render in the background
   const shownCaptured = useDeferredValue(captured);
-  // a stable size object keeps the memoised mini boards from re-rendering
   const miniBoardSize = useMemo(
     () => ({ height: boardSize / 8, width: boardSize / 2 }),
     [boardSize],
   );
   const expandedGap = boardSize * EXPANDED_GAP_RATIO;
-  // the preview is centred in the board's closed rect, so its visible top sits lower
   const previewTop = closedTop + (boardSize - previewSize) / 2;
   const halfTray = miniBoardSize.height / 2;
   const shared = { left, miniBoardSize, onToggle: onToggleSide, open, progress, width: boardSize };

@@ -4,11 +4,13 @@ import { StyleSheet, View } from 'react-native';
 import Animated, { Extrapolation, interpolate, useAnimatedStyle } from 'react-native-reanimated';
 import type { SharedValue } from 'react-native-reanimated';
 
-import { CHECKMATE_KING_IMG, GAME_OVER_KING_IMG, PIECE_IMG } from '@/constants/chess-pieces';
+import { PIECE_IMG } from '@/constants/chess-pieces';
+import { useSheetColors } from '@/hooks/use-sheet-colors';
 import { kingCellFromFen, piecesFromFen } from '@/utils/fen';
 
 import type { BoardTransform } from '../board-transform';
 import {
+  KING_DOT,
   PIECE_REVEAL_OPACITY,
   PIECE_REVEAL_OPACITY_VALUES,
   PIECE_REVEAL_START_SCALE,
@@ -18,14 +20,13 @@ import {
 
 export type PieceImageSet = typeof PIECE_IMG;
 
-const KING_IMAGES = { checkmate: CHECKMATE_KING_IMG, gameOver: GAME_OVER_KING_IMG } as const;
-
-// one image per piece sharing a single animated style, so the grow-in lands in the same commit as the sheet
+// the pieces grow in and out with the sheet while the live board stays hidden
 export const TransitionPieces = memo(function TransitionPieces({
   boardSize,
   boardTransform,
   fen,
   kingDisplayState,
+  kingSide = null,
   pieceImages,
   progress,
 }: {
@@ -33,19 +34,20 @@ export const TransitionPieces = memo(function TransitionPieces({
   boardTransform: BoardTransform;
   fen: string;
   kingDisplayState: KingDisplayState;
+  kingSide?: 'w' | 'b' | null;
   pieceImages: PieceImageSet;
   progress: SharedValue<number>;
 }) {
+  const { kingColors, kingImages } = useSheetColors();
   const cell = boardSize / 8;
   const { previewScale, scale } = boardTransform;
-  // the pieces are hidden while the sheet is closed, so a game switch can update them after the markers
+  // a deferred position lets a game switch update the markers first
   const deferredFen = useDeferredValue(fen);
   const pieces = useMemo(() => piecesFromFen(deferredFen), [deferredFen]);
-  const kingCell = useMemo(() => kingCellFromFen(deferredFen), [deferredFen]);
+  const kingCell = useMemo(() => kingCellFromFen(deferredFen, kingSide), [deferredFen, kingSide]);
 
   const pieceStyle = useAnimatedStyle(() => {
     const boardScale = scale.value;
-    // the on-screen piece size, divided by the board's own scale
     const totalPieceScale = interpolate(
       boardScale,
       [previewScale, 1],
@@ -66,7 +68,6 @@ export const TransitionPieces = memo(function TransitionPieces({
     };
   });
 
-  // memoised on the deferred position, so the urgent render of a game switch skips all 32 images
   const images = useMemo(
     () =>
       pieces.map(({ color, index, type }, slot) => {
@@ -74,9 +75,8 @@ export const TransitionPieces = memo(function TransitionPieces({
 
         return (
           <Animated.Image
-            // keyed by slot so a game switch reuses the same images with new props
             key={`slot-${slot}`}
-            source={specialKing ? KING_IMAGES[kingDisplayState] : pieceImages[color][type]}
+            source={specialKing ? kingImages[kingDisplayState] : pieceImages[color][type]}
             style={[
               {
                 height: cell,
@@ -90,11 +90,31 @@ export const TransitionPieces = memo(function TransitionPieces({
           />
         );
       }),
-    [cell, kingCell, kingDisplayState, pieceImages, pieceStyle, pieces],
+    [cell, kingCell, kingDisplayState, kingImages, pieceImages, pieceStyle, pieces],
   );
+
+  // the coloured king dot grows in with the pieces before the live board takes over
+  const dot =
+    kingCell !== null && kingDisplayState !== null ? (
+      <Animated.View
+        style={[
+          {
+            backgroundColor: kingColors[kingDisplayState].dot,
+            borderRadius: (cell * KING_DOT.diameter) / 2,
+            height: cell * KING_DOT.diameter,
+            left: (kingCell % 8) * cell + cell * KING_DOT.x - (cell * KING_DOT.diameter) / 2,
+            position: 'absolute',
+            top: Math.floor(kingCell / 8) * cell + cell * KING_DOT.y - (cell * KING_DOT.diameter) / 2,
+            width: cell * KING_DOT.diameter,
+          },
+          pieceStyle,
+        ]}
+      />
+    ) : null;
 
   return (
     <View pointerEvents="none" style={StyleSheet.absoluteFill}>
+      {dot}
       {images}
     </View>
   );

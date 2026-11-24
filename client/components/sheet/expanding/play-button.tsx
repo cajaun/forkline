@@ -12,7 +12,6 @@ import type { BoardMotion } from './use-board-motion';
 
 const FADE_INPUT = [0, 0.45, 0.78, 1];
 
-// the Play pill centred on the closed board, shrinking away as the sheet opens
 export function PlayButton({
   left,
   motion,
@@ -33,7 +32,6 @@ export function PlayButton({
   const { colors } = useSheetColors();
   const { translate } = motion;
 
-  // follows the board's centre but skips its scale, so the pill keeps its size
   const followStyle = useAnimatedStyle(() => ({
     transform: [{ translateX: translate.value.x }, { translateY: translate.value.y }],
   }));

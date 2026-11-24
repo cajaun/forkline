@@ -7,13 +7,15 @@ import type { SharedValue } from 'react-native-reanimated';
 import type { BoardTransform } from '../board-transform';
 
 const DEVICE_PIXEL_RATIO = PixelRatio.get();
-export const BOARD_RADIUS = 12;
+const BOARD_RADIUS = 12;
 
-// snaps to whole device pixels, so the board holds still between visible steps
-const toDevicePixel = (value: number) =>
-  Math.round(value * DEVICE_PIXEL_RATIO) / DEVICE_PIXEL_RATIO;
+// snaps a value to the device pixel grid so the board edges stay sharp
+function toDevicePixel(value: number) {
+  'worklet';
+  return Math.round(value * DEVICE_PIXEL_RATIO) / DEVICE_PIXEL_RATIO;
+}
 
-// moves the board from the preview to its open rect by transform, which lands in the sheet's commit
+// scales and moves the board between the closed card and the open sheet
 export function useBoardMotion({
   boardSize,
   closedTop,
@@ -34,13 +36,11 @@ export function useBoardMotion({
     return toDevicePixel(boardSize * rawScale) / boardSize;
   });
 
-  // the board only travels vertically because both rects share the same left edge
   const translate = useDerivedValue(() => ({
     x: 0,
     y: toDevicePixel(interpolate(progress.value, [0, 1], [closedTop, openTop]) - openTop),
   }));
 
-  // the radius is divided by the scale so the corners read as 12pt at every size
   const radius = useDerivedValue(() =>
     interpolate(
       progress.value,

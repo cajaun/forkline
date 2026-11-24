@@ -10,10 +10,9 @@ import { useSheetColors } from '@/hooks/use-sheet-colors';
 import type { SettingsInfoKey } from '../info-content';
 import { SettingsInfoAction } from './settings-info';
 
-// matches Tray.Header's separator spacing but draws its own line so it follows the theme
 const HEADER_SEPARATOR_GAP = 21;
 
-// steps sit flat after their parent, so going back can take several steps
+// sub steps sit flat after their parent so going back can take several steps
 function SettingsBackAction({ steps }: { steps: number }) {
   const { back } = useTrayNavigation();
   const { colors } = useSheetColors();
@@ -58,7 +57,6 @@ function SettingsCloseAction() {
   );
 }
 
-// the root step shows a close button on the right and sub-steps a back arrow on the left
 export function SettingsHeader({
   title,
   backSteps = 0,
@@ -66,7 +64,6 @@ export function SettingsHeader({
 }: {
   title: string;
   backSteps?: number;
-  // adds a ? on the right that opens the info step right after this one
   info?: SettingsInfoKey;
 }) {
   const { colors } = useSheetColors();

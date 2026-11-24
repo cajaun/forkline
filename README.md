@@ -148,10 +148,25 @@ npx tsc --noEmit
 npm run lint
 ~~~
 
-Run a five-game agent match and print its JSON report:
+Run a ten-game agent match and print its JSON report:
 
 ~~~bash
-server/.venv/bin/python -m server.matches.harness --games 5 --depth 2 --max-plies 300
+server/.venv/bin/python -m server.matches.harness --games 10 --depth 2 --max-plies 300
+~~~
+
+Each pair of games starts from one of ten named openings, once with each agent
+as White, so no two games repeat. The report lists every game's opening, result
+and moves, plus each agent's average nodes searched and branches pruned per move.
+
+The full depth-2 report is saved in
+[`server/reports/match-depth-2.json`](server/reports/match-depth-2.json), and the
+app shows its summary in the stats tray (the chart button on the home screen,
+then AI match report). To refresh both after changing an agent:
+
+~~~bash
+server/.venv/bin/python -m server.matches.harness --games 10 --depth 2 \
+  --output server/reports/match-depth-2.json \
+  --summary client/constants/match-report.json
 ~~~
 
 ## Repository Layout

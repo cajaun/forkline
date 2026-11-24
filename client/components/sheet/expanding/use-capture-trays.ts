@@ -17,7 +17,7 @@ const sameList = (a: string[], b: string[]) =>
 
 const sameCaptures = (a: Captured, b: Captured) => sameList(a.b, b.b) && sameList(a.w, b.w);
 
-// the captured pieces above and below the board, plus which tray is expanded
+// tracks captured pieces and opens the tray of the side that captured
 export function useCaptureTrays(boardFen: string) {
   const [captured, setCaptured] = useState(() => capturedFromFen(boardFen));
   const [expandedSide, setExpandedSide] = useState<CaptureExpansion>(null);
@@ -30,7 +30,6 @@ export function useCaptureTrays(boardFen: string) {
     collapseTimerRef.current = null;
   }, []);
 
-  // a capture pops its tray open for a few seconds
   const recordCapture = useCallback(
     (result: MoveResult) => {
       const piece = result.move.captured;
@@ -47,7 +46,6 @@ export function useCaptureTrays(boardFen: string) {
     [clearCollapseTimer],
   );
 
-  // the first tap shows both trays, and a tap on an open tray closes it
   const toggleSide = useCallback(
     (side: CaptureSide) => {
       clearCollapseTimer();
@@ -60,7 +58,6 @@ export function useCaptureTrays(boardFen: string) {
     [clearCollapseTimer],
   );
 
-  // a new position rebuilds the captures during render, keeping the old object when nothing changed
   if (capturedFen !== boardFen) {
     const next = capturedFromFen(boardFen);
     setCapturedFen(boardFen);
@@ -68,7 +65,6 @@ export function useCaptureTrays(boardFen: string) {
     setExpandedSide(null);
   }
 
-  // a pending auto-collapse belongs to the old position
   useEffect(() => clearCollapseTimer(), [boardFen, clearCollapseTimer]);
 
   useEffect(() => clearCollapseTimer, [clearCollapseTimer]);

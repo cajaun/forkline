@@ -1,8 +1,7 @@
-import { useRef, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { View, useWindowDimensions } from 'react-native';
 
 import { StatusBar } from 'expo-status-bar';
-import { GestureDetector } from 'react-native-gesture-handler';
 import { Extrapolation, interpolate, useAnimatedStyle } from 'react-native-reanimated';
 import type { ChessboardRef } from 'react-native-chessboard';
 
@@ -15,18 +14,18 @@ import { useGameSelection } from '@/hooks/use-game-selection';
 import { useLibraryLifecycle } from '@/hooks/use-library-lifecycle';
 import { useSheetAnimation } from '@/hooks/use-sheet-animation';
 import { useSheetColors } from '@/hooks/use-sheet-colors';
-import { START_FEN, useGameLibrary } from '@/stores/games';
+import { lossSideOf } from '@/utils/game-ending';
+import { START_FEN, gameActions, useGameLibrary } from '@/stores/games';
 
 import { ExpandingBoard } from './expanding-board';
-import { GameDots } from './game-dots';
 import { HomeChrome } from './home-chrome';
 import { OpenBottomControls } from './open-bottom-controls';
 import { OpenControls } from './open-controls';
 import { PreviewCard } from './preview-card';
 import { PreviewTimer } from './preview-timer';
 import { SheetStack } from './sheet-stack';
+import { useBoardHint } from '@/hooks/use-board-hint';
 
-// the home screen: the day strip behind a card that opens into the game sheet
 export function ChessboardSheet() {
   const { height, width } = useWindowDimensions();
   const { colors, isDark } = useSheetColors();
@@ -34,32 +33,49 @@ export function ChessboardSheet() {
   const { addElapsed, days, gamesByDay, getMoves, library, recordState, selectGame, selectedGame } =
     useGameLibrary();
   const { closeSheet, open, openSheet, progress, sheetStyle } = useSheetAnimation(height);
-  const backendGame = useBackendGame({ active: open, game: selectedGame, getMoves, recordState });
-  const selection = useGameSelection({
-    gamesByDay,
-    library,
-    onOpen: openSheet,
-    open,
-    selectGame,
-    selectedGame,
+  const backendGame = useBackendGame({
+    active: open && selectedGame?.status === 'active',
+    game: selectedGame,
+    getMoves,
+    recordState,
   });
-  const { dayGames, pendingGame, shownGame } = selection;
+  const selection = useGameSelection({ library, onOpen: openSheet, selectGame, selectedGame });
+  const { pendingGame, shownGame } = selection;
   const [trayOpen, setTrayOpen] = useState(false);
 
   useLibraryLifecycle(library?.onboardingComplete ?? false);
 
   const previewSize = Math.round(width * SHEET_LAYOUT.previewBoardRatio);
   const expandedSize = width * SHEET_LAYOUT.openBoardRatio - SHEET_LAYOUT.openBoardGutter * 2;
-  // the clock runs only while an unfinished game is open with no tray over it
+  // the clock runs for an open game in play with no tray over it
   const clockRunning = open && !trayOpen && !pendingGame && selectedGame?.status === 'active';
-  // only a human-vs-agent game still in play takes board input
+  // the board takes input in a human game the server is not busy with
   const boardInputEnabled =
     !backendGame.busy &&
     !backendGame.error &&
     selectedGame?.status === 'active' &&
     selectedGame.config.gameMode === 'human-vs-agent';
 
-  // washes the home background out to the sheet colour as the sheet takes over
+  const resignedSide = lossSideOf(selectedGame);
+  const shownResignedSide = lossSideOf(shownGame);
+
+  const hint = useBoardHint(boardRef, colors.primary, selectedGame?.id ?? null);
+  const { requestHint } = backendGame;
+  const showHint = hint.show;
+  const handleHint = useCallback(() => {
+    void showHint(requestHint);
+  }, [requestHint, showHint]);
+  const { onUserMove } = backendGame;
+  const clearHint = hint.clear;
+  // a move clears any hint before the server sees it
+  const handleUserMove = useCallback(
+    (result: Parameters<typeof onUserMove>[0]) => {
+      clearHint();
+      void onUserMove(result);
+    },
+    [clearHint, onUserMove],
+  );
+
   const backdropStyle = useAnimatedStyle(() => ({
     opacity: interpolate(
       progress.value,
@@ -77,9 +93,9 @@ export function ChessboardSheet() {
         <HomeChrome
           days={days}
           gamesByDay={gamesByDay}
-          onSelectDay={selection.selectDay}
+          onSelectGame={selection.showGame}
           progress={progress}
-          selectedDayKey={shownGame ? selection.shownDayKey : null}
+          selectedGameId={shownGame?.id ?? null}
         />
       </AnimatedView>
 
@@ -91,30 +107,25 @@ export function ChessboardSheet() {
 
       <SheetStack frameStyle={sheetStyle} />
 
-      <GestureDetector gesture={selection.swipeGesture}>
-        <AnimatedView
-          className="absolute overflow-visible"
-          style={[{ backgroundColor: colors.background, boxShadow: SHEET_SHADOWS.sheet }, sheetStyle]}>
-          <PreviewCard
-            dayKey={selection.shownDayKey}
-            onClose={closeSheet}
-            onOpen={selection.openShownGame}
-            open={open}
-            progress={progress}
-          />
-          <OpenControls onClose={closeSheet} open={open} progress={progress} />
-          <OpenBottomControls open={open} progress={progress} />
-        </AnimatedView>
-      </GestureDetector>
-
-      {dayGames.length > 1 ? (
-        <GameDots
-          activeIndex={selection.gameIndex}
-          games={dayGames}
+      <AnimatedView
+        className="absolute overflow-visible"
+        style={[{ backgroundColor: colors.background, boxShadow: SHEET_SHADOWS.sheet }, sheetStyle]}>
+        <PreviewCard
+          dayKey={selection.shownDayKey}
+          onClose={closeSheet}
+          onOpen={selection.openShownGame}
+          open={open}
           progress={progress}
-          top={height * (1 - SHEET_LAYOUT.closedBottom) + 26}
         />
-      ) : null}
+        <OpenControls onClose={closeSheet} open={open} progress={progress} />
+        <OpenBottomControls
+          hintEnabled={boardInputEnabled}
+          hintThinking={hint.thinking}
+          onHint={handleHint}
+          open={open}
+          progress={progress}
+        />
+      </AnimatedView>
 
       <ExpandingBoard
         boardFen={backendGame.boardFen || selectedGame?.fen || START_FEN}
@@ -129,8 +140,10 @@ export function ChessboardSheet() {
         previewSize={previewSize}
         progress={progress}
         onRemoteMoveApplied={backendGame.acknowledgeRemoteMove}
-        onUserMove={backendGame.onUserMove}
+        onUserMove={handleUserMove}
         remoteMove={backendGame.remoteMove}
+        resignedSide={resignedSide}
+        surfaceResignedSide={shownResignedSide}
         syncRequest={backendGame.syncRequest}
       />
       <PreviewTimer
@@ -138,6 +151,7 @@ export function ChessboardSheet() {
         gameId={selectedGame?.id ?? null}
         height={height}
         onCommitElapsed={addElapsed}
+        onTimeUp={gameActions.timeOutGame}
         progress={progress}
         running={clockRunning}
       />

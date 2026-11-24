@@ -6,7 +6,8 @@ import type { AgentName } from '@/components/trays/settings/types';
 import type { GameConfig, GameMoves } from '@/types/games';
 
 const configuredApiUrl = process.env.EXPO_PUBLIC_API_URL?.trim();
-export const CHESS_API_URL =
+// the Android emulator reaches the host machine through its own alias address
+const CHESS_API_URL =
   configuredApiUrl ||
   (Platform.OS === 'android' ? 'http://10.0.2.2:8000' : 'http://localhost:8000');
 
@@ -56,6 +57,7 @@ export type BackendMoveResponse = BackendState & {
 
 type ApiErrorPayload = { detail?: string };
 
+// turns a network failure or a server error into a readable message
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   let response: Response;
 
@@ -85,7 +87,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   return payload as T;
 }
 
-export function opponentAgent(agent: AgentName): AgentName {
+function opponentAgent(agent: AgentName): AgentName {
   return agent === 'material-mobility'
     ? 'king-safety-position'
     : 'material-mobility';
@@ -103,7 +105,7 @@ export function moveFromUci(uci: string): {
   };
 }
 
-// a session replays the saved start position and moves, so any game can resume with new settings
+// a session replays the saved start and moves so any game resumes with new settings
 export async function createHumanGame(
   config: GameConfig,
   history: GameMoves,
@@ -154,6 +156,11 @@ export async function requestHumanGameAiMove(
   return request<BackendMoveResponse>(`/games/${gameId}/ai-move`, {
     method: 'POST',
   });
+}
+
+// the agent best move for the human turn searched without playing it
+export async function requestHint(gameId: string): Promise<{ uci: string }> {
+  return request<{ uci: string }>(`/games/${gameId}/hint`, { method: 'POST' });
 }
 
 export async function requestMatchAiMove(

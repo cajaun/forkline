@@ -1,5 +1,3 @@
-// days are keyed YYYY-MM-DD in local time, so an 11pm game stays on that evening's date
-
 const WEEKDAYS = [
   'Sunday',
   'Monday',
@@ -50,12 +48,11 @@ export function dayLabels(dayKey: string) {
   };
 }
 
-// every day from `firstKey` through `lastKey`, inclusive, oldest first
+// a clock that moved backwards past the first game yields today alone
 export function dayRange(firstKey: string, lastKey: string): string[] {
   const days: string[] = [];
   const cursor = dateFromDayKey(firstKey);
   const last = dateFromDayKey(lastKey);
-  // guard against a clock that moved backwards past the first game
   if (cursor > last) return [lastKey];
   while (cursor <= last) {
     days.push(dayKeyFromDate(cursor));
@@ -64,13 +61,7 @@ export function dayRange(firstKey: string, lastKey: string): string[] {
   return days;
 }
 
-// whole hours (rounded up) until the next local midnight
-export function hoursUntilNextDay(now = new Date()): number {
-  const midnight = new Date(now);
-  midnight.setHours(24, 0, 0, 0);
-  return Math.max(1, Math.ceil((midnight.getTime() - now.getTime()) / 3_600_000));
-}
-
+// minutes and seconds with hours once a game runs past an hour
 export function formatElapsed(ms: number): string {
   const totalSeconds = Math.floor(ms / 1000);
   const hours = Math.floor(totalSeconds / 3600);

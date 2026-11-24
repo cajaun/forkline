@@ -5,7 +5,7 @@ import type { GameConfig } from '@/types/games';
 
 import type { SettingsScope } from './types';
 
-// defaults apply to new games, while a started game takes strategy and depth from its next move and restarts for a new mode or colour
+// defaults shape new games while a started game restarts for a new mode or colour
 export function useScopedConfig(scope: SettingsScope) {
   const { defaults, game } = useSettingsSlice(scope);
   const editsGame = scope === 'game' && game !== null;
@@ -29,16 +29,10 @@ export function useScopedConfig(scope: SettingsScope) {
     [editsGame, game],
   );
 
-  const startNewGame = useCallback(() => {
-    gameActions.createGame(config);
-  }, [config]);
-
   return {
     change,
     config,
-    // the game's mode and colour are locked once it has moves
     modeLocked: editsGame && (game?.started ?? false),
     scope: editsGame ? ('game' as const) : ('defaults' as const),
-    startNewGame,
   };
 }

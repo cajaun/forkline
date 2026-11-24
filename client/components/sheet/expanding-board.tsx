@@ -1,5 +1,7 @@
-import { memo, useCallback, useState } from 'react';
+import { memo, useCallback, useMemo, useState } from 'react';
 import { useWindowDimensions } from 'react-native';
+
+import { Chess } from 'chess.js';
 
 import { useAnimatedStyle } from 'react-native-reanimated';
 import type { SharedValue } from 'react-native-reanimated';
@@ -17,14 +19,18 @@ import { useOpenGate, useRemoteMoves, useSyncRequests } from './expanding/use-bo
 import { useCaptureTrays } from './expanding/use-capture-trays';
 import { BoardPreviewLayers, SheetBoard, type KingDisplayState } from './sheet-board';
 
-// a check marks the king orange and a checkmate marks it red
-function kingStateAfter(result: MoveResult): KingDisplayState {
-  if (result.state.isCheckmate) return 'gameOver';
-  if (result.state.isCheck) return 'checkmate';
-  return null;
+// the closed board king colour comes from the position so it survives reloads and switches
+function kingStateOf(fen: string): KingDisplayState {
+  try {
+    const chess = new Chess(fen);
+    if (chess.isCheckmate()) return 'gameOver';
+    return chess.inCheck() ? 'checkmate' : null;
+  } catch {
+    return null;
+  }
 }
 
-// lives outside the sheet in screen coordinates, so the sheet's lagging layout frame never offsets it
+// the board lives outside the sheet in screen space so the sheet frame cannot offset it
 export const ExpandingBoard = memo(function ExpandingBoard({
   boardRef,
   boardFen,
@@ -40,11 +46,12 @@ export const ExpandingBoard = memo(function ExpandingBoard({
   onRemoteMoveApplied,
   onUserMove,
   remoteMove,
+  resignedSide = null,
+  surfaceResignedSide = resignedSide,
   syncRequest,
 }: {
   boardRef: React.RefObject<ChessboardRef | null>;
   boardFen: string;
-  // a picked game's saved position, shown before the switch to it finishes rendering
   previewFen?: string | null;
   boardSize: number;
   closedCenterY: number;
@@ -57,6 +64,8 @@ export const ExpandingBoard = memo(function ExpandingBoard({
   onRemoteMoveApplied?: (id: string) => void;
   onUserMove?: (result: MoveResult) => void;
   remoteMove?: RemoteMove | null;
+  resignedSide?: 'w' | 'b' | null;
+  surfaceResignedSide?: 'w' | 'b' | null;
   syncRequest?: SyncRequest | null;
 }) {
   const { width } = useWindowDimensions();
@@ -66,13 +75,11 @@ export const ExpandingBoard = memo(function ExpandingBoard({
   const motion = useBoardMotion({ boardSize, closedTop, openTop, previewSize, progress });
   const captures = useCaptureTrays(boardFen);
   const gate = useOpenGate(onOpen);
-  const [kingDisplayState, setKingDisplayState] = useState<KingDisplayState>(null);
 
-  // markers follow the live position and reset in the same render as a new boardFen, never a frame late
+  // markers reset in the same render as a new position
   const [markerState, setMarkerState] = useState({ base: boardFen, fen: boardFen });
   if (markerState.base !== boardFen) {
     setMarkerState({ base: boardFen, fen: boardFen });
-    setKingDisplayState(null);
   }
   const markerFen = markerState.base === boardFen ? markerState.fen : boardFen;
   const setMarkerFen = useCallback(
@@ -80,15 +87,14 @@ export const ExpandingBoard = memo(function ExpandingBoard({
     [],
   );
 
-  // the closed-state layers are hidden while open, so they hold the opening position and catch up on close
-  const liveSurfaceFen = previewFen ?? markerFen;
-  const [openedSurfaceFen, setOpenedSurfaceFen] = useState(liveSurfaceFen);
-  if (!open && openedSurfaceFen !== liveSurfaceFen) {
-    setOpenedSurfaceFen(liveSurfaceFen);
-  }
-  const surfaceFen = open ? openedSurfaceFen : liveSurfaceFen;
+  // the closed layers follow each move so opening and closing show the real position
+  const surfaceFen = previewFen ?? markerFen;
+  const surfaceKingState = useMemo(
+    () => (surfaceResignedSide ? 'gameOver' : kingStateOf(surfaceFen)),
+    [surfaceResignedSide, surfaceFen],
+  );
 
-  // the library resets the board whenever its fen prop changes, so it only gets the first position
+  // the library resets on a fen prop change so it receives the first position alone
   const [initialBoardFen] = useState(boardFen);
   const fastResetRef = useSyncRequests({ boardRef, onSynced: setMarkerFen, open, syncRequest });
   const remoteMoveInProgressRef = useRemoteMoves({
@@ -102,7 +108,6 @@ export const ExpandingBoard = memo(function ExpandingBoard({
   const handleMove = useCallback(
     (result: MoveResult) => {
       setMarkerFen(result.state.fen);
-      setKingDisplayState(kingStateAfter(result));
       recordCapture(result);
       if (!remoteMoveInProgressRef.current) onUserMove?.(result);
     },
@@ -135,25 +140,25 @@ export const ExpandingBoard = memo(function ExpandingBoard({
       />
       <AnimatedView
         className="absolute z-2 overflow-hidden"
-        // input is blocked here, since toggling the board's own config rebuilds its whole context
         pointerEvents={open && boardInputEnabled ? 'auto' : 'none'}
         style={[openRect, boardStyle]}>
         <BoardPreviewLayers
           boardSize={boardSize}
           boardTransform={motion.boardTransform}
           fen={surfaceFen}
-          kingDisplayState={kingDisplayState}
+          kingDisplayState={surfaceKingState}
+          kingSide={surfaceResignedSide}
           progress={progress}
         />
         <SheetBoard
           ref={boardRef}
           boardSize={boardSize}
           fen={initialBoardFen}
-          kingDisplayState={kingDisplayState}
           onMove={handleMove}
           onReady={gate.onReady}
           progress={progress}
           resetRef={fastResetRef}
+          resignedSide={resignedSide}
         />
       </AnimatedView>
       <PlayButton

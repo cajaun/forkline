@@ -19,7 +19,7 @@ function layerStyle(layer: StackLayer): ViewStyle {
   };
 }
 
-// a sibling behind the sheet, so each card's shadow falls on the card behind it
+// the stand in cards that peek out under the closed sheet
 export function SheetStack({
   frameStyle,
 }: {

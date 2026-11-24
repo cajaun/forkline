@@ -9,6 +9,7 @@ type FallbackName = ComponentProps<typeof Ionicons>['name'];
 export type SymbolName = ExtendedSymbol;
 export type SymbolFallback = FallbackName;
 
+// draws the SF Symbol on iOS and the Ionicons fallback elsewhere
 export function SfSymbol({
   fallback,
   name,
@@ -22,7 +23,6 @@ export function SfSymbol({
   tintColor: string;
   weight?: SymbolWeight;
 }) {
-  // use native symbols first and Ionicons as the fallback
   return (
     <SymbolView
       fallback={<Ionicons color={tintColor} name={fallback} size={size} />}

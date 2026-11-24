@@ -8,8 +8,8 @@ export const START_FEN = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0
 export const INITIAL_GAME_CONFIG: GameConfig = {
   agent: 'material-mobility',
   depths: {
-    'king-safety-position': 2,
-    'material-mobility': 2,
+    'king-safety-position': 1,
+    'material-mobility': 1,
   },
   gameMode: 'human-vs-agent',
   humanColor: 'white',
@@ -24,14 +24,12 @@ export const EMPTY_LIBRARY: GameLibrary = {
 
 const PERSIST_DELAY_MS = 300;
 
-// actions use jotai's default store directly so they stay stable, and components subscribe through selectors.ts
 export const store = getDefaultStore();
 
-// null until the saved library has been read from disk
 export const libraryAtom = atom<GameLibrary | null>(null);
 export const selectedGameIdAtom = atom<string | null>(null);
 
-// move lists load on demand and nothing renders them, so a plain map caches them
+// move lists load on demand and stay cached for the session
 const movesCache = new Map<string, GameMoves>();
 
 export const emptyMoves = (): GameMoves => ({ moves: [], startFen: START_FEN });
@@ -41,8 +39,8 @@ export const cachedMoves = (id: string) => movesCache.get(id);
 export const cacheMoves = (id: string, moves: GameMoves) => movesCache.set(id, moves);
 
 export const clearMovesCache = () => movesCache.clear();
+export const forgetMoves = (id: string) => movesCache.delete(id);
 
-// caches a game's moves for the session and writes them through to disk
 export function storeMoves(id: string, moves: GameMoves) {
   cacheMoves(id, moves);
   void saveMoves(id, moves);
@@ -50,7 +48,7 @@ export function storeMoves(id: string, moves: GameMoves) {
 
 let persistTimer: ReturnType<typeof setTimeout> | null = null;
 
-// batches rapid changes like moves and clock flushes into one write
+// batches rapid writes like moves and clock flushes into one save
 function persistSoon() {
   if (persistTimer) return;
   persistTimer = setTimeout(() => {
@@ -60,7 +58,6 @@ function persistSoon() {
   }, PERSIST_DELAY_MS);
 }
 
-// an update that returns the same object counts as a no-op and skips the write
 export function updateLibrary(update: (library: GameLibrary) => GameLibrary) {
   const current = store.get(libraryAtom);
   if (!current) return;
@@ -83,7 +80,6 @@ export function newGameId() {
   return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
-// a fresh game record at the start position
 export function newGameSummary(
   id: string,
   config: GameConfig,
@@ -104,7 +100,6 @@ export function newGameSummary(
   };
 }
 
-// games grouped by day, oldest first within each day
 export function groupByDay(games: Record<string, GameSummary>) {
   const byDay: Record<string, GameSummary[]> = {};
   for (const game of Object.values(games)) {

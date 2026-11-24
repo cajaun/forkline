@@ -4,7 +4,7 @@ import { atom, useAtom } from 'jotai';
 
 import type { SettingsState } from './types';
 
-export const INITIAL_SETTINGS: SettingsState = {
+const INITIAL_SETTINGS: SettingsState = {
   appearance: {
     themeMode: 'light',
   },

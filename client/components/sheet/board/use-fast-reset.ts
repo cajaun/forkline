@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo } from 'react';
 
 import type { Chess } from 'chess.js';
 import { runOnUI } from 'react-native-reanimated';
+import type { SharedValue } from 'react-native-reanimated';
 import type { useBoardConfig, useBoardStateValues } from 'react-native-chessboard/src/state';
 import type { PieceCode } from 'react-native-chessboard/src/state/types';
 import { SQUARES } from 'react-native-chessboard/src/state/types';
@@ -9,19 +10,20 @@ import { squareToPosition } from 'react-native-chessboard/src/state/use-board-st
 
 export type FastReset = (fen: string) => void;
 
-// jumps to a position in one worklet, where the library's resetBoard makes ~520 separate UI-thread hops
+// jumps the board to a position in one worklet instead of hundreds of UI thread hops
 export function useFastReset({
   boardState,
   chess,
   config,
+  mated,
   resetRef,
 }: {
   boardState: ReturnType<typeof useBoardStateValues>;
   chess: Chess;
   config: ReturnType<typeof useBoardConfig>;
+  mated: SharedValue<boolean>;
   resetRef?: React.RefObject<FastReset | null>;
 }) {
-  // built once per board, so the worklet captures the shared values a single time
   const applyPositionOnUI = useMemo(() => {
     const squares = SQUARES.map(square => boardState.squares[square]);
     const highlights = SQUARES.map(square => boardState.highlights[square]);
@@ -68,7 +70,7 @@ export function useFastReset({
       const xs: number[] = [];
       const ys: number[] = [];
       const sideToMove = chess.turn();
-      // the king square stays marked through checkmate, not only plain check
+      // the king stays marked through checkmate as well as check
       const markKing = chess.isCheck() || chess.isCheckmate();
       let kingIndex = -1;
 
@@ -82,12 +84,12 @@ export function useFastReset({
         ys.push(position.y);
       });
 
+      mated.set(chess.isCheckmate());
       runOnUI(applyPositionOnUI)(pieces, xs, ys, sideToMove, chess.isCheck(), kingIndex);
     },
-    [applyPositionOnUI, chess, config.flipped, config.pieceSize],
+    [applyPositionOnUI, chess, config.flipped, config.pieceSize, mated],
   );
 
-  // hands the reset to the parent, which syncs positions without re-rendering the board
   useEffect(() => {
     if (!resetRef) return;
     resetRef.current = fastReset;

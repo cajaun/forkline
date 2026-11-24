@@ -3,7 +3,9 @@ import { useMemo } from 'react';
 import { atom, useAtomValue } from 'jotai';
 import { selectAtom } from 'jotai/utils';
 
+import type { GameSummary } from '@/types/games';
 import { dayRange, todayKey } from '@/utils/days';
+import { endedByApp } from '@/utils/game-ending';
 
 import { gameActions } from './actions';
 import { INITIAL_GAME_CONFIG, groupByDay, libraryAtom, selectedGameIdAtom } from './state';
@@ -27,7 +29,7 @@ const onboardingAtom = selectAtom(
     a.onboardingComplete === b.onboardingComplete,
 );
 
-// the in-game settings tray needs the defaults and the open game's settings, which a move never changes
+// the game settings tray reads fields a move leaves alone
 const gameSettingsAtom = selectAtom(
   atom(get => ({ defaults: get(libraryAtom)?.defaults, game: get(selectedGameAtom) })),
   ({ defaults, game }) => ({
@@ -41,12 +43,28 @@ const gameSettingsAtom = selectAtom(
     a.game?.started === b.game?.started,
 );
 
-// the home tray ignores the open game, so selecting another game doesn't re-render it
 const defaultSettingsAtom = selectAtom(
   libraryAtom,
   library => ({ defaults: library?.defaults ?? INITIAL_GAME_CONFIG, game: null }),
   (a, b) => a.defaults === b.defaults,
 );
+
+const selectedStandingAtom = selectAtom(
+  selectedGameAtom,
+  game => (game ? { canUndo: canUndo(game), gameMode: game.config.gameMode, status: game.status } : null),
+  (a, b) => a?.gameMode === b?.gameMode && a?.status === b?.status && a?.canUndo === b?.canUndo,
+);
+
+// a game against the AI with a human move on the board and no app ending
+function canUndo(game: GameSummary) {
+  if (game.config.gameMode !== 'human-vs-agent') return false;
+  if (endedByApp(game.termination)) return false;
+  return game.moveCount >= (game.config.humanColor === 'white' ? 1 : 2);
+}
+
+export function useSelectedGameStanding() {
+  return useAtomValue(selectedStandingAtom);
+}
 
 export function useOnboardingState() {
   return useAtomValue(onboardingAtom);
@@ -56,12 +74,11 @@ export function useSettingsSlice(scope: 'defaults' | 'game') {
   return useAtomValue(scope === 'game' ? gameSettingsAtom : defaultSettingsAtom);
 }
 
-// the main screen's view: the whole history and the selected game
 export function useGameLibrary() {
   const library = useAtomValue(libraryAtom);
   const selectedGame = useAtomValue(selectedGameAtom);
   const gamesByDay = useMemo(() => (library ? groupByDay(library.games) : {}), [library]);
-  // every day from the first game to today, so the strip has no gaps
+  // each day from the first game to today so the strip has no gaps
   const days = useMemo(() => {
     const today = todayKey();
     const keys = Object.keys(gamesByDay).sort();

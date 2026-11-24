@@ -8,17 +8,23 @@ import {
   contentTransition,
   font,
   foregroundStyle,
+  frame,
   kerning,
   monospacedDigit,
+  onGeometryChange,
 } from '@expo/ui/swift-ui/modifiers';
 
 import { RollingText } from './rolling-text';
 
+// SwiftUI infinity cannot cross the bridge so a width larger than any screen stands in
+const FILL_MAX_WIDTH = 10_000;
+
 type Weight = 'regular' | 'medium' | 'semibold' | 'bold' | 'heavy' | 'black';
 
-// iOS rolls the characters with SwiftUI's numericText transition, counting down for a smaller value, and other platforms use RollingText
+// iOS rolls characters with the SwiftUI numericText transition and other platforms use RollingText
 export const TransitionText = memo(function TransitionText({
   color,
+  fillWidth = false,
   letterSpacing,
   lineHeight,
   monospacedDigits = false,
@@ -29,20 +35,18 @@ export const TransitionText = memo(function TransitionText({
   weight,
 }: {
   color: string;
+  fillWidth?: boolean;
   letterSpacing?: number;
-  // the row height the text is centred in, matching the old RN line height
   lineHeight: number;
-  // equal-width digits, so a ticking clock doesn't change width every second
   monospacedDigits?: boolean;
   onWidth?: (width: number) => void;
   size: number;
   text: string;
-  // drives the transition: it animates when this number changes
   value: number;
   weight: Weight;
 }) {
-  // the direction the value last moved, derived during render
   const [direction, setDirection] = useState({ countsDown: false, value });
+  // the roll counts down for a smaller value
   if (direction.value !== value) {
     setDirection({ countsDown: value < direction.value, value });
   }
@@ -54,9 +58,12 @@ export const TransitionText = memo(function TransitionText({
       ...(monospacedDigits ? [monospacedDigit()] : []),
       foregroundStyle(color),
       contentTransition('numericText', { countsDown: direction.countsDown }),
+      // reads the text width before the frame widens it to the row
+      ...(fillWidth && onWidth ? [onGeometryChange(geometry => onWidth(geometry.width))] : []),
+      ...(fillWidth ? [frame({ height: lineHeight, maxWidth: FILL_MAX_WIDTH })] : []),
       animation(Animation.default, value),
     ],
-    [color, direction.countsDown, letterSpacing, monospacedDigits, size, value, weight],
+    [color, direction.countsDown, fillWidth, letterSpacing, lineHeight, monospacedDigits, onWidth, size, value, weight],
   );
 
   if (Platform.OS !== 'ios') {
@@ -77,6 +84,14 @@ export const TransitionText = memo(function TransitionText({
     );
   }
 
+  if (fillWidth) {
+    return (
+      <Host style={{ alignSelf: 'stretch', height: lineHeight }}>
+        <SwiftUIText modifiers={modifiers}>{text}</SwiftUIText>
+      </Host>
+    );
+  }
+
   return (
     <View style={{ alignItems: 'center', height: lineHeight, justifyContent: 'center' }}>
       <Host
@@ -88,7 +103,6 @@ export const TransitionText = memo(function TransitionText({
   );
 });
 
-// the game clock: same transition, keyed to whole seconds
 export const NumericText = TransitionText;
 
 const RN_WEIGHTS = {

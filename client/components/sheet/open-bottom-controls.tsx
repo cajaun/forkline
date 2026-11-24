@@ -9,28 +9,28 @@ import {
 } from 'react-native-reanimated';
 import type { SharedValue } from 'react-native-reanimated';
 
-import { useSheetColors } from '@/hooks/use-sheet-colors';
-import { PressableScale } from '@/components/shared/pressable-scale';
-import { SfSymbol } from '@/components/shared/sf-symbol';
 import { AnimatedView } from '@/components/shared/uniwind';
 
-import { RestartTray } from './restart-tray';
-
-const circleClassName =
-  'h-14 w-14 items-center justify-center rounded-full';
+import { GameActionsTray } from './game-actions-tray';
+import { HintButton } from './hint-button';
 
 export const OpenBottomControls = memo(function OpenBottomControls({
+  hintEnabled,
+  hintThinking,
+  onHint,
   open,
   progress,
 }: {
+  hintEnabled: boolean;
+  hintThinking: boolean;
+  onHint: () => void;
   open: boolean;
   progress: SharedValue<number>;
 }) {
   const { bottom } = useSafeAreaInsets();
   const { width } = useWindowDimensions();
-  const { colors } = useSheetColors();
 
-  // move footer controls from the center into their final positions
+  // the two buttons start at the centre and slide out to the corners
   const centerTravel = Math.max(0, width / 2 - 56);
   const controlsStyle = useAnimatedStyle(() => ({
     opacity: interpolate(
@@ -64,19 +64,10 @@ export const OpenBottomControls = memo(function OpenBottomControls({
       pointerEvents={open ? 'auto' : 'none'}
       style={[{ bottom: bottom + 8 }, controlsStyle]}>
       <AnimatedView className="absolute left-0 top-0" style={leftActionStyle}>
-        <RestartTray />
+        <GameActionsTray />
       </AnimatedView>
       <AnimatedView className="absolute right-0 top-0" style={rightActionStyle}>
-        <PressableScale
-          className={circleClassName}
-          style={{ backgroundColor: colors.controlBackground }}>
-          <SfSymbol
-            fallback="flash"
-            name="bolt.fill"
-            size={28}
-            tintColor={colors.icon}
-          />
-        </PressableScale>
+        <HintButton enabled={hintEnabled} onPress={onHint} thinking={hintThinking} />
       </AnimatedView>
     </AnimatedView>
   );

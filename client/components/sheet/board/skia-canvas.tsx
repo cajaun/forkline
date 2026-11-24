@@ -9,25 +9,29 @@ import { useBoardConfig, useBoardStateValues } from 'react-native-chessboard/src
 import { SkiaHighlights } from 'react-native-chessboard/src/components/skia/skia-highlights';
 
 import { AnimatedView } from '@/components/shared/uniwind';
-import { CHECKMATE_KING_IMG, GAME_OVER_KING_IMG } from '@/constants/chess-pieces';
+import { useSheetColors } from '@/hooks/use-sheet-colors';
 
-import { SKIA_SETTLED_PROGRESS, type KingDisplayState } from './constants';
-import { MoveDots, PieceAtlas, SelectedSquareHighlight, SpecialKingLayer } from './skia-layers';
+import { SKIA_SETTLED_PROGRESS } from './constants';
+import { MoveDots, PieceAtlas, SelectedSquareHighlight } from './skia-layers';
+import { SpecialKingLayer } from './special-king-layer';
 
-// the interactive board, drawn at full size and shown only once the sheet has settled open
+// the live board draws in one Skia canvas and appears once the sheet settles
 export const SheetBoardCanvas = memo(function SheetBoardCanvas({
-  kingDisplayState,
+  mated,
   progress,
+  resigned,
   spriteImage,
 }: {
-  kingDisplayState: KingDisplayState;
+  mated: SharedValue<boolean>;
+  resigned: SharedValue<'w' | 'b' | null>;
   progress: SharedValue<number>;
   spriteImage: SkImage | null;
 }) {
   const config = useBoardConfig();
   const boardState = useBoardStateValues();
-  const checkmateKingImage = useImage(CHECKMATE_KING_IMG);
-  const gameOverKingImage = useImage(GAME_OVER_KING_IMG);
+  const { isDark, kingColors, kingImages } = useSheetColors();
+  const checkmateKingImage = useImage(kingImages.checkmate);
+  const gameOverKingImage = useImage(kingImages.gameOver);
   const visibleStyle = useAnimatedStyle(() => ({
     opacity: progress.value >= SKIA_SETTLED_PROGRESS ? 1 : 0,
   }));
@@ -37,14 +41,16 @@ export const SheetBoardCanvas = memo(function SheetBoardCanvas({
       <Canvas style={{ height: config.boardSize, width: config.boardSize }}>
         <SkiaHighlights config={config} boardState={boardState} />
         <SelectedSquareHighlight boardState={boardState} config={config} />
-        <MoveDots boardState={boardState} config={config} />
+        <MoveDots boardState={boardState} config={config} isDark={isDark} />
         <PieceAtlas boardSize={config.boardSize} boardState={boardState} spriteImage={spriteImage} />
         <SpecialKingLayer
           boardState={boardState}
           checkmateImage={checkmateKingImage}
           config={config}
           gameOverImage={gameOverKingImage}
-          kingDisplayState={kingDisplayState}
+          kingColors={kingColors}
+          mated={mated}
+          resigned={resigned}
         />
       </Canvas>
     </AnimatedView>

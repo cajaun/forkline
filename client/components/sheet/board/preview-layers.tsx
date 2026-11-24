@@ -11,18 +11,20 @@ import type { KingDisplayState } from './constants';
 import { PreviewMarkers } from './preview-markers';
 import { TransitionPieces } from './transition-pieces';
 
-// the closed-state layers stay outside SheetBoard, so a game switch never re-renders the interactive board
+// the closed board layers live outside SheetBoard so a game switch leaves the live board alone
 export const BoardPreviewLayers = memo(function BoardPreviewLayers({
   boardSize,
   boardTransform,
   fen,
   kingDisplayState,
+  kingSide = null,
   progress,
 }: {
   boardSize: number;
   boardTransform: BoardTransform;
   fen: string;
   kingDisplayState: KingDisplayState;
+  kingSide?: 'w' | 'b' | null;
   progress: SharedValue<number>;
 }) {
   const { boardColors, isDark } = useSheetColors();
@@ -34,6 +36,7 @@ export const BoardPreviewLayers = memo(function BoardPreviewLayers({
         colors={boardColors}
         fen={fen}
         kingDisplayState={kingDisplayState}
+        kingSide={kingSide}
         progress={progress}
       />
       <TransitionPieces
@@ -41,6 +44,7 @@ export const BoardPreviewLayers = memo(function BoardPreviewLayers({
         boardTransform={boardTransform}
         fen={fen}
         kingDisplayState={kingDisplayState}
+        kingSide={kingSide}
         pieceImages={isDark ? DARK_PIECE_IMG : PIECE_IMG}
         progress={progress}
       />

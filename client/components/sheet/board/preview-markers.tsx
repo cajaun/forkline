@@ -9,7 +9,7 @@ import { AnimatedView } from '@/components/shared/uniwind';
 import { useSheetColors } from '@/hooks/use-sheet-colors';
 import { kingCellFromFen, pieceCellsFromFen } from '@/utils/fen';
 
-import { KING_COLORS, type KingDisplayState } from './constants';
+import type { KingColors, KingDisplayState } from './constants';
 import { hexagonPath } from './hexagon';
 
 type SquareColors = { black: string; white: string };
@@ -19,22 +19,24 @@ function squareColor(
   colors: SquareColors,
   kingCell: number | null,
   kingDisplayState: KingDisplayState,
+  kingColors: KingColors,
 ) {
-  if (index === kingCell && kingDisplayState) return KING_COLORS[kingDisplayState].square;
+  if (index === kingCell && kingDisplayState) return kingColors[kingDisplayState].square;
   const row = Math.floor(index / 8);
   return (row + (index % 8)) % 2 === 0 ? colors.white : colors.black;
 }
 
-// the 64 squares change only with board size, colours or the king's state
 const BoardSquares = memo(function BoardSquares({
   boardSize,
   colors,
   kingCell,
+  kingColors,
   kingDisplayState,
 }: {
   boardSize: number;
   colors: SquareColors;
   kingCell: number | null;
+  kingColors: KingColors;
   kingDisplayState: KingDisplayState;
 }) {
   const cell = boardSize / 8;
@@ -45,7 +47,7 @@ const BoardSquares = memo(function BoardSquares({
         <View
           key={`square-${index}`}
           style={{
-            backgroundColor: squareColor(index, colors, kingCell, kingDisplayState),
+            backgroundColor: squareColor(index, colors, kingCell, kingDisplayState, kingColors),
             height: cell,
             left: (index % 8) * cell,
             position: 'absolute',
@@ -58,7 +60,7 @@ const BoardSquares = memo(function BoardSquares({
   );
 });
 
-// joins every marker of one colour into a single path, so one SVG draws the whole board
+// joins the markers of one colour into one path so a single SVG draws the board
 function buildMarkerPaths(
   fen: string,
   cell: number,
@@ -82,23 +84,25 @@ function buildMarkerPaths(
   return paths;
 }
 
-// the closed board: squares plus a hexagon marker on each occupied square
+// the closed board draws squares with a hexagon on each occupied square
 export const PreviewMarkers = memo(function PreviewMarkers({
   boardSize,
   colors,
   fen,
   kingDisplayState,
+  kingSide = null,
   progress,
 }: {
   boardSize: number;
   colors: SquareColors;
   fen: string;
   kingDisplayState: KingDisplayState;
+  kingSide?: 'w' | 'b' | null;
   progress: SharedValue<number>;
 }) {
-  const { colors: sheetColors } = useSheetColors();
+  const { colors: sheetColors, kingColors } = useSheetColors();
   const cell = boardSize / 8;
-  const kingCell = useMemo(() => kingCellFromFen(fen), [fen]);
+  const kingCell = useMemo(() => kingCellFromFen(fen, kingSide), [fen, kingSide]);
   const markers = useMemo(
     () => buildMarkerPaths(fen, cell, kingCell, kingDisplayState),
     [cell, fen, kingCell, kingDisplayState],
@@ -111,10 +115,6 @@ export const PreviewMarkers = memo(function PreviewMarkers({
       Extrapolation.CLAMP,
     ),
   }));
-  // the checked king's marker fades out sooner than the rest
-  const kingMarkerStyle = useAnimatedStyle(() => ({
-    opacity: interpolate(progress.value, [0, 0.12, 0.2, 1], [1, 0, 0, 0], Extrapolation.CLAMP),
-  }));
 
   return (
     <View pointerEvents="none" style={StyleSheet.absoluteFill}>
@@ -122,6 +122,7 @@ export const PreviewMarkers = memo(function PreviewMarkers({
         boardSize={boardSize}
         colors={colors}
         kingCell={kingCell}
+        kingColors={kingColors}
         kingDisplayState={kingDisplayState}
       />
       <AnimatedView className="absolute inset-0" pointerEvents="none" style={markerStyle}>
@@ -132,11 +133,9 @@ export const PreviewMarkers = memo(function PreviewMarkers({
       </AnimatedView>
       {markers.king && kingDisplayState ? (
         <AnimatedView className="absolute inset-0" pointerEvents="none" style={markerStyle}>
-          <AnimatedView className="absolute inset-0" style={kingMarkerStyle}>
-            <Svg height={boardSize} style={StyleSheet.absoluteFill} width={boardSize}>
-              <SvgPath d={markers.king} fill={KING_COLORS[kingDisplayState].marker} />
-            </Svg>
-          </AnimatedView>
+          <Svg height={boardSize} style={StyleSheet.absoluteFill} width={boardSize}>
+            <SvgPath d={markers.king} fill={kingColors[kingDisplayState].marker} />
+          </Svg>
         </AnimatedView>
       ) : null}
     </View>

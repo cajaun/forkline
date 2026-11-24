@@ -28,7 +28,6 @@ export const OpenControls = memo(function OpenControls({
   const { top } = useSafeAreaInsets();
   const { colors } = useSheetColors();
 
-  // reveal header controls after the board expansion clears their path
   const controlsStyle = useAnimatedStyle(() => ({
     opacity: interpolate(
       progress.value,

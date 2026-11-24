@@ -3,10 +3,11 @@ import { Text, View } from 'react-native';
 
 import { Tray, useTrayNavigation, useTrayNavigationState } from 'react-native-morpheus';
 
-import { PressableScale } from '@/components/shared/pressable-scale';
 import { SfSymbol } from '@/components/shared/sf-symbol';
 import { trayText } from '@/components/shared/tokens';
-import { ChoiceRow } from '@/components/trays/settings/components/choice-row';
+import { useKingImages } from '@/components/trays/shared/king-images';
+import { OptionGrid, OptionTile } from '@/components/trays/shared/option-ui';
+import { TrayButton } from '@/components/trays/shared/tray-button';
 import { useSheetColors } from '@/hooks/use-sheet-colors';
 import type { GameConfig } from '@/types/games';
 
@@ -14,13 +15,12 @@ import { FEATURES, LAST_SETUP_STEP, PLAY_OPTIONS, stepsToNextSetup } from './con
 
 const OPEN_DELAY_MS = 450;
 
-// Tray.Root renders this inside the tray's scope, so it can open the tray on first launch
+// opens onboarding once the saved library loads without a finished setup
 export function OpenOnFirstLaunch({ when }: { when: boolean }) {
   const { open } = useTrayNavigation();
 
   useEffect(() => {
     if (!when) return;
-    // the home screen settles before the tray rises over it
     const timer = setTimeout(open, OPEN_DELAY_MS);
     return () => clearTimeout(timer);
   }, [open, when]);
@@ -28,11 +28,10 @@ export function OpenOnFirstLaunch({ when }: { when: boolean }) {
   return null;
 }
 
-// Continue jumps to the next setup step and finishes from the last one or its info step
-export function OnboardingFooter({ onFinish }: { onFinish: () => void }) {
+// Continue walks past the info page to the next setup page and finishes setup from the last one
+export function ContinueButton({ onFinish }: { onFinish: () => void }) {
   const { close, next } = useTrayNavigation();
   const { index } = useTrayNavigationState();
-  const { colors } = useSheetColors();
 
   const handlePress = () => {
     if (index < LAST_SETUP_STEP) {
@@ -43,25 +42,7 @@ export function OnboardingFooter({ onFinish }: { onFinish: () => void }) {
     close();
   };
 
-  return (
-    <Tray.Footer style={{ width: '100%' }}>
-      <PressableScale
-        accessibilityLabel="Continue"
-        onPress={handlePress}
-        style={{
-          alignItems: 'center',
-          backgroundColor: colors.playButton,
-          borderRadius: 50,
-          height: 56,
-          justifyContent: 'center',
-          width: '100%',
-        }}>
-        <Text className="font-bold" style={[trayText.Title3, { color: colors.playButtonForeground }]}>
-          Continue
-        </Text>
-      </PressableScale>
-    </Tray.Footer>
-  );
+  return <TrayButton label="Continue" onPress={handlePress} style={{ width: '100%' }} tone="primary" />;
 }
 
 export function WelcomeStep() {
@@ -77,15 +58,7 @@ export function WelcomeStep() {
             size={44}
             tintColor={colors.text}
           />
-          <Text
-            className="font-bold"
-            style={{
-              color: colors.text,
-              fontSize: 32,
-              letterSpacing: 0.2,
-              lineHeight: 38,
-              textAlign: 'center',
-            }}>
+          <Text className="font-semibold" style={[trayText.LargeTitle, { color: colors.text, textAlign: 'center' }]}>
             Welcome to Forkline
           </Text>
         </View>
@@ -103,12 +76,12 @@ export function WelcomeStep() {
                 />
               </View>
               <View style={{ flex: 1, gap: 4 }}>
-                <Text className="font-bold" style={[trayText.Title3, { color: colors.text }]}>
+                <Text className="font-semibold" style={[trayText.Title2, { color: colors.text }]}>
                   {feature.title}
                 </Text>
                 <Text
                   className="font-medium"
-                  style={[trayText.Callout, { color: colors.weekdayText }]}>
+                  style={[trayText.Title3, { color: colors.mutedText }]}>
                   {feature.description}
                 </Text>
               </View>
@@ -120,7 +93,6 @@ export function WelcomeStep() {
   );
 }
 
-// in AI vs AI the colour doesn't matter, so only the mode has to match
 const isSelected = (option: (typeof PLAY_OPTIONS)[number], config: GameConfig) =>
   option.config.gameMode === config.gameMode &&
   (config.gameMode === 'agent-vs-agent' || option.config.humanColor === config.humanColor);
@@ -132,20 +104,26 @@ export function PlayStep({
   config: GameConfig;
   onChange: (changes: Partial<GameConfig>) => void;
 }) {
+  const kings = useKingImages();
+  const tile = (option: (typeof PLAY_OPTIONS)[number]) => (
+    <OptionTile
+      key={option.label}
+      label={option.label}
+      onPress={() => onChange(option.config)}
+      selected={isSelected(option, config)}
+      visual={
+        option.config.gameMode === 'agent-vs-agent'
+          ? { fallback: option.fallback, icon: option.icon }
+          : { image: kings[option.config.humanColor] }
+      }
+    />
+  );
+
   return (
     <Tray.Body>
-      <Tray.Section>
-        {PLAY_OPTIONS.map(option => (
-          <ChoiceRow
-            key={option.label}
-            fallback={option.fallback}
-            icon={option.icon}
-            label={option.label}
-            onPress={() => onChange(option.config)}
-            selected={isSelected(option, config)}
-            surface
-          />
-        ))}
+      <Tray.Section style={{ gap: 12 }}>
+        <OptionGrid>{PLAY_OPTIONS.filter(option => option.config.gameMode === 'human-vs-agent').map(tile)}</OptionGrid>
+        <OptionGrid columns={1}>{PLAY_OPTIONS.filter(option => option.config.gameMode === 'agent-vs-agent').map(tile)}</OptionGrid>
       </Tray.Section>
     </Tray.Body>
   );

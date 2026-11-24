@@ -9,7 +9,6 @@ import { useSheetColors } from '@/hooks/use-sheet-colors';
 
 import { SETTINGS_INFO, type SettingsInfoKey } from '../info-content';
 
-// the header's ? moves one step forward, onto the info step that follows every settings step
 export function SettingsInfoAction() {
   const { next } = useTrayNavigation();
   const { colors } = useSheetColors();
@@ -30,27 +29,33 @@ export function SettingsInfoAction() {
   );
 }
 
-// body of an info step: what the settings on the previous step do
 export function SettingsInfoBody({ info }: { info: SettingsInfoKey }) {
   const { colors } = useSheetColors();
   const content = SETTINGS_INFO[info];
 
   return (
     <Tray.Body>
-      <Tray.Section style={{ gap: 20 }}>
-        <Text className="font-medium" style={[trayText.Title3, { color: colors.weekdayText }]}>
-          {content.subtitle}
-        </Text>
-        {content.items.map(item => (
-          <View key={item.title} style={{ gap: 4 }}>
-            <Text className="font-semibold" style={[trayText.Title2, { color: colors.text }]}>
-              {item.title}
-            </Text>
-            <Text className="font-medium" style={[trayText.Title3, { color: colors.weekdayText }]}>
-              {item.body}
-            </Text>
-          </View>
-        ))}
+      <Tray.Section>
+        <View
+          style={{
+            backgroundColor: colors.controlBackground,
+            borderCurve: 'continuous',
+            borderRadius: 28,
+            gap: 22,
+            paddingHorizontal: 22,
+            paddingVertical: 24,
+          }}>
+          {content.items.map(item => (
+            <View key={item.title} style={{ gap: 6 }}>
+              <Text className="font-semibold" style={[trayText.Title2, { color: colors.text }]}>
+                {item.title}
+              </Text>
+              <Text className="font-medium" style={[trayText.Title3, { color: colors.mutedText }]}>
+                {item.body}
+              </Text>
+            </View>
+          ))}
+        </View>
       </Tray.Section>
     </Tray.Body>
   );

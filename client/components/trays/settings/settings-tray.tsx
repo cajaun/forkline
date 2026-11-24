@@ -1,6 +1,7 @@
 import { memo } from 'react';
 import { SfSymbol } from '@/components/shared/sf-symbol';
 import { useSheetColors } from '@/hooks/use-sheet-colors';
+import { TRAY_STEP_OPTIONS } from '@/components/trays/shared/tray-style';
 import { Tray } from 'react-native-morpheus';
 
 import { CategoryOptions } from './category-options';
@@ -18,12 +19,7 @@ import { useSettingsState } from './state';
 import type { SettingsScope } from './types';
 import { useScopedConfig } from './use-scoped-config';
 
-const STEP_OPTIONS = {
-  className: 'bg-[#FEFFFF] dark:bg-[#262626]',
-  footerClassName: 'bg-[#FEFFFF] dark:bg-[#262626]',
-};
-
-// memo matters here because every render re-registers the tray's steps
+// steps sit flat in order with each category followed by its info page
 export const SettingsTray = memo(function SettingsTray({
   scope = 'defaults',
   size = 56,
@@ -68,7 +64,7 @@ export const SettingsTray = memo(function SettingsTray({
   };
 
   return (
-    <Tray.Root stepOptions={STEP_OPTIONS}>
+    <Tray.Root stepOptions={TRAY_STEP_OPTIONS}>
       <Tray.Trigger
         accessibilityLabel="Settings"
         haptics="selection"
@@ -83,13 +79,9 @@ export const SettingsTray = memo(function SettingsTray({
 
       <Tray.Step key="settings">
         <SettingsHeader title="Settings" />
-        <SettingsHomeBody
-          onNewGame={scoped.startNewGame}
-          scope={scoped.scope}
-        />
+        <SettingsHomeBody scope={scoped.scope} />
       </Tray.Step>
 
-      {/* each settings step is followed by the info step its ? opens */}
       <Tray.Step key="game">
         <SettingsHeader
           backSteps={SETTINGS_STEP_INDEX.game - SETTINGS_STEP_INDEX.settings}
