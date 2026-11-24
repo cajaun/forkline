@@ -49,8 +49,7 @@ function CaptureTray({
     opacity: interpolate(progress.value, [0, 1], [0, 1], Extrapolation.CLAMP),
     transform: [
       {
-        translateY:
-          interpolate(progress.value, [0, 1], [closedY, openY], Extrapolation.CLAMP) - openY,
+        translateY: interpolate(progress.value, [0, 1], [closedY, openY], Extrapolation.CLAMP) - openY,
       },
     ],
   }));
@@ -59,7 +58,8 @@ function CaptureTray({
     <AnimatedView
       className="absolute z-1"
       pointerEvents={open ? 'box-none' : 'none'}
-      style={[{ height: miniBoardSize.height, left, top: openY, width }, trayStyle]}>
+      style={[{ height: miniBoardSize.height, left, top: openY, width }, trayStyle]}
+    >
       <CaptureMiniBoard
         boardColors={boardColors}
         expanded={expanded}
@@ -99,10 +99,7 @@ export const BoardCaptures = memo(function BoardCaptures({
   progress: SharedValue<number>;
 }) {
   const shownCaptured = useDeferredValue(captured);
-  const miniBoardSize = useMemo(
-    () => ({ height: boardSize / 8, width: boardSize / 2 }),
-    [boardSize],
-  );
+  const miniBoardSize = useMemo(() => ({ height: boardSize / 8, width: boardSize / 2 }), [boardSize]);
   const expandedGap = boardSize * EXPANDED_GAP_RATIO;
   const previewTop = closedTop + (boardSize - previewSize) / 2;
   const halfTray = miniBoardSize.height / 2;

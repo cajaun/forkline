@@ -99,10 +99,7 @@ export const PreviewTimer = memo(function PreviewTimer({
   }));
 
   return (
-    <AnimatedView
-      className="absolute z-2 items-center"
-      pointerEvents="none"
-      style={style}>
+    <AnimatedView className="absolute z-2 items-center" pointerEvents="none" style={style}>
       <View className="flex-row items-center gap-2">
         <ClockFace
           fraction={1 - shownMs / GAME_TIME_LIMIT_MS}

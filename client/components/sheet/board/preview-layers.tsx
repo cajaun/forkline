@@ -19,6 +19,7 @@ export const BoardPreviewLayers = memo(function BoardPreviewLayers({
   kingDisplayState,
   kingSide = null,
   progress,
+  revealed = false,
 }: {
   boardSize: number;
   boardTransform: BoardTransform;
@@ -26,6 +27,7 @@ export const BoardPreviewLayers = memo(function BoardPreviewLayers({
   kingDisplayState: KingDisplayState;
   kingSide?: 'w' | 'b' | null;
   progress: SharedValue<number>;
+  revealed?: boolean;
 }) {
   const { boardColors, isDark } = useSheetColors();
 
@@ -38,6 +40,7 @@ export const BoardPreviewLayers = memo(function BoardPreviewLayers({
         kingDisplayState={kingDisplayState}
         kingSide={kingSide}
         progress={progress}
+        revealed={revealed}
       />
       <TransitionPieces
         boardSize={boardSize}
@@ -47,6 +50,7 @@ export const BoardPreviewLayers = memo(function BoardPreviewLayers({
         kingSide={kingSide}
         pieceImages={isDark ? DARK_PIECE_IMG : PIECE_IMG}
         progress={progress}
+        revealed={revealed}
       />
     </View>
   );

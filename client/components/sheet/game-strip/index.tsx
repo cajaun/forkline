@@ -53,6 +53,7 @@ export const GameStrip = memo(function GameStrip({
   const cellCount = games.length + 1;
   const contentWidth = Math.max(width, cellCount * cellWidth + edgeInset * 2);
   const start = (contentWidth - cellCount * cellWidth) / 2;
+  const contentStyle = useMemo(() => ({ height: '100%' as const, width: contentWidth }), [contentWidth]);
 
   // keeps the selected game near the middle where the row allows it
   const offsetFor = useCallback(
@@ -70,13 +71,18 @@ export const GameStrip = memo(function GameStrip({
     scrolledOnce.current = true;
   }, [offsetFor, selectedIndex]);
 
+  // the handler reads the selection from a ref so a new pick does not redraw every cell
+  const selectedRef = useRef(selectedGameId);
+  useEffect(() => {
+    selectedRef.current = selectedGameId;
+  }, [selectedGameId]);
   const handleSelect = useCallback(
     (gameId: string) => {
-      if (gameId === selectedGameId) return;
+      if (gameId === selectedRef.current) return;
       void Haptics.selectionAsync();
       onSelectGame(gameId);
     },
-    [onSelectGame, selectedGameId],
+    [onSelectGame],
   );
 
   const requestDelete = useSetAtom(deleteGameRequestAtom);
@@ -92,10 +98,11 @@ export const GameStrip = memo(function GameStrip({
   return (
     <ScrollView
       ref={scrollRef}
-      contentContainerStyle={{ height: '100%', width: contentWidth }}
+      contentContainerStyle={contentStyle}
       horizontal
       showsHorizontalScrollIndicator={false}
-      style={{ flexGrow: 0, height: '100%' }}>
+      style={{ flexGrow: 0, height: '100%' }}
+    >
       {games.map((entry, index) => (
         <PlacedCell key={entry.game.id} x={start + index * cellWidth}>
           <GameCell

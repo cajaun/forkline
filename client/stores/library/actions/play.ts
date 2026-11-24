@@ -4,7 +4,17 @@ import { GAME_TIME_LIMIT_MS } from '@/constants/game-rules';
 import type { GameSummary, RecordedState } from '@/types/games';
 import { aiWinResult, endedByApp } from '@/utils/game-ending';
 
-import { START_FEN, cachedMoves, emptyMoves, libraryAtom, newGameSummary, selectedGameIdAtom, store, storeMoves, updateGame } from '../state';
+import {
+  START_FEN,
+  cachedMoves,
+  emptyMoves,
+  libraryAtom,
+  newGameSummary,
+  selectedGameIdAtom,
+  store,
+  storeMoves,
+  updateGame,
+} from '../state';
 
 // mirrors the server state and skips the write when nothing visible changed
 export function recordState(id: string, state: RecordedState) {
@@ -13,9 +23,9 @@ export function recordState(id: string, state: RecordedState) {
     // a resignation or timeout belongs to the app so a late server reply cannot reopen it
     endedByApp(game.termination) ||
     (game.fen === state.fen &&
-    game.moveCount === state.moves.length &&
-    game.status === state.status &&
-    game.result === state.result)
+      game.moveCount === state.moves.length &&
+      game.status === state.status &&
+      game.result === state.result)
       ? game
       : {
           ...game,
@@ -43,7 +53,12 @@ export function restartSelectedGame() {
 }
 
 // the human loses a resign or timeout ending while an AI match takes the given result
-function endEarly(id: string, termination: string, watchedResult: string | null, extra: Partial<GameSummary> = {}) {
+function endEarly(
+  id: string,
+  termination: string,
+  watchedResult: string | null,
+  extra: Partial<GameSummary> = {},
+) {
   updateGame(id, game => {
     if (game.status !== 'active') return game;
     const result = game.config.gameMode === 'human-vs-agent' ? aiWinResult(game.config) : watchedResult;

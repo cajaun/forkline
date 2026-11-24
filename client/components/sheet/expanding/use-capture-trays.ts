@@ -4,11 +4,7 @@ import type { MoveResult } from 'react-native-chessboard/src/state/move-executor
 
 import { capturedFromFen } from '@/utils/fen';
 
-import {
-  CAPTURE_AUTO_COLLAPSE_DELAY,
-  type CaptureExpansion,
-  type CaptureSide,
-} from '../board-captures';
+import { CAPTURE_AUTO_COLLAPSE_DELAY, type CaptureExpansion, type CaptureSide } from '../board-captures';
 
 type Captured = Record<'b' | 'w', string[]>;
 

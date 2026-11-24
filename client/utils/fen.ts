@@ -38,16 +38,12 @@ export function piecesFromFen(fen: string): FenPiece[] {
 }
 
 export function pieceCellsFromFen(fen: string): Map<number, 'black' | 'gray'> {
-  return new Map(
-    piecesFromFen(fen).map(piece => [piece.index, piece.color === 'w' ? 'gray' : 'black']),
-  );
+  return new Map(piecesFromFen(fen).map(piece => [piece.index, piece.color === 'w' ? 'gray' : 'black']));
 }
 
 export function kingCellFromFen(fen: string, side?: 'w' | 'b' | null): number | null {
   const kingSide = side ?? (fen.split(' ')[1] === 'w' ? 'w' : 'b');
-  const king = piecesFromFen(fen).find(
-    piece => piece.type === 'k' && piece.color === kingSide,
-  );
+  const king = piecesFromFen(fen).find(piece => piece.type === 'k' && piece.color === kingSide);
   return king?.index ?? null;
 }
 

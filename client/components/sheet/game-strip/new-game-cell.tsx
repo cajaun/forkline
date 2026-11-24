@@ -21,7 +21,8 @@ export const NewGameCell = memo(function NewGameCell({ width }: { width: number 
         height: '100%',
         justifyContent: 'center',
         width,
-      }}>
+      }}
+    >
       <PressableScale
         accessibilityLabel="New game"
         onPress={() => {
@@ -36,7 +37,8 @@ export const NewGameCell = memo(function NewGameCell({ width }: { width: number 
           height: '100%',
           justifyContent: 'center',
           width: width * PILL_WIDTH_RATIO,
-        }}>
+        }}
+      >
         <SfSymbol fallback="add" name="plus" size={26} tintColor={colors.text} weight="bold" />
       </PressableScale>
     </View>

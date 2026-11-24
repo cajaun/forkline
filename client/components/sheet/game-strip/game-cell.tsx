@@ -16,6 +16,7 @@ import { SfSymbol } from '@/components/shared/sf-symbol';
 import { useSheetColors } from '@/hooks/use-sheet-colors';
 import type { GameSummary } from '@/types/games';
 import { dayLabels } from '@/utils/days';
+import { humanOutcome } from '@/utils/game-ending';
 
 import { REMOVE_FADE_MS, removingGameIdAtom } from '../delete-game-tray';
 import type { StripGame } from './strip-items';
@@ -37,13 +38,15 @@ const FADE_MS = 180;
 // the new game waits for its neighbours to make room before it fades in
 const ENTER_DELAY_MS = 80;
 
-// a check marks a finished game and the clock face shows progress for one in play
+// a check marks a finished game and a cross a lost one while the clock face shows progress for one in play
 function GameStatusMark({ color, game, inner }: { color: string; game: GameSummary; inner: string }) {
   if (game.status === 'finished') {
+    // a lost game gets a cross so the strip reads as a record of results
+    const lost = humanOutcome(game) === 'loss';
     return (
       <SfSymbol
-        fallback="checkmark-circle"
-        name="checkmark.circle.fill"
+        fallback={lost ? 'close-circle' : 'checkmark-circle'}
+        name={lost ? 'xmark.circle.fill' : 'checkmark.circle.fill'}
         size={STATUS_SIZE}
         tintColor={color}
       />
@@ -99,7 +102,8 @@ export const GameCell = memo(function GameCell({
           width,
         },
         presenceStyle,
-      ]}>
+      ]}
+    >
       <PressableScale
         accessibilityLabel={`Game ${numberInDay ?? 1} on ${labels.weekday} ${labels.monthDay}`}
         onLongPress={() => onLongPress(game.id, `${labels.weekday} ${labels.monthDay}`)}
@@ -112,7 +116,8 @@ export const GameCell = memo(function GameCell({
           justifyContent: 'center',
           paddingVertical: 15,
           width: width * PILL_WIDTH_RATIO,
-        }}>
+        }}
+      >
         <Animated.View
           pointerEvents="none"
           style={[

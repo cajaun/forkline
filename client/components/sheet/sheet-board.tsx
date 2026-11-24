@@ -107,12 +107,7 @@ function SheetGestureBoard({
     <GestureHandlerRootView style={containerStyle}>
       <GestureDetector gesture={gesture}>
         <View style={containerStyle}>
-          <SheetBoardCanvas
-            mated={mated}
-            progress={progress}
-            resigned={resigned}
-            spriteImage={spriteImage}
-          />
+          <SheetBoardCanvas mated={mated} progress={progress} resigned={resigned} spriteImage={spriteImage} />
         </View>
       </GestureDetector>
       <PromotionTray
@@ -137,10 +132,7 @@ export const SheetBoard = memo(
     ref,
   ) {
     const { boardColors } = useSheetColors();
-    const colors = useMemo(
-      () => ({ ...boardColors, checkmateHighlight: 'transparent' }),
-      [boardColors],
-    );
+    const colors = useMemo(() => ({ ...boardColors, checkmateHighlight: 'transparent' }), [boardColors]);
 
     return (
       <BoardStateProvider
@@ -149,7 +141,8 @@ export const SheetBoard = memo(
         fen={fen}
         gestureEnabled={gestureEnabled ?? true}
         withLetters={false}
-        withNumbers={false}>
+        withNumbers={false}
+      >
         <SheetGestureBoard
           boardRef={ref}
           onMove={onMove}

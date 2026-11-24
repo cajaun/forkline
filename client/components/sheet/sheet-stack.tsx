@@ -20,11 +20,7 @@ function layerStyle(layer: StackLayer): ViewStyle {
 }
 
 // the stand in cards that peek out under the closed sheet
-export function SheetStack({
-  frameStyle,
-}: {
-  frameStyle: ComponentProps<typeof AnimatedView>['style'];
-}) {
+export function SheetStack({ frameStyle }: { frameStyle: ComponentProps<typeof AnimatedView>['style'] }) {
   const { colors } = useSheetColors();
 
   return (

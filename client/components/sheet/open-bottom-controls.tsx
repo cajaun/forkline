@@ -2,11 +2,7 @@ import { memo } from 'react';
 import { useWindowDimensions } from 'react-native';
 
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import {
-  Extrapolation,
-  interpolate,
-  useAnimatedStyle,
-} from 'react-native-reanimated';
+import { Extrapolation, interpolate, useAnimatedStyle } from 'react-native-reanimated';
 import type { SharedValue } from 'react-native-reanimated';
 
 import { AnimatedView } from '@/components/shared/uniwind';
@@ -35,12 +31,7 @@ export const OpenBottomControls = memo(function OpenBottomControls({
   // the two buttons start at the centre and slide out to the corners
   const centerTravel = Math.max(0, width / 2 - 56);
   const controlsStyle = useAnimatedStyle(() => ({
-    opacity: interpolate(
-      progress.value,
-      [0.55, 0.82, 1],
-      [0, 0.75, 1],
-      Extrapolation.CLAMP,
-    ),
+    opacity: interpolate(progress.value, [0.55, 0.82, 1], [0, 0.75, 1], Extrapolation.CLAMP),
     transform: [{ translateY: interpolate(progress.value, [0, 1], [6, 0]) }],
   }));
   const leftActionStyle = useAnimatedStyle(() => ({
@@ -64,7 +55,8 @@ export const OpenBottomControls = memo(function OpenBottomControls({
     <AnimatedView
       className="absolute left-7 right-7 z-4 h-14"
       pointerEvents={open ? 'auto' : 'none'}
-      style={[{ bottom: bottom + 8 }, controlsStyle]}>
+      style={[{ bottom: bottom + 8 }, controlsStyle]}
+    >
       <AnimatedView className="absolute left-0 top-0" style={leftActionStyle}>
         <GameActionsTray />
       </AnimatedView>

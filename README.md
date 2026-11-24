@@ -5,10 +5,23 @@ provides the animated chess sheet and interactive board. The server provides
 the shared `python-chess` game state, two Minimax agents with Alpha-Beta
 pruning, human-vs-agent games, and agent-vs-agent matches.
 
-## Documentation
+## Author
 
-The repository keeps the client and server in separate packages. Use the
-source references below for the detailed implementation.
+Cajaun Campbell (620169526) completed this assignment alone and built both agents: Material + Mobility and King Safety + Position. The two agents share one Minimax search and differ in their evaluation functions. [`docs/agents.md`](docs/agents.md) explains the search and compares the strategies, and [`docs/match-report.md`](docs/match-report.md) covers the agent-vs-agent results.
+
+## Playing the two modes
+
+The app talks to the chess server for every AI move, so start the server first (see Local Development) or point the app at the hosted copy.
+
+1. Tap Play on today's game to open the board.
+2. Tap the gear, then Game, then Game mode.
+3. Pick **Human vs AI** to play against an agent. Choose your colour under Play as and the agent under AI strategy.
+4. Pick **AI vs AI** to watch the two agents play each other. The board updates after each move.
+5. Under Gameplay, set the search depth for each agent from 1 to 5.
+
+Changing the mode or colour of a game in progress starts a new game.
+
+## Source map
 
 | Area | Start here |
 | --- | --- |
@@ -41,9 +54,7 @@ FastAPI chess server
   +--> Match harness and JSON reports
 ~~~
 
-The client currently runs its board experience locally. The server runs as an
-independent local service and exposes the integration boundary for human games
-and agent matches. Session data resets when the server process stops.
+The client asks the server for each AI move and hint, and stores your games on the device. The server keeps sessions in memory, so they reset when the process stops, and the client replays a saved game's moves to resume it.
 
 ## Local Development
 
@@ -84,7 +95,9 @@ http://localhost:8000
 
 The client uses `http://localhost:8000` on iOS and web, and
 `http://10.0.2.2:8000` on the Android emulator. For a physical device, set
-`EXPO_PUBLIC_API_URL` to the machine's LAN address before starting Expo.
+`EXPO_PUBLIC_API_URL` to the machine's LAN address before starting Expo. The
+hosted server lives at `https://forkline-n04p.onrender.com`, and `client/.env`
+points the app there.
 
 ## API
 
@@ -98,6 +111,7 @@ GET    /games/{game_id}
 DELETE /games/{game_id}
 POST   /games/{game_id}/moves
 POST   /games/{game_id}/ai-move
+POST   /games/{game_id}/hint
 POST   /matches/sessions
 GET    /matches/sessions/{match_id}
 DELETE /matches/sessions/{match_id}
@@ -184,5 +198,7 @@ server/                 Python chess backend
   api/                  FastAPI routes and session storage
   chess/                Game state, agents, evaluation, and search
   matches/              Agent match runner and report generation
+  reports/              Saved match reports
   tests/                Backend unit tests
+docs/                   Search, strategy and match report write-ups
 ~~~

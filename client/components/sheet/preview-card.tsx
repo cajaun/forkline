@@ -1,12 +1,7 @@
 import { memo, useCallback } from 'react';
 import { Pressable, View } from 'react-native';
 
-import {
-  Extrapolation,
-  interpolate,
-  useAnimatedStyle,
-  useSharedValue,
-} from 'react-native-reanimated';
+import { Extrapolation, interpolate, useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
 import type { SharedValue } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -52,11 +47,7 @@ export const PreviewCard = memo(function PreviewCard({
   );
   const anchorY = (p: number) => {
     'worklet';
-    return interpolate(
-      p,
-      [0, 1],
-      [WEEKDAY_CLOSED_CENTER, safeTop + HANDLE_HEIGHT / 2],
-    );
+    return interpolate(p, [0, 1], [WEEKDAY_CLOSED_CENTER, safeTop + HANDLE_HEIGHT / 2]);
   };
   // the weekday shrinks on the handle line as the sheet opens
   const weekdayShrink = (p: number) => {
@@ -66,28 +57,15 @@ export const PreviewCard = memo(function PreviewCard({
   const weekdayStyle = useAnimatedStyle(() => {
     const p = progress.value;
     return {
-      opacity: interpolate(
-        p,
-        MORPH_CROSSFADE,
-        [1, 0],
-        Extrapolation.CLAMP,
-      ),
-      transform: [
-        { translateY: anchorY(p) - WEEKDAY_CLOSED_CENTER },
-        { scale: weekdayShrink(p) },
-      ],
+      opacity: interpolate(p, MORPH_CROSSFADE, [1, 0], Extrapolation.CLAMP),
+      transform: [{ translateY: anchorY(p) - WEEKDAY_CLOSED_CENTER }, { scale: weekdayShrink(p) }],
     };
   });
   const handleStyle = useAnimatedStyle(() => {
     const p = progress.value;
     const wordWidth = weekdayWidth.value * weekdayShrink(p);
     return {
-      opacity: interpolate(
-        p,
-        MORPH_CROSSFADE,
-        [0, 1],
-        Extrapolation.CLAMP,
-      ),
+      opacity: interpolate(p, MORPH_CROSSFADE, [0, 1], Extrapolation.CLAMP),
       transform: [
         { translateY: anchorY(p) - WEEKDAY_CLOSED_CENTER },
         { scaleX: Math.max(wordWidth / HANDLE_WIDTH, 1) },
@@ -96,9 +74,7 @@ export const PreviewCard = memo(function PreviewCard({
   });
   const dateStyle = useAnimatedStyle(() => ({
     top: interpolate(progress.value, [0, 1], [SHEET_CARD_TEXT.dateTop, safeTop + 15]),
-    transform: [
-      { scale: interpolate(progress.value, [0, 1], [1, 0.43]) },
-    ],
+    transform: [{ scale: interpolate(progress.value, [0, 1], [1, 0.43]) }],
   }));
 
   return (
@@ -106,11 +82,13 @@ export const PreviewCard = memo(function PreviewCard({
       accessibilityLabel="Open chessboard sheet"
       className="absolute inset-0 z-1 overflow-visible rounded-[34px]"
       onPress={open ? undefined : onOpen}
-      pointerEvents={open ? 'box-none' : 'auto'}>
+      pointerEvents={open ? 'box-none' : 'auto'}
+    >
       <View className="absolute inset-0 items-center" pointerEvents="none">
         <AnimatedView
           className="absolute left-0 right-0 items-center"
-          style={[{ top: WEEKDAY_CLOSED_CENTER - WEEKDAY_LINE_HEIGHT / 2 }, weekdayStyle]}>
+          style={[{ top: WEEKDAY_CLOSED_CENTER - WEEKDAY_LINE_HEIGHT / 2 }, weekdayStyle]}
+        >
           <TransitionText
             color={colors.weekdayText}
             fillWidth
@@ -124,7 +102,8 @@ export const PreviewCard = memo(function PreviewCard({
         </AnimatedView>
         <AnimatedView
           className="absolute left-0 right-0 items-center"
-          style={[{ top: WEEKDAY_CLOSED_CENTER - HANDLE_HEIGHT / 2 }, handleStyle]}>
+          style={[{ top: WEEKDAY_CLOSED_CENTER - HANDLE_HEIGHT / 2 }, handleStyle]}
+        >
           <View
             className="rounded-[3px]"
             style={{
@@ -134,9 +113,7 @@ export const PreviewCard = memo(function PreviewCard({
             }}
           />
         </AnimatedView>
-        <AnimatedView
-          className="absolute left-0 right-0 items-center"
-          style={dateStyle}>
+        <AnimatedView className="absolute left-0 right-0 items-center" style={dateStyle}>
           <TransitionText
             color={colors.dateText}
             fillWidth

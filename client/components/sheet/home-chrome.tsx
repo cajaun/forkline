@@ -1,10 +1,6 @@
 import { memo } from 'react';
 import { View } from 'react-native';
-import {
-  Extrapolation,
-  interpolate,
-  useAnimatedStyle,
-} from 'react-native-reanimated';
+import { Extrapolation, interpolate, useAnimatedStyle } from 'react-native-reanimated';
 import type { SharedValue } from 'react-native-reanimated';
 
 import { AnimatedView } from '@/components/shared/uniwind';
@@ -43,9 +39,7 @@ export const HomeChrome = memo(function HomeChrome({
 
   return (
     <View className="flex-1 pt-17" style={{ backgroundColor: colors.appBackground }}>
-      <AnimatedView
-        className="flex-row items-center gap-3 px-7"
-        style={topChromeStyle}>
+      <AnimatedView className="flex-row items-center gap-3 px-7" style={topChromeStyle}>
         <StatsTray size={48} />
         <View className="flex-1" />
         <SettingsTray size={48} />
@@ -53,9 +47,7 @@ export const HomeChrome = memo(function HomeChrome({
         <DeleteGameTray />
       </AnimatedView>
 
-      <AnimatedView
-        className="absolute bottom-8.5 left-0 right-0 h-30.75"
-        style={bottomChromeStyle}>
+      <AnimatedView className="absolute bottom-8.5 left-0 right-0 h-30.75" style={bottomChromeStyle}>
         <GameStrip
           days={days}
           gamesByDay={gamesByDay}

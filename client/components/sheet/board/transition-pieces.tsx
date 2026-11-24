@@ -29,6 +29,7 @@ export const TransitionPieces = memo(function TransitionPieces({
   kingSide = null,
   pieceImages,
   progress,
+  revealed = false,
 }: {
   boardSize: number;
   boardTransform: BoardTransform;
@@ -37,14 +38,17 @@ export const TransitionPieces = memo(function TransitionPieces({
   kingSide?: 'w' | 'b' | null;
   pieceImages: PieceImageSet;
   progress: SharedValue<number>;
+  revealed?: boolean;
 }) {
   const { kingColors, kingImages } = useSheetColors();
   const cell = boardSize / 8;
   const { previewScale, scale } = boardTransform;
   // a deferred position lets a game switch update the markers first
   const deferredFen = useDeferredValue(fen);
-  const pieces = useMemo(() => piecesFromFen(deferredFen), [deferredFen]);
-  const kingCell = useMemo(() => kingCellFromFen(deferredFen, kingSide), [deferredFen, kingSide]);
+  // a won card shows these pieces at rest so they follow the shown game without lagging
+  const pieceFen = revealed ? fen : deferredFen;
+  const pieces = useMemo(() => piecesFromFen(pieceFen), [pieceFen]);
+  const kingCell = useMemo(() => kingCellFromFen(pieceFen, kingSide), [pieceFen, kingSide]);
 
   const pieceStyle = useAnimatedStyle(() => {
     const boardScale = scale.value;
@@ -54,44 +58,43 @@ export const TransitionPieces = memo(function TransitionPieces({
       [previewScale * PIECE_REVEAL_START_SCALE, 1],
       Extrapolation.CLAMP,
     );
+    const settled = progress.value >= SKIA_SETTLED_PROGRESS;
+    // a won game keeps its pieces at full size on the closed card until the live board takes over
+    if (revealed) return { opacity: settled ? 0 : 1, transform: [{ scale: 1 }] };
     return {
-      opacity:
-        progress.value >= SKIA_SETTLED_PROGRESS
-          ? 0
-          : interpolate(
-              progress.value,
-              PIECE_REVEAL_OPACITY,
-              PIECE_REVEAL_OPACITY_VALUES,
-              Extrapolation.CLAMP,
-            ),
+      opacity: settled
+        ? 0
+        : interpolate(progress.value, PIECE_REVEAL_OPACITY, PIECE_REVEAL_OPACITY_VALUES, Extrapolation.CLAMP),
       transform: [{ scale: totalPieceScale / boardScale }],
     };
   });
 
-  const images = useMemo(
-    () =>
-      pieces.map(({ color, index, type }, slot) => {
-        const specialKing = index === kingCell && type === 'k' && kingDisplayState !== null;
+  const images = useMemo(() => {
+    // each image keeps its piece kind across positions so a switch moves it rather than reloading it
+    const seen: Record<string, number> = {};
+    return pieces.map(({ color, index, type }) => {
+      const kind = `${color}${type}`;
+      seen[kind] = (seen[kind] ?? 0) + 1;
+      const specialKing = index === kingCell && type === 'k' && kingDisplayState !== null;
 
-        return (
-          <Animated.Image
-            key={`slot-${slot}`}
-            source={specialKing ? kingImages[kingDisplayState] : pieceImages[color][type]}
-            style={[
-              {
-                height: cell,
-                left: (index % 8) * cell,
-                position: 'absolute',
-                top: Math.floor(index / 8) * cell,
-                width: cell,
-              },
-              pieceStyle,
-            ]}
-          />
-        );
-      }),
-    [cell, kingCell, kingDisplayState, kingImages, pieceImages, pieceStyle, pieces],
-  );
+      return (
+        <Animated.Image
+          key={`${kind}-${seen[kind]}`}
+          source={specialKing ? kingImages[kingDisplayState] : pieceImages[color][type]}
+          style={[
+            {
+              height: cell,
+              left: (index % 8) * cell,
+              position: 'absolute',
+              top: Math.floor(index / 8) * cell,
+              width: cell,
+            },
+            pieceStyle,
+          ]}
+        />
+      );
+    });
+  }, [cell, kingCell, kingDisplayState, kingImages, pieceImages, pieceStyle, pieces]);
 
   // the coloured king dot grows in with the pieces before the live board takes over
   const dot =

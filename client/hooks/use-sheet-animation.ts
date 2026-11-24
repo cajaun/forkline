@@ -40,18 +40,8 @@ export function useSheetAnimation(height: number) {
       [height * SHEET_LAYOUT.closedBottom, 0],
       Extrapolation.CLAMP,
     );
-    const left = interpolate(
-      progress.value,
-      [0, 1],
-      [SHEET_LAYOUT.sheetGutter, 0],
-      Extrapolation.CLAMP,
-    );
-    const right = interpolate(
-      progress.value,
-      [0, 1],
-      [SHEET_LAYOUT.sheetGutter, 0],
-      Extrapolation.CLAMP,
-    );
+    const left = interpolate(progress.value, [0, 1], [SHEET_LAYOUT.sheetGutter, 0], Extrapolation.CLAMP);
+    const right = interpolate(progress.value, [0, 1], [SHEET_LAYOUT.sheetGutter, 0], Extrapolation.CLAMP);
     const top = interpolate(
       progress.value,
       [0, 1],

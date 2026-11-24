@@ -1,4 +1,4 @@
-import { memo, useEffect, useRef } from 'react';
+import { memo, useEffect, useMemo, useRef } from 'react';
 import { Image, View, type StyleProp, type ViewStyle } from 'react-native';
 
 import * as Haptics from '@/services/haptics';
@@ -51,7 +51,22 @@ type SquareProps = {
   piecesStyle: LayerStyle;
 };
 
-function MiniSquare({
+// the animated styles keep one identity per board so a square only redraws when its piece or size changes
+function sameSquare(previous: SquareProps, next: SquareProps) {
+  return (
+    previous.piece === next.piece &&
+    previous.index === next.index &&
+    previous.cellSize === next.cellSize &&
+    previous.height === next.height &&
+    previous.foe === next.foe &&
+    previous.dotColor === next.dotColor &&
+    previous.emptyDotColor === next.emptyDotColor &&
+    previous.boardColors === next.boardColors &&
+    previous.pieceImages === next.pieceImages
+  );
+}
+
+const MiniSquare = memo(function MiniSquare({
   boardColors,
   cellSize,
   cellsStyle,
@@ -104,7 +119,7 @@ function MiniSquare({
       ) : null}
     </View>
   );
-}
+}, sameSquare);
 
 // a two row board of captured pieces that collapses into a dot strip
 export const CaptureMiniBoard = memo(function CaptureMiniBoard({
@@ -168,23 +183,24 @@ export const CaptureMiniBoard = memo(function CaptureMiniBoard({
   const cellsStyle = useAnimatedStyle(() => ({
     opacity: fade(expansion, [0.1, 0.4, 0.85], [0, 0.7, 1]),
   }));
+  const dotStyles = useMemo(() => [dotsStyle, dotScaleStyle], [dotScaleStyle, dotsStyle]);
 
   return (
-    <AnimatedView
-      style={[{ alignSelf: 'center', height: size.height, width: size.width }, translationStyle]}>
+    <AnimatedView style={[{ alignSelf: 'center', height: size.height, width: size.width }, translationStyle]}>
       <PressableScale
         accessibilityLabel={`${foe === 'w' ? 'top' : 'bottom'} captured pieces`}
         hitSlop={32}
         onPress={() => onToggle(side)}
-        style={{ height: size.height, width: size.width }}>
+        style={{ height: size.height, width: size.width }}
+      >
         <AnimatedView
           pointerEvents="none"
           style={[
             { borderRadius: RADIUS, height: size.height, overflow: 'hidden', width: size.width },
             scaleStyle,
-          ]}>
-          <View
-            style={{ flexDirection: 'row', flexWrap: 'wrap', height: size.height, width: size.width }}>
+          ]}
+        >
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', height: size.height, width: size.width }}>
             {Array.from({ length: ROWS * COLUMNS }, (_, index) => (
               <MiniSquare
                 key={`${foe}-capture-square-${index}`}
@@ -192,7 +208,7 @@ export const CaptureMiniBoard = memo(function CaptureMiniBoard({
                 cellSize={cellSize}
                 cellsStyle={cellsStyle}
                 dotColor={foe === 'b' ? colors.pieceBlack : colors.pieceWhite}
-                dotStyles={[dotsStyle, dotScaleStyle]}
+                dotStyles={dotStyles}
                 emptyDotColor={colors.captureEmptyDot}
                 foe={foe}
                 height={size.height / ROWS}

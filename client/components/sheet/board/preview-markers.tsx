@@ -14,19 +14,37 @@ import { hexagonPath } from './hexagon';
 
 type SquareColors = { black: string; white: string };
 
-function squareColor(
-  index: number,
-  colors: SquareColors,
-  kingCell: number | null,
-  kingDisplayState: KingDisplayState,
-  kingColors: KingColors,
-) {
-  if (index === kingCell && kingDisplayState) return kingColors[kingDisplayState].square;
-  const row = Math.floor(index / 8);
-  return (row + (index % 8)) % 2 === 0 ? colors.white : colors.black;
-}
+// the checkerboard only depends on the board size and theme so a game switch skips its 64 views
+const StaticSquares = memo(function StaticSquares({
+  boardSize,
+  colors,
+}: {
+  boardSize: number;
+  colors: SquareColors;
+}) {
+  const cell = boardSize / 8;
 
-const BoardSquares = memo(function BoardSquares({
+  return (
+    <>
+      {Array.from({ length: 64 }, (_, index) => (
+        <View
+          key={`square-${index}`}
+          style={{
+            backgroundColor: (Math.floor(index / 8) + (index % 8)) % 2 === 0 ? colors.white : colors.black,
+            height: cell,
+            left: (index % 8) * cell,
+            position: 'absolute',
+            top: Math.floor(index / 8) * cell,
+            width: cell,
+          }}
+        />
+      ))}
+    </>
+  );
+});
+
+// the tinted king square is the one square that changes between games
+function BoardSquares({
   boardSize,
   colors,
   kingCell,
@@ -43,22 +61,22 @@ const BoardSquares = memo(function BoardSquares({
 
   return (
     <>
-      {Array.from({ length: 64 }, (_, index) => (
+      <StaticSquares boardSize={boardSize} colors={colors} />
+      {kingCell !== null && kingDisplayState ? (
         <View
-          key={`square-${index}`}
           style={{
-            backgroundColor: squareColor(index, colors, kingCell, kingDisplayState, kingColors),
+            backgroundColor: kingColors[kingDisplayState].square,
             height: cell,
-            left: (index % 8) * cell,
+            left: (kingCell % 8) * cell,
             position: 'absolute',
-            top: Math.floor(index / 8) * cell,
+            top: Math.floor(kingCell / 8) * cell,
             width: cell,
           }}
         />
-      ))}
+      ) : null}
     </>
   );
-});
+}
 
 // joins the markers of one colour into one path so a single SVG draws the board
 function buildMarkerPaths(
@@ -72,11 +90,7 @@ function buildMarkerPaths(
   const paths = { black: '', gray: '', king: '' };
 
   for (const [index, color] of pieceCellsFromFen(fen)) {
-    const path = hexagonPath(
-      (index % 8) * cell + inset,
-      Math.floor(index / 8) * cell + inset,
-      markerSize,
-    );
+    const path = hexagonPath((index % 8) * cell + inset, Math.floor(index / 8) * cell + inset, markerSize);
     if (index === kingCell && kingDisplayState !== null) paths.king += path;
     else paths[color] += path;
   }
@@ -92,9 +106,11 @@ export const PreviewMarkers = memo(function PreviewMarkers({
   kingDisplayState,
   kingSide = null,
   progress,
+  revealed = false,
 }: {
   boardSize: number;
   colors: SquareColors;
+  revealed?: boolean;
   fen: string;
   kingDisplayState: KingDisplayState;
   kingSide?: 'w' | 'b' | null;
@@ -108,12 +124,7 @@ export const PreviewMarkers = memo(function PreviewMarkers({
     [cell, fen, kingCell, kingDisplayState],
   );
   const markerStyle = useAnimatedStyle(() => ({
-    opacity: interpolate(
-      progress.value,
-      [0, 0.2, 0.7, 0.96, 1],
-      [1, 0.85, 0.35, 0, 0],
-      Extrapolation.CLAMP,
-    ),
+    opacity: interpolate(progress.value, [0, 0.2, 0.7, 0.96, 1], [1, 0.85, 0.35, 0, 0], Extrapolation.CLAMP),
   }));
 
   return (
@@ -125,13 +136,16 @@ export const PreviewMarkers = memo(function PreviewMarkers({
         kingColors={kingColors}
         kingDisplayState={kingDisplayState}
       />
-      <AnimatedView className="absolute inset-0" pointerEvents="none" style={markerStyle}>
-        <Svg height={boardSize} style={StyleSheet.absoluteFill} width={boardSize}>
-          <SvgPath d={markers.black} fill={sheetColors.pieceBlack} />
-          <SvgPath d={markers.gray} fill={sheetColors.pieceWhite} />
-        </Svg>
-      </AnimatedView>
-      {markers.king && kingDisplayState ? (
+      {/* a won game swaps its markers for the real pieces in the same frame */}
+      {revealed ? null : (
+        <AnimatedView className="absolute inset-0" pointerEvents="none" style={markerStyle}>
+          <Svg height={boardSize} style={StyleSheet.absoluteFill} width={boardSize}>
+            <SvgPath d={markers.black} fill={sheetColors.pieceBlack} />
+            <SvgPath d={markers.gray} fill={sheetColors.pieceWhite} />
+          </Svg>
+        </AnimatedView>
+      )}
+      {markers.king && kingDisplayState && !revealed ? (
         <AnimatedView className="absolute inset-0" pointerEvents="none" style={markerStyle}>
           <Svg height={boardSize} style={StyleSheet.absoluteFill} width={boardSize}>
             <SvgPath d={markers.king} fill={kingColors[kingDisplayState].marker} />

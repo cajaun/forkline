@@ -43,16 +43,7 @@ export const DARK_PIECE_IMG: Record<Side, Record<string, ImageSourcePropType>> =
   },
 };
 
-export const CHECKMATE_KING_IMG = require(
-  '../assets/images/chess-pieces/orange/king.png',
-);
-export const GAME_OVER_KING_IMG = require(
-  '../assets/images/chess-pieces/red/king.png',
-);
-export const DARK_CHECKMATE_KING_IMG = require(
-  '../assets/images/chess-pieces/dark/orange/king.png',
-);
-export const DARK_GAME_OVER_KING_IMG = require(
-  '../assets/images/chess-pieces/dark/red/king.png',
-);
-
+export const CHECKMATE_KING_IMG = require('../assets/images/chess-pieces/orange/king.png');
+export const GAME_OVER_KING_IMG = require('../assets/images/chess-pieces/red/king.png');
+export const DARK_CHECKMATE_KING_IMG = require('../assets/images/chess-pieces/dark/orange/king.png');
+export const DARK_GAME_OVER_KING_IMG = require('../assets/images/chess-pieces/dark/red/king.png');

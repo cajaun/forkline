@@ -2,7 +2,20 @@ import { deleteMoves, loadLibrary, loadMoves } from '@/services/game-storage';
 import type { GameConfig, GameMoves } from '@/types/games';
 import { todayKey } from '@/utils/days';
 
-import { EMPTY_LIBRARY, cacheMoves, cachedMoves, emptyMoves, forgetMoves, libraryAtom, newGameId, newGameSummary, selectedGameIdAtom, store, storeMoves, updateLibrary } from '../state';
+import {
+  EMPTY_LIBRARY,
+  cacheMoves,
+  cachedMoves,
+  emptyMoves,
+  forgetMoves,
+  libraryAtom,
+  newGameId,
+  newGameSummary,
+  selectedGameIdAtom,
+  store,
+  storeMoves,
+  updateLibrary,
+} from '../state';
 
 // a first launch starts with today's game and a return visit opens on the newest one
 export async function hydrate() {

@@ -8,13 +8,13 @@ import type { ChessboardRef } from 'react-native-chessboard';
 import { OnboardingTray } from '@/components/onboarding/onboarding-tray';
 import { TrayActivityWatcher } from '@/components/shared/tray-activity';
 import { AnimatedView } from '@/components/shared/uniwind';
-import { SHEET_BACKDROP_FADE, SHEET_LAYOUT, SHEET_SHADOWS } from '@/constants/sheet';
+import { SHEET_BACKDROP_FADE, SHEET_LAYOUT, SHEET_RESULT, SHEET_SHADOWS } from '@/constants/sheet';
 import { useBackendGame } from '@/hooks/use-backend-game';
 import { useGameSelection } from '@/hooks/use-game-selection';
 import { useLibraryLifecycle } from '@/hooks/use-library-lifecycle';
 import { useSheetAnimation } from '@/hooks/use-sheet-animation';
 import { useSheetColors } from '@/hooks/use-sheet-colors';
-import { lossSideOf } from '@/utils/game-ending';
+import { lossSideOf, resultOf } from '@/utils/game-ending';
 import { START_FEN, gameActions, useGameLibrary } from '@/stores/games';
 
 import { ExpandingBoard } from './expanding-board';
@@ -25,6 +25,13 @@ import { PreviewCard } from './preview-card';
 import { PreviewTimer } from './preview-timer';
 import { SheetStack } from './sheet-stack';
 import { useBoardHint } from '@/hooks/use-board-hint';
+import { useWinCelebration } from '@/hooks/use-win-celebration';
+import type { ConfettiMethods } from 'react-native-fast-confetti';
+
+import { Confetti } from './celebration/confetti';
+import { LossTray } from './celebration/loss-tray';
+import { resultBoardRect } from './celebration/result-layout';
+import { ResultStats } from './celebration/result-stats';
 import { HINTS_PER_GAME } from '@/constants/game-rules';
 
 export function ChessboardSheet() {
@@ -57,6 +64,12 @@ export function ChessboardSheet() {
     !backendGame.error &&
     selectedGame?.status === 'active' &&
     selectedGame.config.gameMode === 'human-vs-agent';
+
+  const confettiRef = useRef<ConfettiMethods | null>(null);
+  const celebrate = useCallback(() => confettiRef.current?.restart(), []);
+  const result = useWinCelebration(selectedGame, celebrate);
+  const resultRect = resultBoardRect(width, height, expandedSize);
+  const resultTop = resultRect.top;
 
   const resignedSide = lossSideOf(selectedGame);
   const shownResignedSide = lossSideOf(shownGame);
@@ -150,7 +163,8 @@ export function ChessboardSheet() {
 
       <ExpandingBoard
         boardFen={backendGame.boardFen || selectedGame?.fen || START_FEN}
-        previewFen={pendingGame?.fen ?? null}
+        // the closed card draws the shown game from the library so a switch never shows the last board
+        previewFen={open ? (pendingGame?.fen ?? null) : (shownGame?.fen ?? null)}
         boardSize={expandedSize}
         boardRef={boardRef}
         boardInputEnabled={boardInputEnabled}
@@ -164,7 +178,11 @@ export function ChessboardSheet() {
         onUserMove={handleUserMove}
         remoteMove={backendGame.remoteMove}
         resignedSide={resignedSide}
+        result={result}
+        resultGame={resultOf(shownGame) ? shownGame : null}
+        resultTop={resultTop}
         surfaceResignedSide={shownResignedSide}
+        surfaceRevealed={resultOf(shownGame) !== null}
         syncRequest={backendGame.syncRequest}
       />
       <PreviewTimer
@@ -176,6 +194,15 @@ export function ChessboardSheet() {
         progress={progress}
         running={clockRunning}
       />
+
+      <ResultStats
+        game={resultOf(selectedGame) ? selectedGame : null}
+        progress={progress}
+        result={result}
+        top={height * SHEET_RESULT.statsTop}
+      />
+      <Confetti ref={confettiRef} />
+      <LossTray game={selectedGame} />
 
       <TrayActivityWatcher onChange={setTrayOpen} />
       {library ? <OnboardingTray /> : null}

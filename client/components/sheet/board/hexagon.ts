@@ -2,8 +2,7 @@ const HEXAGON_PATH =
   'M46 4Q50 2 54 4L91 25Q96 28 96 33V67Q96 72 91 75L54 96Q50 98 46 96L9 75Q4 72 4 67V33Q4 28 9 25Z';
 
 const HEXAGON = HEXAGON_PATH.match(/[A-Z][^A-Z]*/g)!.map(
-  part =>
-    [part[0], ...part.slice(1).trim().split(/[ ,]+/).filter(Boolean).map(Number)] as const,
+  part => [part[0], ...part.slice(1).trim().split(/[ ,]+/).filter(Boolean).map(Number)] as const,
 );
 
 const round = (value: number) => Math.round(value * 100) / 100;

@@ -1,10 +1,6 @@
 import { memo } from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import {
-  Extrapolation,
-  interpolate,
-  useAnimatedStyle,
-} from 'react-native-reanimated';
+import { Extrapolation, interpolate, useAnimatedStyle } from 'react-native-reanimated';
 import type { SharedValue } from 'react-native-reanimated';
 
 import { useSheetColors } from '@/hooks/use-sheet-colors';
@@ -13,8 +9,7 @@ import { SfSymbol } from '@/components/shared/sf-symbol';
 import { SettingsTray } from '@/components/trays/settings';
 import { AnimatedView } from '@/components/shared/uniwind';
 
-const circleClassName =
-  'h-14 w-14 items-center justify-center rounded-full';
+const circleClassName = 'h-14 w-14 items-center justify-center rounded-full';
 
 export const OpenControls = memo(function OpenControls({
   onClose,
@@ -29,12 +24,7 @@ export const OpenControls = memo(function OpenControls({
   const { colors } = useSheetColors();
 
   const controlsStyle = useAnimatedStyle(() => ({
-    opacity: interpolate(
-      progress.value,
-      [0.55, 0.82, 1],
-      [0, 0.75, 1],
-      Extrapolation.CLAMP,
-    ),
+    opacity: interpolate(progress.value, [0.55, 0.82, 1], [0, 0.75, 1], Extrapolation.CLAMP),
     transform: [{ translateY: interpolate(progress.value, [0, 1], [6, 0]) }],
   }));
 
@@ -42,12 +32,14 @@ export const OpenControls = memo(function OpenControls({
     <AnimatedView
       className="absolute left-7 right-7 z-4 flex-row justify-between"
       pointerEvents={open ? 'auto' : 'none'}
-      style={[{ top: top + 18 }, controlsStyle]}>
+      style={[{ top: top + 18 }, controlsStyle]}
+    >
       <PressableScale
         accessibilityLabel="Close chessboard"
         className={circleClassName}
         onPress={onClose}
-        style={{ backgroundColor: colors.controlBackground }}>
+        style={{ backgroundColor: colors.controlBackground }}
+      >
         <SfSymbol
           fallback="chevron-down"
           name="chevron.down"

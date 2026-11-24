@@ -10,6 +10,14 @@ export const SHEET_LAYOUT = {
   sheetRadius: 34,
 } as const;
 
+// a won game shrinks the board under the header with its badge on the lower edge and stats below
+export const SHEET_RESULT = {
+  boardScale: 0.76,
+  boardTop: 0.19,
+  fadeShare: 0.45,
+  statsTop: 0.69,
+} as const;
+
 // offsets the live card and the stand in cards share
 export const SHEET_CARD_TEXT = {
   dateTop: 95,

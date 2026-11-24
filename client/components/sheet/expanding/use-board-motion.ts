@@ -4,6 +4,8 @@ import { PixelRatio } from 'react-native';
 import { Extrapolation, interpolate, useDerivedValue } from 'react-native-reanimated';
 import type { SharedValue } from 'react-native-reanimated';
 
+import { SHEET_RESULT } from '@/constants/sheet';
+
 import type { BoardTransform } from '../board-transform';
 
 const DEVICE_PIXEL_RATIO = PixelRatio.get();
@@ -22,33 +24,42 @@ export function useBoardMotion({
   openTop,
   previewSize,
   progress,
+  result,
+  resultTop,
 }: {
   boardSize: number;
   closedTop: number;
   openTop: number;
   previewSize: number;
   progress: SharedValue<number>;
+  result: SharedValue<number>;
+  resultTop: number;
 }) {
   const previewScale = previewSize / boardSize;
 
-  const scale = useDerivedValue(() => {
-    const rawScale = interpolate(progress.value, [0, 1], [previewScale, 1], Extrapolation.CLAMP);
-    return toDevicePixel(boardSize * rawScale) / boardSize;
+  // a won game shrinks the open board toward the header and only while the sheet is open
+  const shrink = useDerivedValue(() => {
+    const open = interpolate(progress.value, [0, 1], [0, 1], Extrapolation.CLAMP);
+    return result.value * open;
   });
 
+  const scale = useDerivedValue(() => {
+    const rawScale = interpolate(progress.value, [0, 1], [previewScale, 1], Extrapolation.CLAMP);
+    const resultScale = 1 - (1 - SHEET_RESULT.boardScale) * shrink.value;
+    return toDevicePixel(boardSize * rawScale * resultScale) / boardSize;
+  });
+
+  // the shrunken board keeps its top edge at the result line
+  const resultShift = resultTop - openTop - (boardSize * (1 - SHEET_RESULT.boardScale)) / 2;
   const translate = useDerivedValue(() => ({
     x: 0,
-    y: toDevicePixel(interpolate(progress.value, [0, 1], [closedTop, openTop]) - openTop),
+    y: toDevicePixel(
+      interpolate(progress.value, [0, 1], [closedTop, openTop]) - openTop + resultShift * shrink.value,
+    ),
   }));
 
-  const radius = useDerivedValue(() =>
-    interpolate(
-      progress.value,
-      [0, 1],
-      [BOARD_RADIUS / previewScale, BOARD_RADIUS],
-      Extrapolation.CLAMP,
-    ),
-  );
+  // the corner radius divides out the scale so it reads the same at every size
+  const radius = useDerivedValue(() => BOARD_RADIUS / scale.value);
 
   const boardTransform = useMemo<BoardTransform>(
     () => ({ previewScale, scale, translate }),

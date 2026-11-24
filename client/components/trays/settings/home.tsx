@@ -15,7 +15,7 @@ const PREVIEW_DELAY_MS = 400;
 
 export function SettingsHomeBody({ scope }: { scope: SettingsScope }) {
   const { close, next } = useTrayNavigation();
-  const { resetLibrary, seedSampleHistory } = gameActions;
+  const { resetLibrary, seedSampleHistory, simulateWin } = gameActions;
   const previewPromotion = useSetAtom(promotionPreviewAtom);
   const openCategory = (category: keyof typeof CATEGORY_STEP_INDEX) => {
     for (let step = 0; step < CATEGORY_STEP_INDEX[category]; step += 1) next();
@@ -34,6 +34,18 @@ export function SettingsHomeBody({ scope }: { scope: SettingsScope }) {
             />
           ))}
         </OptionGrid>
+        {__DEV__ && scope === 'game' ? (
+          <OptionLink
+            fallback="trophy-outline"
+            icon="trophy"
+            onPress={() => {
+              close();
+              setTimeout(simulateWin, PREVIEW_DELAY_MS);
+            }}
+            title="Simulate a win"
+            value="Dev · end this game as your win"
+          />
+        ) : null}
         {__DEV__ && scope === 'defaults' ? (
           <View style={{ gap: 10 }}>
             <OptionLink

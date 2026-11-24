@@ -24,8 +24,7 @@ export type SyncRequest = {
   fen: string;
 };
 
-const moveId = (sessionId: string, move: BackendMove) =>
-  `${sessionId}:${move.ply}:${move.uci}`;
+const moveId = (sessionId: string, move: BackendMove) => `${sessionId}:${move.ply}:${move.uci}`;
 
 export const remoteMoveFrom = (sessionId: string, move: BackendMove): RemoteMove => ({
   id: moveId(sessionId, move),

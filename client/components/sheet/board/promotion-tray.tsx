@@ -48,7 +48,8 @@ function PromotionHeader({ onCancel }: { onCancel: () => void }) {
           <Tray.HeaderButton
             accessibilityLabel="Cancel the move"
             onPress={onCancel}
-            style={{ backgroundColor: colors.controlBackground }}>
+            style={{ backgroundColor: colors.controlBackground }}
+          >
             <SymbolView
               name="xmark"
               size={TRAY_HEADER_CLOSE_ICON_SIZE}
@@ -57,7 +58,8 @@ function PromotionHeader({ onCancel }: { onCancel: () => void }) {
               weight="bold"
             />
           </Tray.HeaderButton>
-        }>
+        }
+      >
         <Text className="font-semibold" style={[trayText.Title1, { color: colors.text }]}>
           Promote pawn
         </Text>

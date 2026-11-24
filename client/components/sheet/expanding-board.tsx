@@ -1,17 +1,19 @@
-import { memo, useCallback, useMemo, useState } from 'react';
-import { useWindowDimensions } from 'react-native';
+import { memo, useCallback, useLayoutEffect, useMemo, useState } from 'react';
+import { StyleSheet, useWindowDimensions } from 'react-native';
 
 import { Chess } from 'chess.js';
 
-import { useAnimatedStyle } from 'react-native-reanimated';
+import { useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
 import type { SharedValue } from 'react-native-reanimated';
 import type { ChessboardRef } from 'react-native-chessboard';
 import type { MoveResult } from 'react-native-chessboard/src/state/move-executor';
 
 import { AnimatedView } from '@/components/shared/uniwind';
 import type { RemoteMove, SyncRequest } from '@/hooks/use-backend-game';
+import type { GameSummary } from '@/types/games';
 
 import { BoardCaptures } from './board-captures';
+import { ResultBadge } from './celebration/result-badge';
 import { BoardOutline } from './expanding/board-outline';
 import { PlayButton } from './expanding/play-button';
 import { useBoardMotion } from './expanding/use-board-motion';
@@ -47,6 +49,10 @@ export const ExpandingBoard = memo(function ExpandingBoard({
   onUserMove,
   remoteMove,
   resignedSide = null,
+  result,
+  resultGame = null,
+  resultTop,
+  surfaceRevealed = false,
   surfaceResignedSide = resignedSide,
   syncRequest,
 }: {
@@ -65,6 +71,10 @@ export const ExpandingBoard = memo(function ExpandingBoard({
   onUserMove?: (result: MoveResult) => void;
   remoteMove?: RemoteMove | null;
   resignedSide?: 'w' | 'b' | null;
+  result: SharedValue<number>;
+  resultGame?: GameSummary | null;
+  resultTop: number;
+  surfaceRevealed?: boolean;
   surfaceResignedSide?: 'w' | 'b' | null;
   syncRequest?: SyncRequest | null;
 }) {
@@ -72,7 +82,20 @@ export const ExpandingBoard = memo(function ExpandingBoard({
   const left = (width - boardSize) / 2;
   const closedTop = closedCenterY - boardSize / 2;
   const openTop = openCenterY - boardSize / 2;
-  const motion = useBoardMotion({ boardSize, closedTop, openTop, previewSize, progress });
+  // a game switch swaps the Play button and the win badge in the same frame as the pieces
+  const reveal = useSharedValue(surfaceRevealed ? 1 : 0);
+  useLayoutEffect(() => {
+    reveal.set(surfaceRevealed ? 1 : 0);
+  }, [reveal, surfaceRevealed]);
+  const motion = useBoardMotion({
+    boardSize,
+    closedTop,
+    openTop,
+    previewSize,
+    progress,
+    result,
+    resultTop,
+  });
   const captures = useCaptureTrays(boardFen);
   const gate = useOpenGate(onOpen);
 
@@ -82,10 +105,7 @@ export const ExpandingBoard = memo(function ExpandingBoard({
     setMarkerState({ base: boardFen, fen: boardFen });
   }
   const markerFen = markerState.base === boardFen ? markerState.fen : boardFen;
-  const setMarkerFen = useCallback(
-    (fen: string) => setMarkerState(current => ({ ...current, fen })),
-    [],
-  );
+  const setMarkerFen = useCallback((fen: string) => setMarkerState(current => ({ ...current, fen })), []);
 
   // the closed layers follow each move so opening and closing show the real position
   const surfaceFen = previewFen ?? markerFen;
@@ -131,26 +151,36 @@ export const ExpandingBoard = memo(function ExpandingBoard({
       { scale: motion.scale.value },
     ],
   }));
+  // the Play button and the win badge fold on the sheet spring whenever the shown game's result changes
+  // the badge keeps the last won game while it fades out
+  const [lastResultGame, setLastResultGame] = useState(resultGame);
+  if (resultGame && resultGame !== lastResultGame) setLastResultGame(resultGame);
+
+  const capturesStyle = useAnimatedStyle(() => ({ opacity: 1 - result.value }));
   const openRect = { height: boardSize, left, top: openTop, width: boardSize };
 
   return (
     <>
-      <BoardCaptures
-        boardSize={boardSize}
-        captured={captures.captured}
-        closedTop={closedTop}
-        expandedSide={captures.expandedSide}
-        left={left}
-        onToggleSide={captures.toggleSide}
-        open={open}
-        openTop={openTop}
-        previewSize={previewSize}
-        progress={progress}
-      />
+      {/* the capture trays step out of the way while a won board shrinks */}
+      <AnimatedView pointerEvents="box-none" style={[StyleSheet.absoluteFill, capturesStyle]}>
+        <BoardCaptures
+          boardSize={boardSize}
+          captured={captures.captured}
+          closedTop={closedTop}
+          expandedSide={captures.expandedSide}
+          left={left}
+          onToggleSide={captures.toggleSide}
+          open={open}
+          openTop={openTop}
+          previewSize={previewSize}
+          progress={progress}
+        />
+      </AnimatedView>
       <AnimatedView
         className="absolute z-2 overflow-hidden"
         pointerEvents={open && boardInputEnabled ? 'auto' : 'none'}
-        style={[openRect, boardStyle]}>
+        style={[openRect, boardStyle]}
+      >
         <BoardPreviewLayers
           boardSize={boardSize}
           boardTransform={motion.boardTransform}
@@ -158,6 +188,7 @@ export const ExpandingBoard = memo(function ExpandingBoard({
           kingDisplayState={surfaceKingState}
           kingSide={surfaceResignedSide}
           progress={progress}
+          revealed={surfaceRevealed}
         />
         <SheetBoard
           ref={boardRef}
@@ -171,7 +202,9 @@ export const ExpandingBoard = memo(function ExpandingBoard({
         />
       </AnimatedView>
       <PlayButton
+        hidden={surfaceRevealed}
         left={left}
+        reveal={reveal}
         motion={motion}
         onPress={gate.requestOpen}
         open={open}
@@ -180,6 +213,16 @@ export const ExpandingBoard = memo(function ExpandingBoard({
         top={openTop}
       />
       <BoardOutline left={left} motion={motion} progress={progress} size={boardSize} top={openTop} />
+      <ResultBadge
+        boardSize={boardSize}
+        game={resultGame ?? lastResultGame}
+        left={left}
+        motion={motion}
+        progress={progress}
+        result={result}
+        reveal={reveal}
+        top={openTop}
+      />
     </>
   );
 });

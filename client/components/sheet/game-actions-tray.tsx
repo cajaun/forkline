@@ -121,11 +121,7 @@ function ActionsFooter() {
     <Tray.Footer style={{ width: '100%' }}>
       <SplitButton
         step={index}
-        action={
-          copy
-            ? { label: copy.confirmLabel, onPress: confirm }
-            : null
-        }
+        action={copy ? { label: copy.confirmLabel, onPress: confirm } : null}
         onCancel={() => {
           if (index === 0) {
             close();

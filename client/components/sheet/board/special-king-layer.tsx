@@ -22,7 +22,9 @@ function moveInFlight(boardState: BoardState, size: number, flipped: boolean) {
   if (moving.zIndex.get() === 0) return false;
   const target = squareToPosition(lastMove.to, size, flipped);
   const near = size * LANDED_DISTANCE;
-  return Math.abs(moving.translateX.get() - target.x) > near || Math.abs(moving.translateY.get() - target.y) > near;
+  return (
+    Math.abs(moving.translateX.get() - target.x) > near || Math.abs(moving.translateY.get() - target.y) > near
+  );
 }
 
 // 0 means no check and 1 a check and 2 a checkmate
@@ -70,27 +72,32 @@ export function SpecialKingLayer({
   const kingCode = useSharedValue<NonNullable<PieceCode> | null>(null);
   const applied = useSharedValue(0);
 
+  // the square rides along with the tone so a switch between two ended games moves the tint too
   useAnimatedReaction(
     () => {
-      if (resigned.get()) return RESIGNED;
+      const side = resigned.get();
+      if (side) return { at: kingSquareOf(boardState, `${side}k` as NonNullable<PieceCode>), tone: RESIGNED };
       const tone = kingTone(boardState, mated);
-      return tone > 0 && moveInFlight(boardState, size, config.flipped) ? -1 : tone;
+      const at = boardState.kingInCheckSquare.get();
+      return { at, tone: tone > 0 && moveInFlight(boardState, size, config.flipped) ? -1 : tone };
     },
-    tone => {
-      if (tone < 0 || tone === applied.get()) return;
+    (next, previous) => {
+      const { tone } = next;
+      if (tone < 0) return;
+      if (tone === applied.get() && next.at === previous?.at) return;
       // leaving a resignation pins the square so the red fades out in place
       const previousCode = kingCode.get();
-      if (applied.get() === RESIGNED && previousCode) square.set(kingSquareOf(boardState, previousCode));
+      if (applied.get() === RESIGNED && tone !== RESIGNED && previousCode) {
+        square.set(kingSquareOf(boardState, previousCode));
+      }
       applied.set(tone);
-      const checked = boardState.kingInCheckSquare.get();
       const side = resigned.get();
       if (tone === RESIGNED && side) {
-        const code = `${side}k` as NonNullable<PieceCode>;
-        square.set(kingSquareOf(boardState, code));
-        kingCode.set(code);
-      } else if (tone > 0 && checked) {
-        square.set(checked);
-        kingCode.set(boardState.squares[checked].piece.get());
+        square.set(next.at);
+        kingCode.set(`${side}k` as NonNullable<PieceCode>);
+      } else if (tone > 0 && next.at) {
+        square.set(next.at);
+        kingCode.set(boardState.squares[next.at].piece.get());
       }
       checkFade.set(withTiming(tone === 1 ? 1 : 0, KING_STATE_FADE_OPTIONS));
       mateFade.set(withTiming(tone >= 2 ? 1 : 0, KING_STATE_FADE_OPTIONS));

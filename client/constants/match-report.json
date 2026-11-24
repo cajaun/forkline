@@ -1,10 +1,7 @@
 {
   "games": 10,
   "depth": 2,
-  "agents": [
-    "material-mobility",
-    "king-safety-position"
-  ],
+  "agents": ["material-mobility", "king-safety-position"],
   "scores": {
     "material-mobility": {
       "wins": 6,

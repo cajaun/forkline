@@ -26,14 +26,9 @@ export function BoardOutline({
 
   const outlineStyle = useAnimatedStyle(() => ({
     borderRadius: radius.value,
-    outlineOffset:
-      interpolate(progress.value, [0, 1], [0, -BORDER_WIDTH], Extrapolation.CLAMP) / scale.value,
+    outlineOffset: interpolate(progress.value, [0, 1], [0, -BORDER_WIDTH], Extrapolation.CLAMP) / scale.value,
     outlineWidth: BORDER_WIDTH / scale.value,
-    transform: [
-      { translateX: translate.value.x },
-      { translateY: translate.value.y },
-      { scale: scale.value },
-    ],
+    transform: [{ translateX: translate.value.x }, { translateY: translate.value.y }, { scale: scale.value }],
   }));
 
   return (
