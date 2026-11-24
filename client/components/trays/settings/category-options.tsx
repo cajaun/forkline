@@ -1,27 +1,21 @@
-import {
-  AppearanceOptions,
-  type AppearanceOptionsProps,
-} from './categories/appearance';
+import { AppearanceOptions, type AppearanceOptionsProps } from './categories/appearance';
 import { GameOptions, type GameOptionsProps } from './categories/game';
-import {
-  GameplayOptions,
-  type GameplayOptionsProps,
-} from './categories/gameplay';
-import { MatchOptions, type MatchOptionsProps } from './categories/match';
+import { HapticsOptions, type HapticsOptionsProps } from './categories/haptics';
+import { GameplayOptions, type GameplayOptionsProps } from './categories/gameplay';
 import type { Category } from './types';
 
 export function CategoryOptions({
   category,
   game,
   gameplay,
-  match,
   appearance,
+  haptics,
 }: {
   category: Category;
   game: GameOptionsProps;
   gameplay: GameplayOptionsProps;
-  match: MatchOptionsProps;
   appearance: AppearanceOptionsProps;
+  haptics: HapticsOptionsProps;
 }) {
   if (category === 'game') {
     return <GameOptions {...game} />;
@@ -31,12 +25,11 @@ export function CategoryOptions({
     return <GameplayOptions {...gameplay} />;
   }
 
-  if (category === 'match') {
-    return <MatchOptions {...match} />;
-  }
-
   if (category === 'appearance') {
     return <AppearanceOptions {...appearance} />;
   }
 
+  if (category === 'haptics') {
+    return <HapticsOptions {...haptics} />;
+  }
 }

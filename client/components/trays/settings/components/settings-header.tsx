@@ -25,7 +25,8 @@ function SettingsBackAction({ steps }: { steps: number }) {
           back();
         }
       }}
-      style={{ backgroundColor: colors.controlBackground }}>
+      style={{ backgroundColor: colors.controlBackground }}
+    >
       <SymbolView
         name="chevron.left"
         type="palette"
@@ -45,7 +46,8 @@ function SettingsCloseAction() {
     <Tray.HeaderButton
       accessibilityLabel="Close"
       onPress={close}
-      style={{ backgroundColor: colors.controlBackground }}>
+      style={{ backgroundColor: colors.controlBackground }}
+    >
       <SymbolView
         name="xmark"
         type="palette"
@@ -73,16 +75,9 @@ export function SettingsHeader({
     <Tray.Header style={{ gap: HEADER_SEPARATOR_GAP }}>
       <Tray.HeaderRow
         left={isSubStep ? <SettingsBackAction steps={backSteps} /> : undefined}
-        right={
-          isSubStep ? (
-            info ? <SettingsInfoAction /> : undefined
-          ) : (
-            <SettingsCloseAction />
-          )
-        }>
-        <Text
-          className="font-semibold"
-          style={[trayText.Title1, { color: colors.text }]}>
+        right={isSubStep ? info ? <SettingsInfoAction /> : undefined : <SettingsCloseAction />}
+      >
+        <Text className="font-semibold" style={[trayText.Title1, { color: colors.text }]}>
           {title}
         </Text>
       </Tray.HeaderRow>

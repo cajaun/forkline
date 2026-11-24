@@ -15,9 +15,7 @@ import { TRAY_STEP_OPTIONS } from '@/components/trays/shared/tray-style';
 type ConfirmProps = {
   body: string;
   cancelLabel: string;
-  confirmColor?: string;
   confirmLabel: string;
-  confirmTextColor?: string;
   disabled?: boolean;
   fallback: SymbolFallback;
   icon: SymbolName;
@@ -44,7 +42,8 @@ export function ConfirmBody({
           justifyContent: 'space-between',
           paddingHorizontal: 28,
           paddingTop: 24,
-        }}>
+        }}
+      >
         <View style={{ alignItems: 'flex-start', height: 68, justifyContent: 'center', width: 68 }}>
           <SfSymbol fallback={fallback} name={icon} size={58} tintColor={colors.mutedText} weight="regular" />
         </View>
@@ -58,7 +57,8 @@ export function ConfirmBody({
             height: 36,
             justifyContent: 'center',
             width: 36,
-          }}>
+          }}
+        >
           <SymbolView name="xmark" size={18} tintColor={colors.trayIcon} type="palette" weight="bold" />
         </PressableScale>
       </View>
@@ -77,22 +77,16 @@ export function ConfirmBody({
 
 function ConfirmButtons({
   cancelLabel,
-  confirmColor,
   confirmLabel,
-  confirmTextColor,
   disabled,
   onConfirm,
-}: Pick<
-  ConfirmProps,
-  'cancelLabel' | 'confirmColor' | 'confirmLabel' | 'confirmTextColor' | 'disabled' | 'onConfirm'
->) {
+}: Pick<ConfirmProps, 'cancelLabel' | 'confirmLabel' | 'disabled' | 'onConfirm'>) {
   const { close } = useTrayNavigation();
 
   return (
     <View style={{ flexDirection: 'row', gap: 10, width: '100%' }}>
       <TrayButton label={cancelLabel} onPress={close} style={{ flex: 1 }} />
       <TrayButton
-        color={confirmColor}
         disabled={disabled}
         label={confirmLabel}
         onPress={() => {
@@ -100,7 +94,6 @@ function ConfirmButtons({
           close();
         }}
         style={{ flex: 1 }}
-        textColor={confirmTextColor}
         tone="primary"
       />
     </View>
@@ -114,18 +107,7 @@ export const ConfirmTray = memo(function ConfirmTray({
   triggerLabel,
   ...props
 }: ConfirmProps & { presenter?: ReactNode; size?: number; triggerLabel?: string }) {
-  const {
-    body,
-    cancelLabel,
-    confirmColor,
-    confirmLabel,
-    confirmTextColor,
-    disabled,
-    fallback,
-    icon,
-    onConfirm,
-    title,
-  } = props;
+  const { body, cancelLabel, confirmLabel, disabled, fallback, icon, onConfirm, title } = props;
 
   return (
     <Tray.Root stepOptions={TRAY_STEP_OPTIONS}>
@@ -137,9 +119,7 @@ export const ConfirmTray = memo(function ConfirmTray({
         <Tray.Footer style={{ width: '100%' }}>
           <ConfirmButtons
             cancelLabel={cancelLabel}
-            confirmColor={confirmColor}
             confirmLabel={confirmLabel}
-            confirmTextColor={confirmTextColor}
             disabled={disabled}
             onConfirm={onConfirm}
           />

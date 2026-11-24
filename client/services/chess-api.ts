@@ -8,8 +8,7 @@ import type { GameConfig, GameMoves } from '@/types/games';
 const configuredApiUrl = process.env.EXPO_PUBLIC_API_URL?.trim();
 // the Android emulator reaches the host machine through its own alias address
 const CHESS_API_URL =
-  configuredApiUrl ||
-  (Platform.OS === 'android' ? 'http://10.0.2.2:8000' : 'http://localhost:8000');
+  configuredApiUrl || (Platform.OS === 'android' ? 'http://10.0.2.2:8000' : 'http://localhost:8000');
 
 export type BackendMove = {
   ply: number;
@@ -72,15 +71,9 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     );
   }
 
-  const payload = (await response.json().catch(() => null)) as
-    | T
-    | ApiErrorPayload
-    | null;
+  const payload = (await response.json().catch(() => null)) as T | ApiErrorPayload | null;
   if (!response.ok) {
-    const detail =
-      payload && typeof payload === 'object' && 'detail' in payload
-        ? payload.detail
-        : undefined;
+    const detail = payload && typeof payload === 'object' && 'detail' in payload ? payload.detail : undefined;
     throw new Error(detail || `Chess server returned ${response.status}.`);
   }
 
@@ -88,9 +81,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 }
 
 function opponentAgent(agent: AgentName): AgentName {
-  return agent === 'material-mobility'
-    ? 'king-safety-position'
-    : 'material-mobility';
+  return agent === 'material-mobility' ? 'king-safety-position' : 'material-mobility';
 }
 
 export function moveFromUci(uci: string): {
@@ -106,10 +97,7 @@ export function moveFromUci(uci: string): {
 }
 
 // a session replays the saved start and moves so any game resumes with new settings
-export async function createHumanGame(
-  config: GameConfig,
-  history: GameMoves,
-): Promise<BackendGameResponse> {
+export async function createHumanGame(config: GameConfig, history: GameMoves): Promise<BackendGameResponse> {
   return request<BackendGameResponse>('/games', {
     body: JSON.stringify({
       agent: config.agent,
@@ -140,19 +128,14 @@ export async function createAgentMatch(
   });
 }
 
-export async function submitHumanMove(
-  gameId: string,
-  uci: string,
-): Promise<BackendMoveResponse> {
+export async function submitHumanMove(gameId: string, uci: string): Promise<BackendMoveResponse> {
   return request<BackendMoveResponse>(`/games/${gameId}/moves`, {
     body: JSON.stringify({ uci }),
     method: 'POST',
   });
 }
 
-export async function requestHumanGameAiMove(
-  gameId: string,
-): Promise<BackendMoveResponse> {
+export async function requestHumanGameAiMove(gameId: string): Promise<BackendMoveResponse> {
   return request<BackendMoveResponse>(`/games/${gameId}/ai-move`, {
     method: 'POST',
   });
@@ -163,9 +146,7 @@ export async function requestHint(gameId: string): Promise<{ uci: string }> {
   return request<{ uci: string }>(`/games/${gameId}/hint`, { method: 'POST' });
 }
 
-export async function requestMatchAiMove(
-  matchId: string,
-): Promise<BackendMoveResponse> {
+export async function requestMatchAiMove(matchId: string): Promise<BackendMoveResponse> {
   return request<BackendMoveResponse>(`/matches/sessions/${matchId}/step`, {
     method: 'POST',
   });

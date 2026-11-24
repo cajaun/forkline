@@ -26,7 +26,11 @@ export function OptionTile({
     <PressableScale
       accessibilityLabel={label}
       onPress={onPress}
-      style={[outline, { alignItems: 'center', flex: 1, gap: 8, justifyContent: 'center', minHeight: 116, padding: 14 }]}>
+      style={[
+        outline,
+        { alignItems: 'center', flex: 1, gap: 8, justifyContent: 'center', minHeight: 116, padding: 14 },
+      ]}
+    >
       {'image' in visual ? (
         <Image source={visual.image} style={{ height: 52, width: 52 }} />
       ) : (
@@ -37,7 +41,8 @@ export function OptionTile({
       <Text
         className="font-semibold"
         numberOfLines={2}
-        style={[trayText.Title3, { color: colors.text, textAlign: 'center' }]}>
+        style={[trayText.Title3, { color: colors.text, textAlign: 'center' }]}
+      >
         {label}
       </Text>
     </PressableScale>

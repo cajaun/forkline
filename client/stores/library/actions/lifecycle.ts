@@ -4,11 +4,12 @@ import { todayKey } from '@/utils/days';
 
 import { EMPTY_LIBRARY, cacheMoves, cachedMoves, emptyMoves, forgetMoves, libraryAtom, newGameId, newGameSummary, selectedGameIdAtom, store, storeMoves, updateLibrary } from '../state';
 
-// a first launch starts with today's game already in the strip
+// a first launch starts with today's game and a return visit opens on the newest one
 export async function hydrate() {
   const saved = await loadLibrary();
   store.set(libraryAtom, saved ?? EMPTY_LIBRARY);
   if (!saved) createGame();
+  else if (saved.onboardingComplete) ensureSelection();
 }
 
 export function createGame(config?: GameConfig) {

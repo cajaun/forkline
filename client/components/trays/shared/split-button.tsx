@@ -94,7 +94,8 @@ export function SplitButton({
     <View style={{ height: HEIGHT, justifyContent: 'center', width: BUTTON_WIDTH }}>
       <Animated.View
         pointerEvents={split ? 'auto' : 'none'}
-        style={[{ height: HEIGHT, position: 'absolute', right: 0, width: ACTION_WIDTH }, actionStyle]}>
+        style={[{ height: HEIGHT, position: 'absolute', right: 0, width: ACTION_WIDTH }, actionStyle]}
+      >
         <TrayButton
           color={shown?.backgroundColor}
           label={shown?.label ?? ''}
@@ -115,10 +116,12 @@ export function SplitButton({
           position: 'absolute',
           // the tap area changes once per step to free the action half
           width: split ? MIN_BUTTON_WIDTH : BUTTON_WIDTH,
-        }}>
+        }}
+      >
         <View
           pointerEvents="none"
-          style={{ height: HEIGHT, left: 0, position: 'absolute', width: BUTTON_WIDTH }}>
+          style={{ height: HEIGHT, left: 0, position: 'absolute', width: BUTTON_WIDTH }}
+        >
           <View style={[cap, { backgroundColor: colors.controlBackground, left: 0 }]} />
           <Animated.View
             style={[
@@ -150,7 +153,8 @@ export function SplitButton({
                 width: BUTTON_WIDTH,
               },
               labelStyle,
-            ]}>
+            ]}
+          >
             <Text className="font-semibold" style={[trayText.Button, { color: colors.text }]}>
               {cancelLabel}
             </Text>

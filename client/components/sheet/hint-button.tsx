@@ -32,8 +32,15 @@ export const HintButton = memo(function HintButton({
       <PressableScale
         accessibilityLabel={`Hint, ${hintsLeft} left`}
         onPress={active ? onPress : undefined}
-        style={[roundButtonStyle(size, colors.controlBackground), { opacity: active ? 1 : 0.4 }]}>
-        <SfSymbol fallback="bulb-outline" name="lightbulb.fill" size={Math.round(size * 0.5)} tintColor={colors.icon} />
+        // a hint on its way ignores taps without dimming the button
+        style={[roundButtonStyle(size, colors.controlBackground), { opacity: enabled ? 1 : 0.4 }]}
+      >
+        <SfSymbol
+          fallback="bulb-outline"
+          name="lightbulb.fill"
+          size={Math.round(size * 0.5)}
+          tintColor={colors.icon}
+        />
       </PressableScale>
       {/* the badge counts the hints left and its ring in the sheet colour cuts it out of the button */}
       <View
@@ -41,9 +48,17 @@ export const HintButton = memo(function HintButton({
         style={[
           roundButtonStyle(badge + BADGE_RING * 2, colors.background),
           { position: 'absolute', right: -badge * 0.32, top: -badge * 0.32 },
-        ]}>
+        ]}
+      >
         <View style={roundButtonStyle(badge, colors.controlBackground)}>
-          <Text style={{ color: colors.text, fontSize: badge * 0.58, fontVariant: ['tabular-nums'], fontWeight: '800' }}>
+          <Text
+            style={{
+              color: colors.text,
+              fontSize: badge * 0.58,
+              fontVariant: ['tabular-nums'],
+              fontWeight: '800',
+            }}
+          >
             {hintsLeft}
           </Text>
         </View>

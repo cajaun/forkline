@@ -1,6 +1,6 @@
-import { memo } from 'react';
+import { memo, useState } from 'react';
 
-import * as Haptics from 'expo-haptics';
+import * as Haptics from '@/services/haptics';
 import { Tray, useTrayNavigation, useTrayNavigationState } from 'react-native-morpheus';
 
 import { SettingsHeader } from '@/components/trays/settings/components/settings-header';
@@ -8,7 +8,6 @@ import { ConfirmBody } from '@/components/trays/shared/confirm-tray';
 import { OptionLink } from '@/components/trays/shared/option-ui';
 import { SplitButton } from '@/components/trays/shared/split-button';
 import { TrayTriggerButton } from '@/components/trays/shared/tray-ui';
-import { useSheetColors } from '@/hooks/use-sheet-colors';
 import { gameActions, useSelectedGameStanding } from '@/stores/games';
 import { TRAY_STEP_OPTIONS } from '@/components/trays/shared/tray-style';
 
@@ -29,15 +28,15 @@ function finalCopy(final: Final, watching: boolean) {
     ? {
         body: 'The two AIs stop here and the game is saved to your history with no winner',
         confirmLabel: 'End game',
-        fallback: 'flag-outline' as const,
-        icon: 'flag.fill' as const,
+        fallback: 'stop-circle-outline' as const,
+        icon: 'stop.circle.fill' as const,
         title: 'End this game?',
       }
     : {
         body: 'The AI wins this game and it is saved to your history as a loss',
         confirmLabel: 'Resign',
-        fallback: 'flag-outline' as const,
-        icon: 'flag.fill' as const,
+        fallback: 'log-out-outline' as const,
+        icon: 'rectangle.portrait.and.arrow.right' as const,
         title: 'Resign?',
       };
 }
@@ -79,8 +78,8 @@ function ActionsBody() {
         />
         <OptionLink
           disabled={!playing}
-          fallback="flag-outline"
-          icon="flag"
+          fallback={watching ? 'stop-circle-outline' : 'log-out-outline'}
+          icon={watching ? 'stop.circle' : 'rectangle.portrait.and.arrow.right'}
           onPress={() => openStep(RESIGN_STEP)}
           title={watching ? 'End game' : 'Resign'}
         />
@@ -97,9 +96,11 @@ function FinalBody({ final }: { final: Final }) {
 
 // one footer for the tray that splits into Cancel and the action on a confirmation
 function ActionsFooter() {
-  const index = useTrayNavigationState(state => state.index);
+  // the tray reports step zero once it starts closing so the last open step holds the split until it is gone
+  const live = useTrayNavigationState(state => (state.isActive ? state.index : -1));
+  const [index, setIndex] = useState(0);
+  if (live >= 0 && live !== index) setIndex(live);
   const { back, close } = useTrayNavigation();
-  const { kingColors } = useSheetColors();
   const standing = useSelectedGameStanding();
   const final: Final | null = index === RESTART_STEP ? 'restart' : index === RESIGN_STEP ? 'resign' : null;
   const copy = final ? finalCopy(final, standing?.gameMode === 'agent-vs-agent') : null;
@@ -122,12 +123,7 @@ function ActionsFooter() {
         step={index}
         action={
           copy
-            ? {
-                backgroundColor: resigning ? kingColors.gameOver.marker : undefined,
-                label: copy.confirmLabel,
-                onPress: confirm,
-                textColor: resigning ? '#FFFFFF' : undefined,
-              }
+            ? { label: copy.confirmLabel, onPress: confirm }
             : null
         }
         onCancel={() => {
@@ -148,7 +144,12 @@ const FOOTER = <ActionsFooter />;
 export const GameActionsTray = memo(function GameActionsTray({ size = 56 }: { size?: number }) {
   return (
     <Tray.Root footer={FOOTER} stepOptions={TRAY_STEP_OPTIONS}>
-      <TrayTriggerButton fallback="arrow-undo-outline" icon="arrow.uturn.backward" label="Feeling stuck" size={size} />
+      <TrayTriggerButton
+        fallback="arrow-undo-outline"
+        icon="arrow.uturn.backward"
+        label="Feeling stuck"
+        size={size}
+      />
 
       <Tray.Step key="actions">
         <SettingsHeader title="Feeling stuck?" />

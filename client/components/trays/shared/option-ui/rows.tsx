@@ -24,7 +24,8 @@ export function OptionLink({
     <PressableScale
       accessibilityLabel={props.title}
       onPress={disabled ? undefined : props.onPress}
-      style={[outline, ROW_LAYOUT, disabled ? { opacity: 0.4 } : null]}>
+      style={[outline, ROW_LAYOUT, disabled ? { opacity: 0.4 } : null]}
+    >
       <OutlinedRowShell {...props}>
         <SfSymbol fallback="chevron-forward" name="chevron.right" size={15} tintColor={colors.trayIcon} />
       </OutlinedRowShell>

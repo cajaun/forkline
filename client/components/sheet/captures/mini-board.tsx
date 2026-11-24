@@ -1,7 +1,7 @@
 import { memo, useEffect, useRef } from 'react';
 import { Image, View, type StyleProp, type ViewStyle } from 'react-native';
 
-import * as Haptics from 'expo-haptics';
+import * as Haptics from '@/services/haptics';
 import {
   Easing,
   Extrapolation,

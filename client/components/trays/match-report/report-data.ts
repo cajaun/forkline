@@ -24,8 +24,7 @@ const SHORT_AGENT_LABELS: Record<AgentName, string> = {
 
 const shortAgentLabel = (name: string) => SHORT_AGENT_LABELS[name as AgentName] ?? name;
 
-const terminationLabel = (termination: string) =>
-  TERMINATION_LABELS[termination] ?? termination;
+const terminationLabel = (termination: string) => TERMINATION_LABELS[termination] ?? termination;
 
 export function gameOutcome(game: ReportGame) {
   const moves = `${game.plies} moves`;

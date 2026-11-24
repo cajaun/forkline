@@ -5,11 +5,7 @@ import { TRAY_STEP_OPTIONS } from '@/components/trays/shared/tray-style';
 import { Tray } from 'react-native-morpheus';
 
 import { CategoryOptions } from './category-options';
-import {
-  AgentOptions,
-  GameModeOptions,
-  HumanColorOptions,
-} from './categories/game';
+import { AgentOptions, GameModeOptions, HumanColorOptions } from './categories/game';
 import { CATEGORY_TITLES, SETTINGS_STEP_INDEX } from './constants';
 import { SettingsHeader } from './components/settings-header';
 import { SettingsInfoBody } from './components/settings-info';
@@ -42,8 +38,11 @@ export const SettingsTray = memo(function SettingsTray({
   const categoryOptions = {
     appearance: {
       ...settings.appearance,
-      onChange: (changes: Partial<typeof settings.appearance>) =>
-        update('appearance', changes),
+      onChange: (changes: Partial<typeof settings.appearance>) => update('appearance', changes),
+    },
+    haptics: {
+      ...settings.haptics,
+      onChange: (changes: Partial<typeof settings.haptics>) => update('haptics', changes),
     },
     game: {
       agent: config.agent,
@@ -56,19 +55,15 @@ export const SettingsTray = memo(function SettingsTray({
       depths: config.depths,
       onChange: scoped.change,
     },
-    match: {
-      ...settings.match,
-      onChange: (changes: Partial<typeof settings.match>) =>
-        update('match', changes),
-    },
   };
 
   return (
     <Tray.Root stepOptions={TRAY_STEP_OPTIONS}>
       <Tray.Trigger
         accessibilityLabel="Settings"
-        haptics="selection"
-        style={triggerStyle}>
+        haptics={settings.haptics.on ? 'selection' : false}
+        style={triggerStyle}
+      >
         <SfSymbol
           fallback="settings-sharp"
           name="gearshape.fill"
@@ -147,19 +142,6 @@ export const SettingsTray = memo(function SettingsTray({
         <SettingsInfoBody info="difficulty" />
       </Tray.Step>
 
-      <Tray.Step key="match">
-        <SettingsHeader
-          backSteps={SETTINGS_STEP_INDEX.match - SETTINGS_STEP_INDEX.settings}
-          info="match"
-          title={CATEGORY_TITLES.match}
-        />
-        <CategoryOptions {...categoryOptions} category="match" />
-      </Tray.Step>
-      <Tray.Step key="match-info">
-        <SettingsHeader backSteps={1} title={SETTINGS_INFO['match'].title} />
-        <SettingsInfoBody info="match" />
-      </Tray.Step>
-
       <Tray.Step key="appearance">
         <SettingsHeader
           backSteps={SETTINGS_STEP_INDEX.appearance - SETTINGS_STEP_INDEX.settings}
@@ -171,6 +153,19 @@ export const SettingsTray = memo(function SettingsTray({
       <Tray.Step key="appearance-info">
         <SettingsHeader backSteps={1} title={SETTINGS_INFO['appearance'].title} />
         <SettingsInfoBody info="appearance" />
+      </Tray.Step>
+
+      <Tray.Step key="haptics">
+        <SettingsHeader
+          backSteps={SETTINGS_STEP_INDEX.haptics - SETTINGS_STEP_INDEX.settings}
+          info="haptics"
+          title={CATEGORY_TITLES.haptics}
+        />
+        <CategoryOptions {...categoryOptions} category="haptics" />
+      </Tray.Step>
+      <Tray.Step key="haptics-info">
+        <SettingsHeader backSteps={1} title={SETTINGS_INFO['haptics'].title} />
+        <SettingsInfoBody info="haptics" />
       </Tray.Step>
     </Tray.Root>
   );

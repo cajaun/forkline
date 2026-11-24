@@ -41,18 +41,10 @@ export function ThemeCard({
               borderColor: colors.controlBackground,
             }
           : null,
-      ]}>
-      <SfSymbol
-        fallback={fallback}
-        name={icon}
-        size={48}
-        tintColor={colors.icon}
-        weight={iconWeight}
-      />
-      <Text
-        className="font-semibold"
-        style={[trayText.Title3, { color: colors.text }]}
-      >
+      ]}
+    >
+      <SfSymbol fallback={fallback} name={icon} size={48} tintColor={colors.icon} weight={iconWeight} />
+      <Text className="font-semibold" style={[trayText.Title3, { color: colors.text }]}>
         {label}
       </Text>
     </PressableScale>

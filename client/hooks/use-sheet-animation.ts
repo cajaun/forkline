@@ -1,7 +1,7 @@
 import { PixelRatio } from 'react-native';
 import { useCallback, useState } from 'react';
 
-import * as Haptics from 'expo-haptics';
+import * as Haptics from '@/services/haptics';
 import {
   Extrapolation,
   interpolate,

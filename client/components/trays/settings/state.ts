@@ -5,12 +5,11 @@ import { atom, useAtom } from 'jotai';
 import type { SettingsState } from './types';
 
 const INITIAL_SETTINGS: SettingsState = {
+  haptics: {
+    on: true,
+  },
   appearance: {
     themeMode: 'light',
-  },
-  match: {
-    alternateColors: true,
-    games: 5,
   },
 };
 
@@ -20,11 +19,8 @@ export function useSettingsState() {
   const [settings, setSettings] = useAtom(settingsAtom);
 
   const update = useCallback(
-    <Section extends keyof SettingsState>(
-      section: Section,
-      changes: Partial<SettingsState[Section]>,
-    ) => {
-      setSettings((current) => ({
+    <Section extends keyof SettingsState>(section: Section, changes: Partial<SettingsState[Section]>) => {
+      setSettings(current => ({
         ...current,
         [section]: {
           ...current[section],

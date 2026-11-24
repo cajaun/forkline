@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { View, useWindowDimensions } from 'react-native';
 
 import { StatusBar } from 'expo-status-bar';
@@ -34,15 +34,16 @@ export function ChessboardSheet() {
   const { addElapsed, days, gamesByDay, getMoves, library, recordState, selectGame, selectedGame } =
     useGameLibrary();
   const { closeSheet, open, openSheet, progress, sheetStyle } = useSheetAnimation(height);
+  const [trayOpen, setTrayOpen] = useState(false);
   const backendGame = useBackendGame({
-    active: open && selectedGame?.status === 'active',
+    // the AI waits while a tray is up so a settings change lands before the next move
+    active: open && !trayOpen && selectedGame?.status === 'active',
     game: selectedGame,
     getMoves,
     recordState,
   });
   const selection = useGameSelection({ library, onOpen: openSheet, selectGame, selectedGame });
   const { pendingGame, shownGame } = selection;
-  const [trayOpen, setTrayOpen] = useState(false);
 
   useLibraryLifecycle(library?.onboardingComplete ?? false);
 
@@ -60,14 +61,29 @@ export function ChessboardSheet() {
   const resignedSide = lossSideOf(selectedGame);
   const shownResignedSide = lossSideOf(shownGame);
 
-  const hint = useBoardHint(boardRef, colors.primary, selectedGame?.id ?? null);
+  const hint = useBoardHint(boardRef, colors.hint, selectedGame?.id ?? null);
   const { requestHint } = backendGame;
   const showHint = hint.show;
   const gameId = selectedGame?.id ?? null;
   const hintsLeft = Math.max(0, HINTS_PER_GAME - (selectedGame?.hintsUsed ?? 0));
-  const handleHint = useCallback(async () => {
+  const askHint = useCallback(async () => {
     if (gameId && (await showHint(requestHint))) gameActions.spendHint(gameId);
   }, [gameId, requestHint, showHint]);
+  // the hint stays live on the AI turn and waits for the reply before it asks
+  const humanGameLive =
+    !backendGame.error &&
+    selectedGame?.status === 'active' &&
+    selectedGame.config.gameMode === 'human-vs-agent';
+  const [hintQueued, setHintQueued] = useState(false);
+  const handleHint = useCallback(() => {
+    if (backendGame.busy) setHintQueued(true);
+    else void askHint();
+  }, [askHint, backendGame.busy]);
+  useEffect(() => {
+    if (!hintQueued || backendGame.busy) return;
+    void askHint().finally(() => setHintQueued(false));
+  }, [askHint, backendGame.busy, hintQueued]);
+  if (hintQueued && !humanGameLive) setHintQueued(false);
   const { onUserMove } = backendGame;
   const clearHint = hint.clear;
   // a move clears any hint before the server sees it
@@ -112,7 +128,8 @@ export function ChessboardSheet() {
 
       <AnimatedView
         className="absolute overflow-visible"
-        style={[{ backgroundColor: colors.background, boxShadow: SHEET_SHADOWS.sheet }, sheetStyle]}>
+        style={[{ backgroundColor: colors.background, boxShadow: SHEET_SHADOWS.sheet }, sheetStyle]}
+      >
         <PreviewCard
           dayKey={selection.shownDayKey}
           onClose={closeSheet}
@@ -122,9 +139,9 @@ export function ChessboardSheet() {
         />
         <OpenControls onClose={closeSheet} open={open} progress={progress} />
         <OpenBottomControls
-          hintEnabled={boardInputEnabled && hintsLeft > 0}
+          hintEnabled={humanGameLive && hintsLeft > 0}
           hintsLeft={hintsLeft}
-          hintThinking={hint.thinking}
+          hintThinking={hint.thinking || hintQueued}
           onHint={handleHint}
           open={open}
           progress={progress}

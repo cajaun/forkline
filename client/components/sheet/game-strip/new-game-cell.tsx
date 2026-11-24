@@ -1,7 +1,7 @@
 import { memo } from 'react';
 import { View } from 'react-native';
 
-import * as Haptics from 'expo-haptics';
+import * as Haptics from '@/services/haptics';
 
 import { PressableScale } from '@/components/shared/pressable-scale';
 import { SfSymbol } from '@/components/shared/sf-symbol';

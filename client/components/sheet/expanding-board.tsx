@@ -96,11 +96,20 @@ export const ExpandingBoard = memo(function ExpandingBoard({
 
   // the library resets on a fen prop change so it receives the first position alone
   const [initialBoardFen] = useState(boardFen);
-  const fastResetRef = useSyncRequests({ boardRef, onSynced: setMarkerFen, open, syncRequest });
+  const { syncCaptures } = captures;
+  const handleSynced = useCallback(
+    (fen: string) => {
+      setMarkerFen(fen);
+      syncCaptures(fen);
+    },
+    [setMarkerFen, syncCaptures],
+  );
+  const fastResetRef = useSyncRequests({ boardRef, onSynced: handleSynced, open, syncRequest });
   const remoteMoveInProgressRef = useRemoteMoves({
     boardReady: gate.ready,
     boardRef,
     onApplied: onRemoteMoveApplied,
+    open,
     remoteMove,
   });
 

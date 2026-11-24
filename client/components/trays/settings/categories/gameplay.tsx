@@ -21,7 +21,12 @@ export function GameplayOptions({ depths, onChange }: GameplayOptionsProps) {
     <Tray.Body>
       <Tray.Section style={{ gap: 12 }}>
         {AGENT_OPTIONS.map(option => (
-          <OptionCard key={option.value} fallback={option.fallback} icon={option.icon} title={AGENT_LABELS[option.value]}>
+          <OptionCard
+            key={option.value}
+            fallback={option.fallback}
+            icon={option.icon}
+            title={AGENT_LABELS[option.value]}
+          >
             <OptionNumbers
               label={`${AGENT_LABELS[option.value]} depth`}
               max={MAX_DEPTH}

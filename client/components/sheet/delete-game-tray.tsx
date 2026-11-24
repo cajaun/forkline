@@ -1,11 +1,10 @@
 import { memo, useCallback, useEffect, useRef } from 'react';
 
-import * as Haptics from 'expo-haptics';
+import * as Haptics from '@/services/haptics';
 import { atom, useAtomValue, useSetAtom, useStore } from 'jotai';
 import { useTrayNavigation } from 'react-native-morpheus';
 
 import { ConfirmTray } from '@/components/trays/shared/confirm-tray';
-import { useSheetColors } from '@/hooks/use-sheet-colors';
 import { gameActions } from '@/stores/games';
 
 type DeleteRequest = { gameId: string; label: string; nonce: number };
@@ -33,7 +32,6 @@ function DeletePresenter({ nonce }: { nonce: number | null }) {
 
 export const DeleteGameTray = memo(function DeleteGameTray() {
   const request = useAtomValue(deleteGameRequestAtom);
-  const { kingColors } = useSheetColors();
   const store = useStore();
   const setRemoving = useSetAtom(removingGameIdAtom);
 
@@ -53,9 +51,7 @@ export const DeleteGameTray = memo(function DeleteGameTray() {
     <ConfirmTray
       body={`The game from ${request?.label ?? 'this day'} and all its moves are removed for good, and your stats leave it out`}
       cancelLabel="Cancel"
-      confirmColor={kingColors.gameOver.marker}
       confirmLabel="Delete game"
-      confirmTextColor="#FFFFFF"
       fallback="trash-outline"
       icon="exclamationmark.triangle"
       onConfirm={confirm}

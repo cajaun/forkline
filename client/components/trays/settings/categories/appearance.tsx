@@ -15,9 +15,7 @@ export type AppearanceOptionsProps = AppearanceSettings & {
   onChange: (changes: Partial<AppearanceSettings>) => void;
 };
 
-export function AppearanceOptions({
-  onChange,
-}: AppearanceOptionsProps) {
+export function AppearanceOptions({ onChange }: AppearanceOptionsProps) {
   const { hasAdaptiveThemes, theme } = useUniwind();
   const activeTheme: ThemeMode = hasAdaptiveThemes ? 'system' : theme;
 
@@ -35,7 +33,7 @@ export function AppearanceOptions({
     <Tray.Body>
       <Tray.Section>
         <View className="flex-row gap-3">
-          {THEME_OPTIONS.map((option) => (
+          {THEME_OPTIONS.map(option => (
             <ThemeCard
               key={option.value}
               fallback={option.fallback}

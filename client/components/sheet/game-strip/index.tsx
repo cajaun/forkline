@@ -1,7 +1,7 @@
 import { type ReactNode, memo, useCallback, useEffect, useMemo, useRef } from 'react';
 import { useWindowDimensions } from 'react-native';
 
-import * as Haptics from 'expo-haptics';
+import * as Haptics from '@/services/haptics';
 import { useSetAtom } from 'jotai';
 import { ScrollView } from 'react-native-gesture-handler';
 import Animated, { Easing, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';

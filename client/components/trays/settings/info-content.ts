@@ -1,13 +1,7 @@
 import type { SymbolFallback, SymbolName } from '@/components/shared/sf-symbol';
 
 export type SettingsInfoKey =
-  | 'appearance'
-  | 'difficulty'
-  | 'game'
-  | 'game-mode'
-  | 'match'
-  | 'play-as'
-  | 'strategy';
+  'appearance' | 'difficulty' | 'game' | 'game-mode' | 'haptics' | 'play-as' | 'strategy';
 
 export type SettingsInfo = {
   fallback: SymbolFallback;
@@ -60,7 +54,10 @@ export const SETTINGS_INFO: Record<SettingsInfoKey, SettingsInfo> = {
     icon: 'person.2.fill',
     items: [
       { body: 'You play one side against the AI strategy you choose', title: 'Human vs AI' },
-      { body: 'The two strategies play each other live, and the one you pick plays White', title: 'AI vs AI' },
+      {
+        body: 'The two strategies play each other live, and the one you pick plays White',
+        title: 'AI vs AI',
+      },
       {
         body: 'Changing the mode mid-game starts a new game and keeps the old one in your history',
         title: 'During a game',
@@ -68,17 +65,14 @@ export const SETTINGS_INFO: Record<SettingsInfoKey, SettingsInfo> = {
     ],
     title: 'Game mode',
   },
-  match: {
-    fallback: 'stats-chart-outline',
-    icon: 'chart.bar.fill',
+  haptics: {
+    fallback: 'pulse-outline',
+    icon: 'iphone.radiowaves.left.and.right',
     items: [
-      { body: 'Set how many games the two AIs play in one match', title: 'Games per match' },
-      {
-        body: "The AIs swap White each game, so moving first doesn't decide the score",
-        title: 'Alternate colours',
-      },
+      { body: 'Your phone taps back when you move a piece or pick a game or open a tray', title: 'Taps' },
+      { body: 'Turn them off and Forkline stays still while everything else works the same', title: 'Off' },
     ],
-    title: 'Match',
+    title: 'Haptics',
   },
   'play-as': {
     fallback: 'ellipse-outline',

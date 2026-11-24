@@ -3,12 +3,7 @@ import { Tray, useTrayNavigation, useTrayNavigationState } from 'react-native-mo
 import { useKingImages } from '@/components/trays/shared/king-images';
 import { OptionGrid, OptionLink, OptionTile } from '@/components/trays/shared/option-ui';
 
-import {
-  AGENT_OPTIONS,
-  GAME_MODE_OPTIONS,
-  HUMAN_COLOR_OPTIONS,
-  SETTINGS_STEP_INDEX,
-} from '../constants';
+import { AGENT_OPTIONS, GAME_MODE_OPTIONS, HUMAN_COLOR_OPTIONS, SETTINGS_STEP_INDEX } from '../constants';
 import type { GameSettings } from '../types';
 
 export type GameOptionsProps = GameSettings & {
@@ -36,15 +31,17 @@ export function GameOptions({ agent, gameMode, humanColor }: GameOptionsProps) {
           title="Game mode"
           value={labelOf(GAME_MODE_OPTIONS, gameMode)}
         />
-        {gameMode === 'human-vs-agent' ? (
-          <OptionLink
-            fallback="person-outline"
-            icon="person"
-            onPress={() => openStep(SETTINGS_STEP_INDEX.playAs)}
-            title="Play as"
-            value={labelOf(HUMAN_COLOR_OPTIONS, humanColor)}
-          />
-        ) : null}
+        {/* the row stays in AI vs AI so the step keeps one height and the tray never holds a stale size */}
+        <OptionLink
+          disabled={gameMode !== 'human-vs-agent'}
+          fallback="person-outline"
+          icon="person"
+          onPress={() => openStep(SETTINGS_STEP_INDEX.playAs)}
+          title="Play as"
+          value={
+            gameMode === 'human-vs-agent' ? labelOf(HUMAN_COLOR_OPTIONS, humanColor) : 'AIs play both sides'
+          }
+        />
         <OptionLink
           fallback="sparkles-outline"
           icon="sparkles"

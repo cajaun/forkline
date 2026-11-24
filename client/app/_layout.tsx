@@ -7,18 +7,21 @@ import { TrayProvider } from "react-native-morpheus";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import Animated, { FadeIn } from "react-native-reanimated";
 
-import { useSavedTheme } from "@/hooks/use-saved-theme";
+import { useAppReady } from "@/hooks/use-app-ready";
+import { useSheetColors } from "@/hooks/use-sheet-colors";
 
 const APP_FADE = FadeIn.duration(450);
 
 // the app fades in over the splash colour instead of showing a logo
 export default function RootLayout() {
-  const themeReady = useSavedTheme();
+  const ready = useAppReady();
+  const { colors } = useSheetColors();
 
-  if (!themeReady) return null;
+  if (!ready) return null;
 
+  // the root wears the splash colour so the fade in starts from it and not the system white or black
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
+    <GestureHandlerRootView style={{ backgroundColor: colors.appBackground, flex: 1 }}>
       <SafeAreaProvider>
         <KeyboardProvider>
           <TrayProvider>

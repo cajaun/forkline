@@ -30,14 +30,16 @@ function StatCell({ cell }: { cell: StatCellData }) {
         <Text
           className="font-semibold"
           numberOfLines={1}
-          style={[trayText.Subheadline, { color: colors.mutedText }]}>
+          style={[trayText.Subheadline, { color: colors.mutedText }]}
+        >
           {cell.label}
         </Text>
       </View>
       <Text
         className="font-semibold"
         numberOfLines={1}
-        style={[trayText.Title1, { color: colors.text, fontVariant: ['tabular-nums'] }]}>
+        style={[trayText.Title1, { color: colors.text, fontVariant: ['tabular-nums'] }]}
+      >
         {cell.value}
       </Text>
     </View>
@@ -73,7 +75,8 @@ export const StatCard = memo(function StatCard({ page }: { page: StatPage }) {
         borderRadius: 24,
         paddingHorizontal: 12,
         paddingVertical: 22,
-      }}>
+      }}
+    >
       <View style={{ gap: 14 }}>
         <StatPair cells={[page.cells[0], page.cells[1]]} />
         <View style={{ alignSelf: 'center', backgroundColor: divider, height: 1, width: '84%' }} />

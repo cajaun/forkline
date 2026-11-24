@@ -1,7 +1,7 @@
 export type GameMode = 'human-vs-agent' | 'agent-vs-agent';
 export type AgentName = 'material-mobility' | 'king-safety-position';
 export type HumanColor = 'white' | 'black';
-export type Category = 'game' | 'gameplay' | 'match' | 'appearance';
+export type Category = 'game' | 'gameplay' | 'appearance' | 'haptics';
 export type ThemeMode = 'system' | 'light' | 'dark';
 
 export type GameSettings = {
@@ -14,17 +14,16 @@ export type GameplaySettings = {
   depths: Record<AgentName, number>;
 };
 
-export type MatchSettings = {
-  games: number;
-  alternateColors: boolean;
-};
-
 export type AppearanceSettings = {
   themeMode: ThemeMode;
 };
 
+export type HapticsSettings = {
+  on: boolean;
+};
+
 export type SettingsState = {
-  match: MatchSettings;
+  haptics: HapticsSettings;
   appearance: AppearanceSettings;
 };
 

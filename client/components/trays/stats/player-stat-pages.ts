@@ -17,31 +17,61 @@ export function playerStatPages(stats: PlayerStats): StatPage[] {
         { fallback: 'play', icon: 'play.fill', label: 'Started', value: String(stats.started) },
         { fallback: 'trophy', icon: 'trophy.fill', label: 'Won', value: String(stats.won) },
         { fallback: 'flag', icon: 'flag.checkered', label: 'Checkmates', value: String(stats.checkmates) },
-        { fallback: 'checkmark-circle', icon: 'checkmark.circle.fill', label: 'Completed', value: percent(stats.completedShare) },
+        {
+          fallback: 'checkmark-circle',
+          icon: 'checkmark.circle.fill',
+          label: 'Completed',
+          value: percent(stats.completedShare),
+        },
       ],
       ...PLAYER_CARDS[0],
     },
     {
       cells: [
         { fallback: 'flash', icon: 'hare.fill', label: 'Fastest win', value: clock(stats.timeFastestWinMs) },
-        { fallback: 'speedometer', icon: 'gauge.with.dots.needle.50percent', label: 'Average', value: clock(stats.timeAverageMs) },
+        {
+          fallback: 'speedometer',
+          icon: 'gauge.with.dots.needle.50percent',
+          label: 'Average',
+          value: clock(stats.timeAverageMs),
+        },
         { fallback: 'time', icon: 'clock.fill', label: 'Total', value: duration(stats.timeTotalMs) },
-        { fallback: 'stopwatch', icon: 'stopwatch.fill', label: 'Per move', value: perMove(stats.timePerMoveMs) },
+        {
+          fallback: 'stopwatch',
+          icon: 'stopwatch.fill',
+          label: 'Per move',
+          value: perMove(stats.timePerMoveMs),
+        },
       ],
       ...PLAYER_CARDS[1],
     },
     {
       cells: [
-        { fallback: 'move', icon: 'arrow.up.and.down.and.arrow.left.and.right', label: 'Moves', value: String(stats.movesPlayed) },
+        {
+          fallback: 'move',
+          icon: 'arrow.up.and.down.and.arrow.left.and.right',
+          label: 'Moves',
+          value: String(stats.movesPlayed),
+        },
         { fallback: 'stats-chart', icon: 'percent', label: 'Win rate', value: percent(stats.winShare) },
         { fallback: 'locate', icon: 'scope', label: 'Captures', value: String(stats.captures) },
-        { fallback: 'remove-circle', icon: 'minus.circle.fill', label: 'Pieces lost', value: String(stats.piecesLost) },
+        {
+          fallback: 'remove-circle',
+          icon: 'minus.circle.fill',
+          label: 'Pieces lost',
+          value: String(stats.piecesLost),
+        },
       ],
       ...PLAYER_CARDS[2],
     },
     {
       cells: [
-        { fallback: 'refresh', icon: 'arrow.counterclockwise', label: 'Restarts', value: String(stats.restarts) },
+        {
+          fallback: 'refresh',
+          icon: 'arrow.counterclockwise',
+          label: 'Restarts',
+          value: String(stats.restarts),
+        },
         { fallback: 'resize', icon: 'ruler.fill', label: 'Longest', value: String(stats.longestGame) },
         { fallback: 'reorder-two', icon: 'equal.circle.fill', label: 'Draws', value: String(stats.draws) },
         { fallback: 'close-circle', icon: 'xmark.circle.fill', label: 'Losses', value: String(stats.losses) },

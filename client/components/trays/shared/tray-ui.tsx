@@ -1,10 +1,12 @@
 import type { ReactNode } from 'react';
 import { View } from 'react-native';
 
+import { useAtomValue } from 'jotai';
 import { Tray } from 'react-native-morpheus';
 
 import { SfSymbol, type SymbolFallback, type SymbolName } from '@/components/shared/sf-symbol';
 import { roundButtonStyle } from '@/components/trays/shared/tray-style';
+import { settingsAtom } from '@/components/trays/settings/state';
 import { useSheetColors } from '@/hooks/use-sheet-colors';
 
 export function TrayTriggerButton({
@@ -19,12 +21,14 @@ export function TrayTriggerButton({
   size: number;
 }) {
   const { colors } = useSheetColors();
+  const hapticsOn = useAtomValue(settingsAtom).haptics.on;
 
   return (
     <Tray.Trigger
       accessibilityLabel={label}
-      haptics="selection"
-      style={roundButtonStyle(size, colors.controlBackground)}>
+      haptics={hapticsOn ? 'selection' : false}
+      style={roundButtonStyle(size, colors.controlBackground)}
+    >
       <SfSymbol fallback={fallback} name={icon} size={Math.round(size * 0.5)} tintColor={colors.icon} />
     </Tray.Trigger>
   );
@@ -41,7 +45,8 @@ export function TrayCard({ children }: { children: ReactNode }) {
         borderRadius: 24,
         paddingHorizontal: 16,
         paddingVertical: 6,
-      }}>
+      }}
+    >
       {children}
     </View>
   );

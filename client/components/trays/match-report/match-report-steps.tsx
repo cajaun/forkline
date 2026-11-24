@@ -60,7 +60,8 @@ function GameRow({ game }: { game: ReportGame }) {
           height: 36,
           justifyContent: 'center',
           width: 36,
-        }}>
+        }}
+      >
         <SfSymbol fallback={symbol.fallback} name={symbol.icon} size={15} tintColor={colors.icon} />
       </View>
       <View style={{ flex: 1, gap: 2 }}>

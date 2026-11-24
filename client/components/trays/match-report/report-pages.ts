@@ -24,8 +24,18 @@ export function matchReportPages(): StatPage[] {
   return [
     {
       cells: [
-        { fallback: 'trophy', icon: 'trophy.fill', label: 'Mobility', value: points(MATCH_REPORT.scores[MOBILITY].points) },
-        { fallback: 'shield', icon: 'shield.fill', label: 'King safety', value: points(MATCH_REPORT.scores[KING_SAFETY].points) },
+        {
+          fallback: 'trophy',
+          icon: 'trophy.fill',
+          label: 'Mobility',
+          value: points(MATCH_REPORT.scores[MOBILITY].points),
+        },
+        {
+          fallback: 'shield',
+          icon: 'shield.fill',
+          label: 'King safety',
+          value: points(MATCH_REPORT.scores[KING_SAFETY].points),
+        },
         { fallback: 'list', icon: 'list.number', label: 'Mobility W-D-L', value: record(MOBILITY) },
         { fallback: 'list', icon: 'list.number', label: 'Safety W-D-L', value: record(KING_SAFETY) },
       ],
@@ -36,10 +46,30 @@ export function matchReportPages(): StatPage[] {
     },
     {
       cells: [
-        { fallback: 'git-network', icon: 'point.3.connected.trianglepath.dotted', label: 'Mobility nodes', value: String(Math.round(MATCH_REPORT.search[MOBILITY].avg_nodes)) },
-        { fallback: 'git-network', icon: 'point.3.connected.trianglepath.dotted', label: 'Safety nodes', value: String(Math.round(MATCH_REPORT.search[KING_SAFETY].avg_nodes)) },
-        { fallback: 'cut', icon: 'scissors', label: 'Mobility pruned', value: String(Math.round(MATCH_REPORT.search[MOBILITY].avg_cutoffs)) },
-        { fallback: 'cut', icon: 'scissors', label: 'Safety pruned', value: String(Math.round(MATCH_REPORT.search[KING_SAFETY].avg_cutoffs)) },
+        {
+          fallback: 'git-network',
+          icon: 'point.3.connected.trianglepath.dotted',
+          label: 'Mobility nodes',
+          value: String(Math.round(MATCH_REPORT.search[MOBILITY].avg_nodes)),
+        },
+        {
+          fallback: 'git-network',
+          icon: 'point.3.connected.trianglepath.dotted',
+          label: 'Safety nodes',
+          value: String(Math.round(MATCH_REPORT.search[KING_SAFETY].avg_nodes)),
+        },
+        {
+          fallback: 'cut',
+          icon: 'scissors',
+          label: 'Mobility pruned',
+          value: String(Math.round(MATCH_REPORT.search[MOBILITY].avg_cutoffs)),
+        },
+        {
+          fallback: 'cut',
+          icon: 'scissors',
+          label: 'Safety pruned',
+          value: String(Math.round(MATCH_REPORT.search[KING_SAFETY].avg_cutoffs)),
+        },
       ],
       fallback: 'git-network-outline',
       icon: 'point.3.connected.trianglepath.dotted',
@@ -49,7 +79,12 @@ export function matchReportPages(): StatPage[] {
     {
       cells: [
         { fallback: 'grid', icon: 'square.grid.2x2.fill', label: 'Games', value: String(MATCH_REPORT.games) },
-        { fallback: 'layers', icon: 'square.stack.3d.up.fill', label: 'Depth', value: String(MATCH_REPORT.depth) },
+        {
+          fallback: 'layers',
+          icon: 'square.stack.3d.up.fill',
+          label: 'Depth',
+          value: String(MATCH_REPORT.depth),
+        },
         { fallback: 'flag', icon: 'flag.checkered', label: firstEnding, value: String(firstCount) },
         { fallback: 'repeat', icon: 'repeat', label: secondEnding, value: String(secondCount) },
       ],
@@ -60,10 +95,30 @@ export function matchReportPages(): StatPage[] {
     },
     {
       cells: [
-        { fallback: 'swap-vertical', icon: 'arrow.up.arrow.down', label: 'Avg moves', value: String(MATCH_REPORT.average_plies) },
-        { fallback: 'move', icon: 'arrow.left.arrow.right', label: 'Mobility moves', value: String(MATCH_REPORT.search[MOBILITY].moves) },
-        { fallback: 'move', icon: 'arrow.left.arrow.right', label: 'Safety moves', value: String(MATCH_REPORT.search[KING_SAFETY].moves) },
-        { fallback: 'book', icon: 'book.fill', label: 'Openings', value: String(new Set(MATCH_REPORT.results.map(game => game.opening)).size) },
+        {
+          fallback: 'swap-vertical',
+          icon: 'arrow.up.arrow.down',
+          label: 'Avg moves',
+          value: String(MATCH_REPORT.average_plies),
+        },
+        {
+          fallback: 'move',
+          icon: 'arrow.left.arrow.right',
+          label: 'Mobility moves',
+          value: String(MATCH_REPORT.search[MOBILITY].moves),
+        },
+        {
+          fallback: 'move',
+          icon: 'arrow.left.arrow.right',
+          label: 'Safety moves',
+          value: String(MATCH_REPORT.search[KING_SAFETY].moves),
+        },
+        {
+          fallback: 'book',
+          icon: 'book.fill',
+          label: 'Openings',
+          value: String(new Set(MATCH_REPORT.results.map(game => game.opening)).size),
+        },
       ],
       fallback: 'list-outline',
       icon: 'list.number',

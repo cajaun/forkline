@@ -41,10 +41,15 @@ export function TrayButton({
           opacity: disabled ? 0.4 : 1,
         },
         style,
-      ]}>
+      ]}
+    >
       <Text
         className="font-semibold"
-        style={[trayText.Button, { color: textColor ?? (primary ? colors.playButtonForeground : colors.text) }]}>
+        style={[
+          trayText.Button,
+          { color: textColor ?? (primary ? colors.playButtonForeground : colors.text) },
+        ]}
+      >
         {label}
       </Text>
     </PressableScale>

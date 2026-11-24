@@ -44,7 +44,8 @@ export function useSyncRequests({
     if (!syncRequest || appliedIdRef.current === syncRequest.id) return;
     const apply = () => {
       appliedIdRef.current = syncRequest.id;
-      if (fastResetRef.current) fastResetRef.current(syncRequest.fen);
+      // an open board animates the change while a closed one jumps
+      if (fastResetRef.current) fastResetRef.current(syncRequest.fen, open);
       else boardRef.current?.resetBoard(syncRequest.fen);
       onSynced(syncRequest.fen);
     };
@@ -59,15 +60,17 @@ export function useSyncRequests({
   return fastResetRef;
 }
 
-// plays each server move once and flags it so the board does not report it as the player
+// plays each server move once on the open board and flags it so the board does not report it as the player
 export function useRemoteMoves({
   boardRef,
   boardReady,
   onApplied,
+  open,
   remoteMove,
 }: {
   boardRef: React.RefObject<ChessboardRef | null>;
   boardReady: boolean;
+  open: boolean;
   onApplied?: (id: string) => void;
   remoteMove?: RemoteMove | null;
 }) {
@@ -75,7 +78,8 @@ export function useRemoteMoves({
   const inProgressRef = useRef(false);
 
   useEffect(() => {
-    if (!remoteMove || !boardReady || remoteMove.id === appliedIdRef.current) return;
+    // a reply landing after the sheet closed waits and plays once it opens again
+    if (!remoteMove || !boardReady || !open || remoteMove.id === appliedIdRef.current) return;
     const board = boardRef.current;
     if (!board) return;
 
@@ -85,7 +89,7 @@ export function useRemoteMoves({
       inProgressRef.current = false;
       onApplied?.(remoteMove.id);
     });
-  }, [boardReady, boardRef, onApplied, remoteMove]);
+  }, [boardReady, boardRef, onApplied, open, remoteMove]);
 
   return inProgressRef;
 }

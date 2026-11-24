@@ -17,7 +17,8 @@ export function SettingsInfoAction() {
     <Tray.HeaderButton
       accessibilityLabel="About these settings"
       onPress={next}
-      style={{ backgroundColor: colors.controlBackground }}>
+      style={{ backgroundColor: colors.controlBackground }}
+    >
       <SymbolView
         name="questionmark"
         size={TRAY_HEADER_CLOSE_ICON_SIZE}
@@ -44,7 +45,8 @@ export function SettingsInfoBody({ info }: { info: SettingsInfoKey }) {
             gap: 22,
             paddingHorizontal: 22,
             paddingVertical: 24,
-          }}>
+          }}
+        >
           {content.items.map(item => (
             <View key={item.title} style={{ gap: 6 }}>
               <Text className="font-semibold" style={[trayText.Title2, { color: colors.text }]}>

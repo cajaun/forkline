@@ -1,10 +1,4 @@
-import type {
-  AgentName,
-  Category,
-  GameMode,
-  HumanColor,
-  ThemeMode,
-} from './types';
+import type { AgentName, Category, GameMode, HumanColor, ThemeMode } from './types';
 import type { SymbolFallback, SymbolName } from '@/components/shared/sf-symbol';
 
 export const AGENT_LABELS: Record<AgentName, string> = {
@@ -15,8 +9,8 @@ export const AGENT_LABELS: Record<AgentName, string> = {
 export const CATEGORY_TITLES: Record<Category, string> = {
   game: 'Game',
   gameplay: 'Gameplay',
-  match: 'Match',
   appearance: 'Appearance',
+  haptics: 'Haptics',
 };
 
 // step positions inside the flat Settings tray
@@ -27,15 +21,15 @@ export const SETTINGS_STEP_INDEX = {
   playAs: 5,
   aiStrategy: 7,
   gameplay: 9,
-  match: 11,
-  appearance: 13,
+  appearance: 11,
+  haptics: 13,
 } as const;
 
 export const CATEGORY_STEP_INDEX: Record<Category, number> = {
   appearance: SETTINGS_STEP_INDEX.appearance,
+  haptics: SETTINGS_STEP_INDEX.haptics,
   game: SETTINGS_STEP_INDEX.game,
   gameplay: SETTINGS_STEP_INDEX.gameplay,
-  match: SETTINGS_STEP_INDEX.match,
 };
 
 export const CATEGORY_OPTIONS = [
@@ -52,16 +46,16 @@ export const CATEGORY_OPTIONS = [
     title: 'Gameplay',
   },
   {
-    fallback: 'stats-chart-outline',
-    icon: 'chart.bar',
-    key: 'match',
-    title: 'Match',
-  },
-  {
     fallback: 'color-palette-outline',
     icon: 'paintpalette',
     key: 'appearance',
     title: 'Appearance',
+  },
+  {
+    fallback: 'pulse-outline',
+    icon: 'iphone.radiowaves.left.and.right',
+    key: 'haptics',
+    title: 'Haptics',
   },
 ] as const satisfies readonly {
   fallback: SymbolFallback;

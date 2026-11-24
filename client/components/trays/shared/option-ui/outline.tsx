@@ -44,7 +44,11 @@ export function OutlinedRowShell({
           {title}
         </Text>
         {value ? (
-          <Text className="font-medium" numberOfLines={1} style={[trayText.Body, { color: colors.mutedText }]}>
+          <Text
+            className="font-medium"
+            numberOfLines={1}
+            style={[trayText.Body, { color: colors.mutedText }]}
+          >
             {value}
           </Text>
         ) : null}

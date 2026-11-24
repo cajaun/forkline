@@ -3,10 +3,9 @@ import type { ComponentProps } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { SymbolView, type SFSymbol, type SymbolWeight } from 'expo-symbols';
 
-type ExtendedSymbol = SFSymbol | 'laurel.leading.laurel.trailing';
 type FallbackName = ComponentProps<typeof Ionicons>['name'];
 
-export type SymbolName = ExtendedSymbol;
+export type SymbolName = SFSymbol;
 export type SymbolFallback = FallbackName;
 
 // draws the SF Symbol on iOS and the Ionicons fallback elsewhere
@@ -18,7 +17,7 @@ export function SfSymbol({
   weight = 'semibold',
 }: {
   fallback: FallbackName;
-  name: ExtendedSymbol;
+  name: SymbolName;
   size: number;
   tintColor: string;
   weight?: SymbolWeight;
@@ -26,7 +25,7 @@ export function SfSymbol({
   return (
     <SymbolView
       fallback={<Ionicons color={tintColor} name={fallback} size={size} />}
-      name={name as SFSymbol}
+      name={name}
       size={size}
       tintColor={tintColor}
       weight={weight}

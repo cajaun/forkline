@@ -69,5 +69,11 @@ export function useCaptureTrays(boardFen: string) {
 
   useEffect(() => clearCollapseTimer, [clearCollapseTimer]);
 
-  return { captured, expandedSide, recordCapture, toggleSide };
+  // a board sync such as Start over or Undo rebuilds the lists from the new position
+  const syncCaptures = useCallback((fen: string) => {
+    const next = capturedFromFen(fen);
+    setCaptured(current => (sameCaptures(current, next) ? current : next));
+  }, []);
+
+  return { captured, expandedSide, recordCapture, syncCaptures, toggleSide };
 }
