@@ -25,6 +25,7 @@ import { PreviewCard } from './preview-card';
 import { PreviewTimer } from './preview-timer';
 import { SheetStack } from './sheet-stack';
 import { useBoardHint } from '@/hooks/use-board-hint';
+import { HINTS_PER_GAME } from '@/constants/game-rules';
 
 export function ChessboardSheet() {
   const { height, width } = useWindowDimensions();
@@ -62,9 +63,11 @@ export function ChessboardSheet() {
   const hint = useBoardHint(boardRef, colors.primary, selectedGame?.id ?? null);
   const { requestHint } = backendGame;
   const showHint = hint.show;
-  const handleHint = useCallback(() => {
-    void showHint(requestHint);
-  }, [requestHint, showHint]);
+  const gameId = selectedGame?.id ?? null;
+  const hintsLeft = Math.max(0, HINTS_PER_GAME - (selectedGame?.hintsUsed ?? 0));
+  const handleHint = useCallback(async () => {
+    if (gameId && (await showHint(requestHint))) gameActions.spendHint(gameId);
+  }, [gameId, requestHint, showHint]);
   const { onUserMove } = backendGame;
   const clearHint = hint.clear;
   // a move clears any hint before the server sees it
@@ -119,7 +122,8 @@ export function ChessboardSheet() {
         />
         <OpenControls onClose={closeSheet} open={open} progress={progress} />
         <OpenBottomControls
-          hintEnabled={boardInputEnabled}
+          hintEnabled={boardInputEnabled && hintsLeft > 0}
+          hintsLeft={hintsLeft}
           hintThinking={hint.thinking}
           onHint={handleHint}
           open={open}

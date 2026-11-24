@@ -31,7 +31,7 @@ export function useBoardHint(
       setThinking(true);
       const uci = await ask();
       setThinking(false);
-      if (!uci) return;
+      if (!uci) return false;
       clear();
       const { from, to } = moveFromUci(uci);
       squaresRef.current = [from, to];
@@ -40,6 +40,7 @@ export function useBoardHint(
       boardRef.current?.highlight({ color: tint, square: to });
       void Haptics.selectionAsync();
       timerRef.current = setTimeout(clear, HINT_VISIBLE_MS);
+      return true;
     },
     [boardRef, clear, color],
   );

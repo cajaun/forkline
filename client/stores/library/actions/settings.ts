@@ -1,8 +1,6 @@
 import type { GameConfig } from '@/types/games';
 
-import { libraryAtom, store, updateGame, updateLibrary } from '../state';
-
-import { createGame } from './lifecycle';
+import { updateGame, updateLibrary } from '../state';
 
 export function updateGameConfig(id: string, changes: Partial<GameConfig>) {
   updateGame(id, game => ({ ...game, config: { ...game.config, ...changes } }));
@@ -12,9 +10,16 @@ export function setDefaults(changes: Partial<GameConfig>) {
   updateLibrary(current => ({ ...current, defaults: { ...current.defaults, ...changes } }));
 }
 
-// finishing setup opens with a game for today in the chosen defaults when the history is empty
+// games nobody has played yet take the defaults chosen during setup
 export function completeOnboarding() {
-  updateLibrary(current => ({ ...current, onboardingComplete: true }));
-  const library = store.get(libraryAtom);
-  if (library && Object.keys(library.games).length === 0) createGame();
+  updateLibrary(current => ({
+    ...current,
+    games: Object.fromEntries(
+      Object.entries(current.games).map(([id, game]) => [
+        id,
+        game.moveCount === 0 ? { ...game, config: current.defaults } : game,
+      ]),
+    ),
+    onboardingComplete: true,
+  }));
 }

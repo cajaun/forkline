@@ -17,12 +17,14 @@ import { HintButton } from './hint-button';
 export const OpenBottomControls = memo(function OpenBottomControls({
   hintEnabled,
   hintThinking,
+  hintsLeft,
   onHint,
   open,
   progress,
 }: {
   hintEnabled: boolean;
   hintThinking: boolean;
+  hintsLeft: number;
   onHint: () => void;
   open: boolean;
   progress: SharedValue<number>;
@@ -67,7 +69,7 @@ export const OpenBottomControls = memo(function OpenBottomControls({
         <GameActionsTray />
       </AnimatedView>
       <AnimatedView className="absolute right-0 top-0" style={rightActionStyle}>
-        <HintButton enabled={hintEnabled} onPress={onHint} thinking={hintThinking} />
+        <HintButton enabled={hintEnabled} hintsLeft={hintsLeft} onPress={onHint} thinking={hintThinking} />
       </AnimatedView>
     </AnimatedView>
   );

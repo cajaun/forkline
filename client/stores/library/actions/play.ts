@@ -1,6 +1,6 @@
 import { Chess } from 'chess.js';
 
-import { GAME_TIME_LIMIT_MS } from '@/constants/game-clock';
+import { GAME_TIME_LIMIT_MS } from '@/constants/game-rules';
 import type { GameSummary, RecordedState } from '@/types/games';
 import { aiWinResult, endedByApp } from '@/utils/game-ending';
 
@@ -94,6 +94,11 @@ export function undoSelectedTurn() {
 }
 
 // the clock counts for games in play and stops at the limit
+// a shown hint spends one of the game's hints and an undo gives none back
+export function spendHint(id: string) {
+  updateGame(id, game => ({ ...game, hintsUsed: (game.hintsUsed ?? 0) + 1 }));
+}
+
 export function addElapsed(id: string, ms: number) {
   if (ms <= 0) return;
   updateGame(id, game =>

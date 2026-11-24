@@ -26,6 +26,7 @@ export type GameSummary = {
   elapsedMs: number;
   revision?: number;
   undoCount?: number;
+  hintsUsed?: number;
 };
 
 export type GameMoves = {

@@ -8,13 +8,14 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ClockFace } from '@/components/shared/clock-face';
 import { NumericText } from '@/components/shared/numeric-text';
 import { AnimatedView } from '@/components/shared/uniwind';
-import { GAME_TIME_LIMIT_MS } from '@/constants/game-clock';
+import { GAME_TIME_LIMIT_MS } from '@/constants/game-rules';
 import { SHEET_CARD_TEXT, SHEET_LAYOUT } from '@/constants/sheet';
 import { useSheetColors } from '@/hooks/use-sheet-colors';
 import { formatElapsed } from '@/utils/days';
 
 // a running clock writes to the store at this pace and re-renders itself in between
 const CLOCK_FLUSH_MS = 15_000;
+const CLOCK_TEXT_WIDTH = 62;
 
 // counts time since the last write and ends the game at the limit
 function useRunningClock(
@@ -109,15 +110,18 @@ export const PreviewTimer = memo(function PreviewTimer({
           outer={colors.dateText}
           size={19}
         />
-        <NumericText
-          color={colors.dateText}
-          lineHeight={26}
-          monospacedDigits
-          size={22}
-          text={formatElapsed(remainingMs)}
-          value={remainingMs / 1000}
-          weight="bold"
-        />
+        {/* the time sits in a slot as wide as 00:00 so a shorter time never shifts the clock */}
+        <View style={{ alignItems: 'flex-start', width: CLOCK_TEXT_WIDTH }}>
+          <NumericText
+            color={colors.dateText}
+            lineHeight={26}
+            monospacedDigits
+            size={22}
+            text={formatElapsed(remainingMs)}
+            value={remainingMs / 1000}
+            weight="bold"
+          />
+        </View>
       </View>
     </AnimatedView>
   );
