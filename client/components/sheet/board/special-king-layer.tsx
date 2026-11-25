@@ -47,6 +47,10 @@ function kingSquareOf(boardState: BoardState, code: NonNullable<PieceCode>) {
 
 const RESIGNED = 3;
 
+// the lowest alpha Skia still draws so the effect stays invisible when idle
+// drawing it every frame compiles its GPU shaders up front so a first check never stalls
+const IDLE_OPACITY = 0.004;
+
 // tints the king square and swaps in the coloured king once the attacking move lands
 export function SpecialKingLayer({
   boardState,
@@ -104,18 +108,21 @@ export function SpecialKingLayer({
     },
   );
 
+  const checkOpacity = useDerivedValue(() => Math.max(checkFade.get(), IDLE_OPACITY));
+  const mateOpacity = useDerivedValue(() => Math.max(mateFade.get(), IDLE_OPACITY));
+
   // a resigned king square follows the king while a game switch moves the pieces
   const squareRect = useDerivedValue(() => {
     const code = kingCode.get();
     const at = applied.get() === RESIGNED && code ? kingSquareOf(boardState, code) : square.get();
-    if (!at) return rect(0, 0, 0, 0);
+    if (!at) return rect(0, 0, size, size);
     const position = squareToPosition(at, size, config.flipped);
     return rect(position.x, position.y, size, size);
   });
 
   const kingRect = useDerivedValue(() => {
     const code = kingCode.get();
-    if (!code || checkFade.get() + mateFade.get() === 0) return rect(0, 0, 0, 0);
+    if (!code || checkFade.get() + mateFade.get() === 0) return rect(0, 0, size, size);
     for (const at of SQUARES) {
       const state = boardState.squares[at];
       if (state.piece.get() !== code) continue;
@@ -123,7 +130,7 @@ export function SpecialKingLayer({
       const inset = (size - scaled) / 2;
       return rect(state.translateX.get() + inset, state.translateY.get() + inset, scaled, scaled);
     }
-    return rect(0, 0, 0, 0);
+    return rect(0, 0, size, size);
   });
 
   const dotCenter = useDerivedValue(() => {
@@ -134,12 +141,12 @@ export function SpecialKingLayer({
 
   return (
     <>
-      <Rect color={kingColors.checkmate.square} opacity={checkFade} rect={squareRect} />
-      <Rect color={kingColors.gameOver.square} opacity={mateFade} rect={squareRect} />
-      <Circle c={dotCenter} color={kingColors.checkmate.dot} opacity={checkFade} r={dotRadius} />
-      <Circle c={dotCenter} color={kingColors.gameOver.dot} opacity={mateFade} r={dotRadius} />
-      <SkiaImage fit="contain" image={checkmateImage} opacity={checkFade} rect={kingRect} />
-      <SkiaImage fit="contain" image={gameOverImage} opacity={mateFade} rect={kingRect} />
+      <Rect color={kingColors.checkmate.square} opacity={checkOpacity} rect={squareRect} />
+      <Rect color={kingColors.gameOver.square} opacity={mateOpacity} rect={squareRect} />
+      <Circle c={dotCenter} color={kingColors.checkmate.dot} opacity={checkOpacity} r={dotRadius} />
+      <Circle c={dotCenter} color={kingColors.gameOver.dot} opacity={mateOpacity} r={dotRadius} />
+      <SkiaImage fit="contain" image={checkmateImage} opacity={checkOpacity} rect={kingRect} />
+      <SkiaImage fit="contain" image={gameOverImage} opacity={mateOpacity} rect={kingRect} />
     </>
   );
 }

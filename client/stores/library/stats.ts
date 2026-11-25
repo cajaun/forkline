@@ -27,9 +27,7 @@ export type PlayerStats = {
 };
 
 function humanMoves(game: GameSummary) {
-  return game.config.humanColor === 'white'
-    ? Math.ceil(game.moveCount / 2)
-    : Math.floor(game.moveCount / 2);
+  return game.config.humanColor === 'white' ? Math.ceil(game.moveCount / 2) : Math.floor(game.moveCount / 2);
 }
 
 function humanOutcome(game: GameSummary): 'won' | 'lost' | 'drawn' | null {
@@ -41,9 +39,7 @@ function humanOutcome(game: GameSummary): 'won' | 'lost' | 'drawn' | null {
 const share = (part: number, whole: number) => (whole ? part / whole : null);
 
 function computePlayerStats(allGames: GameSummary[]): PlayerStats {
-  const games = allGames.filter(
-    game => game.config.gameMode === 'human-vs-agent' && game.moveCount > 0,
-  );
+  const games = allGames.filter(game => game.config.gameMode === 'human-vs-agent' && game.moveCount > 0);
   const finished = games.filter(game => game.status === 'finished');
   const won = finished.filter(game => humanOutcome(game) === 'won');
   const movesPlayed = games.reduce((total, game) => total + humanMoves(game), 0);

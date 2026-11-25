@@ -21,8 +21,8 @@ import { fold } from '../expanding/fold';
 import type { BoardMotion } from '../expanding/use-board-motion';
 
 const TIME_SIZE = 64;
-// the overlay rides the board transform so its sizes undo the won board scale to read true when open
-const UNSCALE = 1 / SHEET_RESULT.boardScale;
+// the badge sits in screen space at true size on the open sheet and only scales down with the closed board
+const BADGE_RISE = TIME_SIZE * 1.15;
 
 // the time and win banner sit on the faded board edge on the open sheet and the closed card alike
 export const ResultBadge = memo(function ResultBadge({
@@ -60,8 +60,14 @@ export const ResultBadge = memo(function ResultBadge({
   // the badge and its fade fold in and out on the same curve as the Play button
   const fadeStyle = useAnimatedStyle(() => ({ opacity: fold(1 - shown.value).opacity }));
   const badgeStyle = useAnimatedStyle(() => {
-    const { opacity, scale } = fold(1 - shown.value);
-    return { opacity, transform: [{ scale: scale * UNSCALE }] };
+    const { opacity, scale: folded } = fold(1 - shown.value);
+    // the board scales about its centre so its drawn bottom edge moves with both translate and scale
+    const boardBottom = top + translate.value.y + (boardSize * (1 + scale.value)) / 2;
+    const size = scale.value / SHEET_RESULT.boardScale;
+    return {
+      opacity,
+      transform: [{ translateY: boardBottom - BADGE_RISE * size }, { scale: size * folded }],
+    };
   });
 
   const outcome = resultOf(game);
@@ -75,31 +81,38 @@ export const ResultBadge = memo(function ResultBadge({
       : `DEPTH ${depths[agent]}`;
 
   return (
-    <Animated.View
-      pointerEvents="none"
-      style={[
-        { height: boardSize, left, position: 'absolute', top, width: boardSize, zIndex: 4 },
-        followStyle,
-      ]}
-    >
+    <>
       <Animated.View
-        style={[{ bottom: -4, height: fadeHeight + 4, left: -4, position: 'absolute', right: -4 }, fadeStyle]}
+        pointerEvents="none"
+        style={[
+          { height: boardSize, left, position: 'absolute', top, width: boardSize, zIndex: 4 },
+          followStyle,
+        ]}
       >
-        <LinearGradient
-          colors={[`${colors.background}00`, `${colors.background}CC`, colors.background]}
-          locations={[0, 0.55, 1]}
-          style={{ flex: 1 }}
-        />
+        <Animated.View
+          style={[
+            { bottom: -4, height: fadeHeight + 4, left: -4, position: 'absolute', right: -4 },
+            fadeStyle,
+          ]}
+        >
+          <LinearGradient
+            colors={[`${colors.background}00`, `${colors.background}CC`, colors.background]}
+            locations={[0, 0.55, 1]}
+            style={{ flex: 1 }}
+          />
+        </Animated.View>
       </Animated.View>
       <Animated.View
         style={[
           {
             alignItems: 'center',
             left: 0,
+            pointerEvents: 'none',
             position: 'absolute',
             right: 0,
-            top: boardSize - TIME_SIZE * 1.15 * UNSCALE,
+            top: 0,
             transformOrigin: 'top',
+            zIndex: 4,
           },
           badgeStyle,
         ]}
@@ -111,7 +124,8 @@ export const ResultBadge = memo(function ResultBadge({
             borderRadius: 13,
             flexDirection: 'row',
             gap: 5,
-            marginBottom: -6,
+            // the digits carry more empty line below than above so the pill and banner close in unevenly
+            marginBottom: -2,
             paddingHorizontal: 10,
             paddingVertical: 4,
             zIndex: 1,
@@ -141,7 +155,7 @@ export const ResultBadge = memo(function ResultBadge({
         >
           {formatElapsed(game.elapsedMs)}
         </Text>
-        <View style={{ alignItems: 'center', flexDirection: 'row', gap: 10, marginTop: 2 }}>
+        <View style={{ alignItems: 'center', flexDirection: 'row', gap: 10, marginTop: -6 }}>
           <SfSymbol fallback="leaf-outline" name="laurel.leading" size={30} tintColor={colors.mutedText} />
           <View style={{ borderColor: colors.text, borderRadius: 12, borderWidth: 2, overflow: 'hidden' }}>
             <View
@@ -165,6 +179,6 @@ export const ResultBadge = memo(function ResultBadge({
           <SfSymbol fallback="leaf-outline" name="laurel.trailing" size={30} tintColor={colors.mutedText} />
         </View>
       </Animated.View>
-    </Animated.View>
+    </>
   );
 });

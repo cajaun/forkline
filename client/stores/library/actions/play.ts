@@ -2,7 +2,7 @@ import { Chess } from 'chess.js';
 
 import { GAME_TIME_LIMIT_MS } from '@/constants/game-rules';
 import type { GameSummary, RecordedState } from '@/types/games';
-import { aiWinResult, endedByApp } from '@/utils/game-ending';
+import { aiWinResult, endedByApp, humanOutcome } from '@/utils/game-ending';
 
 import {
   START_FEN,
@@ -66,9 +66,12 @@ function endEarly(
   });
 }
 
-export function resignSelectedGame() {
+// a delay lets a closing tray finish before the whole sheet re-renders for the ended game
+export function resignSelectedGame(delayMs = 0) {
   const id = store.get(selectedGameIdAtom);
-  if (id) endEarly(id, 'resignation', null);
+  if (!id) return;
+  if (delayMs > 0) setTimeout(() => endEarly(id, 'resignation', null), delayMs);
+  else endEarly(id, 'resignation', null);
 }
 
 export function timeOutGame(id: string) {
@@ -81,7 +84,7 @@ export function undoSelectedTurn() {
   const game = id ? store.get(libraryAtom)?.games[id] : null;
   const history = id ? cachedMoves(id) : null;
   if (!id || !game || !history || game.config.gameMode !== 'human-vs-agent') return false;
-  if (endedByApp(game.termination)) return false;
+  if (endedByApp(game.termination) || humanOutcome(game) === 'win') return false;
 
   const human = game.config.humanColor === 'white' ? 'w' : 'b';
   const chess = new Chess(history.startFen);

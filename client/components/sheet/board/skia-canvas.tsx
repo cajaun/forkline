@@ -1,4 +1,4 @@
-import { memo } from 'react';
+import { memo, useEffect } from 'react';
 import { StyleSheet } from 'react-native';
 
 import { Canvas, useImage } from '@shopify/react-native-skia';
@@ -11,9 +11,12 @@ import { SkiaHighlights } from 'react-native-chessboard/src/components/skia/skia
 import { AnimatedView } from '@/components/shared/uniwind';
 import { useSheetColors } from '@/hooks/use-sheet-colors';
 
+import { markBoardPrimed } from './board-primed';
 import { SKIA_SETTLED_PROGRESS } from './constants';
 import { MoveDots, PieceAtlas, SelectedSquareHighlight } from './skia-layers';
 import { SpecialKingLayer } from './special-king-layer';
+
+const PRIMED_FRAMES = 3;
 
 // the live board draws in one Skia canvas and appears once the sheet settles
 export const SheetBoardCanvas = memo(function SheetBoardCanvas({
@@ -32,6 +35,20 @@ export const SheetBoardCanvas = memo(function SheetBoardCanvas({
   const { isDark, kingColors, kingImages } = useSheetColors();
   const checkmateKingImage = useImage(kingImages.checkmate);
   const gameOverKingImage = useImage(kingImages.gameOver);
+  const drawable = spriteImage !== null && checkmateKingImage !== null && gameOverKingImage !== null;
+
+  // a few frames after everything first draws the shaders are compiled and the splash may lift
+  useEffect(() => {
+    if (!drawable) return;
+    let frames = 0;
+    let handle = requestAnimationFrame(function tick() {
+      frames += 1;
+      if (frames >= PRIMED_FRAMES) markBoardPrimed();
+      else handle = requestAnimationFrame(tick);
+    });
+    return () => cancelAnimationFrame(handle);
+  }, [drawable]);
+
   const visibleStyle = useAnimatedStyle(() => ({
     opacity: progress.value >= SKIA_SETTLED_PROGRESS ? 1 : 0,
   }));

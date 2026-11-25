@@ -6,6 +6,7 @@ import * as SystemUI from 'expo-system-ui';
 import { useSetAtom } from 'jotai';
 import { Uniwind } from 'uniwind';
 
+import { boardPrimed } from '@/components/sheet/board/board-primed';
 import { settingsAtom } from '@/components/trays/settings/state';
 import { SHEET_COLORS_BY_THEME } from '@/constants/sheet';
 import { setHapticsEnabled } from '@/services/haptics';
@@ -14,6 +15,9 @@ import { gameActions } from '@/stores/games';
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
 SplashScreen.setOptions({ duration: 250, fade: true });
+
+// a missing board image must never hold the splash up
+const PRIMED_TIMEOUT_MS = 1500;
 
 // applies the saved theme and haptics and loads the games before the splash fades out
 export function useAppReady() {
@@ -46,9 +50,17 @@ export function useAppReady() {
     };
   }, [setSettings]);
 
-  // the splash lifts after the coloured root has rendered beneath it
+  // the splash lifts once the board beneath it has drawn so first time GPU work never shows
   useEffect(() => {
-    if (ready) SplashScreen.hideAsync().catch(() => {});
+    if (!ready) return;
+    let cancelled = false;
+    const giveUp = new Promise<void>(resolve => setTimeout(resolve, PRIMED_TIMEOUT_MS));
+    void Promise.race([boardPrimed, giveUp]).then(() => {
+      if (!cancelled) SplashScreen.hideAsync().catch(() => {});
+    });
+    return () => {
+      cancelled = true;
+    };
   }, [ready]);
 
   return ready;

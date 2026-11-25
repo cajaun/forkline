@@ -3,6 +3,7 @@ import { memo, useState } from 'react';
 import * as Haptics from '@/services/haptics';
 import { Tray, useTrayNavigation, useTrayNavigationState } from 'react-native-morpheus';
 
+import { CLOSE_SETTLE_MS } from '@/components/shared/tray-activity';
 import { SettingsHeader } from '@/components/trays/settings/components/settings-header';
 import { ConfirmBody } from '@/components/trays/shared/confirm-tray';
 import { OptionLink } from '@/components/trays/shared/option-ui';
@@ -58,7 +59,8 @@ function ActionsBody() {
   return (
     <Tray.Body>
       <Tray.Section style={{ gap: 10 }}>
-        {watching ? null : (
+        {/* a watched game and a won game have no move of the player's to take back */}
+        {watching || standing?.won ? null : (
           <OptionLink
             disabled={!standing?.canUndo}
             fallback="arrow-undo-outline"
@@ -109,7 +111,7 @@ function ActionsFooter() {
   const confirm = () => {
     if (resigning) {
       void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
-      gameActions.resignSelectedGame();
+      gameActions.resignSelectedGame(CLOSE_SETTLE_MS);
     } else {
       void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       gameActions.restartSelectedGame();

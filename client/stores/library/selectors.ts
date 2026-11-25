@@ -5,7 +5,7 @@ import { selectAtom } from 'jotai/utils';
 
 import type { GameSummary } from '@/types/games';
 import { dayRange, todayKey } from '@/utils/days';
-import { endedByApp } from '@/utils/game-ending';
+import { endedByApp, humanOutcome } from '@/utils/game-ending';
 
 import { gameActions } from './actions';
 import { INITIAL_GAME_CONFIG, groupByDay, libraryAtom, selectedGameIdAtom } from './state';
@@ -24,9 +24,7 @@ const onboardingAtom = selectAtom(
     onboardingComplete: library?.onboardingComplete ?? false,
   }),
   (a, b) =>
-    a.defaults === b.defaults &&
-    a.hydrated === b.hydrated &&
-    a.onboardingComplete === b.onboardingComplete,
+    a.defaults === b.defaults && a.hydrated === b.hydrated && a.onboardingComplete === b.onboardingComplete,
 );
 
 // the game settings tray reads fields a move leaves alone
@@ -51,14 +49,23 @@ const defaultSettingsAtom = selectAtom(
 
 const selectedStandingAtom = selectAtom(
   selectedGameAtom,
-  game => (game ? { canUndo: canUndo(game), gameMode: game.config.gameMode, status: game.status } : null),
-  (a, b) => a?.gameMode === b?.gameMode && a?.status === b?.status && a?.canUndo === b?.canUndo,
+  game =>
+    game
+      ? {
+          canUndo: canUndo(game),
+          gameMode: game.config.gameMode,
+          status: game.status,
+          won: humanOutcome(game) === 'win',
+        }
+      : null,
+  (a, b) =>
+    a?.gameMode === b?.gameMode && a?.status === b?.status && a?.canUndo === b?.canUndo && a?.won === b?.won,
 );
 
-// a game against the AI with a human move on the board and no app ending
+// a game against the AI with a human move on the board and no app ending or win to take back
 function canUndo(game: GameSummary) {
   if (game.config.gameMode !== 'human-vs-agent') return false;
-  if (endedByApp(game.termination)) return false;
+  if (endedByApp(game.termination) || humanOutcome(game) === 'win') return false;
   return game.moveCount >= (game.config.humanColor === 'white' ? 1 : 2);
 }
 

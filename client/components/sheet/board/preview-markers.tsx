@@ -9,7 +9,7 @@ import { AnimatedView } from '@/components/shared/uniwind';
 import { useSheetColors } from '@/hooks/use-sheet-colors';
 import { kingCellFromFen, pieceCellsFromFen } from '@/utils/fen';
 
-import type { KingColors, KingDisplayState } from './constants';
+import { SKIA_SETTLED_PROGRESS, type KingColors, type KingDisplayState } from './constants';
 import { hexagonPath } from './hexagon';
 
 type SquareColors = { black: string; white: string };
@@ -44,34 +44,43 @@ const StaticSquares = memo(function StaticSquares({
 });
 
 // the tinted king square is the one square that changes between games
+// the live board tints its own king square so this one hands over as the Skia canvas appears
 function BoardSquares({
   boardSize,
   colors,
   kingCell,
   kingColors,
   kingDisplayState,
+  progress,
 }: {
   boardSize: number;
   colors: SquareColors;
   kingCell: number | null;
   kingColors: KingColors;
   kingDisplayState: KingDisplayState;
+  progress: SharedValue<number>;
 }) {
   const cell = boardSize / 8;
+  const tintStyle = useAnimatedStyle(() => ({
+    opacity: progress.value >= SKIA_SETTLED_PROGRESS ? 0 : 1,
+  }));
 
   return (
     <>
       <StaticSquares boardSize={boardSize} colors={colors} />
       {kingCell !== null && kingDisplayState ? (
-        <View
-          style={{
-            backgroundColor: kingColors[kingDisplayState].square,
-            height: cell,
-            left: (kingCell % 8) * cell,
-            position: 'absolute',
-            top: Math.floor(kingCell / 8) * cell,
-            width: cell,
-          }}
+        <AnimatedView
+          style={[
+            {
+              backgroundColor: kingColors[kingDisplayState].square,
+              height: cell,
+              left: (kingCell % 8) * cell,
+              position: 'absolute',
+              top: Math.floor(kingCell / 8) * cell,
+              width: cell,
+            },
+            tintStyle,
+          ]}
         />
       ) : null}
     </>
@@ -135,6 +144,7 @@ export const PreviewMarkers = memo(function PreviewMarkers({
         kingCell={kingCell}
         kingColors={kingColors}
         kingDisplayState={kingDisplayState}
+        progress={progress}
       />
       {/* a won game swaps its markers for the real pieces in the same frame */}
       {revealed ? null : (
