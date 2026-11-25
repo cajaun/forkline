@@ -157,7 +157,14 @@ export const ExpandingBoard = memo(function ExpandingBoard({
   if (resultGame && resultGame !== lastResultGame) setLastResultGame(resultGame);
 
   const capturesStyle = useAnimatedStyle(() => ({ opacity: 1 - result.value }));
-  const openRect = { height: boardSize, left, top: openTop, width: boardSize };
+  // the continuous curve matches the outline so the squares never peek past its corners
+  const openRect = {
+    borderCurve: 'continuous' as const,
+    height: boardSize,
+    left,
+    top: openTop,
+    width: boardSize,
+  };
 
   return (
     <>

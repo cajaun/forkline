@@ -1,12 +1,12 @@
 import { memo, type ReactNode } from 'react';
 import { Text, View } from 'react-native';
 
-import { SymbolView } from 'expo-symbols';
 import { Tray, useTrayNavigation } from 'react-native-morpheus';
+import { TRAY_HEADER_CONTENT_HEIGHT } from 'react-native-morpheus/constants';
 
-import { PressableScale } from '@/components/shared/pressable-scale';
 import { SfSymbol, type SymbolFallback, type SymbolName } from '@/components/shared/sf-symbol';
 import { trayText } from '@/components/shared/tokens';
+import { SettingsCloseAction } from '@/components/trays/settings/components/settings-header';
 import { TrayButton } from '@/components/trays/shared/tray-button';
 import { TrayTriggerButton } from '@/components/trays/shared/tray-ui';
 import { useSheetColors } from '@/hooks/use-sheet-colors';
@@ -23,14 +23,24 @@ type ConfirmProps = {
   title: string;
 };
 
-// a large muted symbol and a close button over the title and its explanation
+// the close button lives in a real header so it morphs in place from the step before
+export function ConfirmHeader() {
+  return (
+    <Tray.Header>
+      <Tray.HeaderRow right={<SettingsCloseAction />}>
+        <View />
+      </Tray.HeaderRow>
+    </Tray.Header>
+  );
+}
+
+// a large muted symbol level with the header close button over the title and its explanation
 export function ConfirmBody({
   body,
   fallback,
   icon,
   title,
 }: Pick<ConfirmProps, 'body' | 'fallback' | 'icon' | 'title'>) {
-  const { close } = useTrayNavigation();
   const { colors } = useSheetColors();
 
   return (
@@ -38,29 +48,14 @@ export function ConfirmBody({
       <View
         style={{
           alignItems: 'flex-start',
-          flexDirection: 'row',
-          justifyContent: 'space-between',
+          height: 68,
+          justifyContent: 'center',
+          marginTop: -TRAY_HEADER_CONTENT_HEIGHT,
           paddingHorizontal: 28,
-          paddingTop: 24,
+          width: 68 + 28,
         }}
       >
-        <View style={{ alignItems: 'flex-start', height: 68, justifyContent: 'center', width: 68 }}>
-          <SfSymbol fallback={fallback} name={icon} size={58} tintColor={colors.mutedText} weight="regular" />
-        </View>
-        <PressableScale
-          accessibilityLabel="Close"
-          onPress={close}
-          style={{
-            alignItems: 'center',
-            backgroundColor: colors.controlBackground,
-            borderRadius: 999,
-            height: 36,
-            justifyContent: 'center',
-            width: 36,
-          }}
-        >
-          <SymbolView name="xmark" size={18} tintColor={colors.trayIcon} type="palette" weight="bold" />
-        </PressableScale>
+        <SfSymbol fallback={fallback} name={icon} size={58} tintColor={colors.mutedText} weight="regular" />
       </View>
 
       <Tray.Section style={{ gap: 12, paddingHorizontal: 28 }}>
@@ -115,6 +110,7 @@ export const ConfirmTray = memo(function ConfirmTray({
         <TrayTriggerButton fallback={fallback} icon={icon} label={triggerLabel ?? title} size={size} />
       )}
       <Tray.Step key="confirm">
+        <ConfirmHeader />
         <ConfirmBody body={body} fallback={fallback} icon={icon} title={title} />
         <Tray.Footer style={{ width: '100%' }}>
           <ConfirmButtons

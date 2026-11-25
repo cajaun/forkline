@@ -3,7 +3,7 @@ import { View } from 'react-native';
 
 import { Tray, useTrayNavigation } from 'react-native-morpheus';
 
-import { ConfirmBody } from '@/components/trays/shared/confirm-tray';
+import { ConfirmBody, ConfirmHeader } from '@/components/trays/shared/confirm-tray';
 import { TrayButton } from '@/components/trays/shared/tray-button';
 import { TRAY_STEP_OPTIONS } from '@/components/trays/shared/tray-style';
 import * as Haptics from '@/services/haptics';
@@ -73,6 +73,7 @@ export const LossTray = memo(function LossTray({ game }: { game: GameSummary | n
     <Tray.Root footer={<LossFooter timedOut={timedOut} />} stepOptions={TRAY_STEP_OPTIONS}>
       <LossPresenter game={game} />
       <Tray.Step key="loss">
+        <ConfirmHeader />
         <ConfirmBody
           body={
             timedOut ? 'Your fifteen minutes ran out. Try again?' : 'The AI checkmated your king. Try again?'

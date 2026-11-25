@@ -5,7 +5,7 @@ import { Tray, useTrayNavigation, useTrayNavigationState } from 'react-native-mo
 
 import { CLOSE_SETTLE_MS } from '@/components/shared/tray-activity';
 import { SettingsHeader } from '@/components/trays/settings/components/settings-header';
-import { ConfirmBody } from '@/components/trays/shared/confirm-tray';
+import { ConfirmBody, ConfirmHeader } from '@/components/trays/shared/confirm-tray';
 import { OptionLink } from '@/components/trays/shared/option-ui';
 import { SplitButton } from '@/components/trays/shared/split-button';
 import { TrayTriggerButton } from '@/components/trays/shared/tray-ui';
@@ -93,6 +93,7 @@ function ActionsBody() {
 function FinalBody({ final }: { final: Final }) {
   const standing = useSelectedGameStanding();
   const copy = finalCopy(final, standing?.gameMode === 'agent-vs-agent');
+
   return <ConfirmBody body={copy.body} fallback={copy.fallback} icon={copy.icon} title={copy.title} />;
 }
 
@@ -155,10 +156,12 @@ export const GameActionsTray = memo(function GameActionsTray({ size = 56 }: { si
       </Tray.Step>
 
       <Tray.Step key="restart">
+        <ConfirmHeader />
         <FinalBody final="restart" />
       </Tray.Step>
 
       <Tray.Step key="resign">
+        <ConfirmHeader />
         <FinalBody final="resign" />
       </Tray.Step>
     </Tray.Root>

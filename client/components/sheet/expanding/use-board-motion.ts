@@ -9,7 +9,7 @@ import { SHEET_RESULT } from '@/constants/sheet';
 import type { BoardTransform } from '../board-transform';
 
 const DEVICE_PIXEL_RATIO = PixelRatio.get();
-const BOARD_RADIUS = 12;
+export const BOARD_RADIUS = 12;
 
 // snaps a value to the device pixel grid so the board edges stay sharp
 function toDevicePixel(value: number) {

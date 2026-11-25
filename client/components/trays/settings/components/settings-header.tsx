@@ -38,7 +38,7 @@ function SettingsBackAction({ steps }: { steps: number }) {
   );
 }
 
-function SettingsCloseAction() {
+export function SettingsCloseAction() {
   const { close } = useTrayNavigation();
   const { colors } = useSheetColors();
 
