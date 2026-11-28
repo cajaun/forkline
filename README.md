@@ -1,3 +1,7 @@
+
+
+https://github.com/user-attachments/assets/67064d14-69be-4cf0-a268-2c01bed25b5a
+
 # Forkline
 
 Forkline is a React Native chess application with a Python backend. The client
@@ -23,41 +27,41 @@ Changing the mode or colour of a game in progress starts a new game.
 
 ## Demo videos
 
-The GUI runs as an iOS app, so these recordings show both modes without an iPhone. [`docs/videos/00-full-demo.mp4`](docs/videos/00-full-demo.mp4) joins all six clips with a title card before each one. Each clip below also stands on its own.
+The GUI runs as an iOS app, so these recordings show both modes without an iPhone. https://github.com/user-attachments/assets/4b5e7da4-ad6f-47e7-a821-9ec2c772d274 joins all six clips with a title card before each one. Each clip below also stands on its own.
 
 ### Getting started
 
-[`docs/videos/01-getting-started.mp4`](docs/videos/01-getting-started.mp4)
+https://github.com/user-attachments/assets/1f6ef792-c98c-42e6-ab3c-778c69ab8a9b
 
 On first launch you choose how to play and how far each AI looks ahead.
 
 ### Human vs AI
 
-[`docs/videos/02-human-vs-ai.mp4`](docs/videos/02-human-vs-ai.mp4)
+https://github.com/user-attachments/assets/ce0d8633-db25-4689-9a32-cc8df2fc0d13
 
 You play White against Material + Mobility. Settings swaps in King Safety + Position and sets each agent's search depth.
 
 ### Finishing a game
 
-[`docs/videos/03-finishing-a-game.mp4`](docs/videos/03-finishing-a-game.mp4)
+https://github.com/user-attachments/assets/5c53d200-e208-475c-8905-85a3eed70b3e
 
 You checkmate the depth 1 agent in 40 moves, and the result screen shows your time and moves.
 
 ### AI vs AI
 
-[`docs/videos/04-ai-vs-ai.mp4`](docs/videos/04-ai-vs-ai.mp4)
+https://github.com/user-attachments/assets/855b4334-df32-490e-a1fb-e5e1e8f17728
 
 The two agents play each other live at depth 1. King Safety + Position takes White, and the game ends in a draw by repetition after 59 moves.
 
 ### The AI tray
 
-[`docs/videos/05-ai-tray.mp4`](docs/videos/05-ai-tray.mp4)
+https://github.com/user-attachments/assets/dfdff48f-fefb-4055-9f47-fee8e69e6d54
 
 The brain button on the home screen explains what each agent scores and shows the harness matches at depth 2 and depth 3.
 
 ### Your stats
 
-[`docs/videos/06-your-stats.mp4`](docs/videos/06-your-stats.mp4)
+https://github.com/user-attachments/assets/ba6e9a87-1265-425b-af89-53d2f23471f7
 
 The stats tray counts your games against the AI, and the question mark on each card explains its numbers.
 
