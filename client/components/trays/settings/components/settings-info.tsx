@@ -7,7 +7,7 @@ import { TRAY_HEADER_CLOSE_ICON_SIZE } from 'react-native-morpheus/constants';
 import { trayText } from '@/components/shared/tokens';
 import { useSheetColors } from '@/hooks/use-sheet-colors';
 
-import { SETTINGS_INFO, type SettingsInfoKey } from '../info-content';
+import { SETTINGS_INFO, type SettingsInfo, type SettingsInfoKey } from '../info-content';
 
 export function SettingsInfoAction() {
   const { next } = useTrayNavigation();
@@ -30,9 +30,9 @@ export function SettingsInfoAction() {
   );
 }
 
-export function SettingsInfoBody({ info }: { info: SettingsInfoKey }) {
+// any tray can explain a step with titled paragraphs on one soft card
+export function InfoBody({ content }: { content: Pick<SettingsInfo, 'items'> }) {
   const { colors } = useSheetColors();
-  const content = SETTINGS_INFO[info];
 
   return (
     <Tray.Body>
@@ -61,4 +61,8 @@ export function SettingsInfoBody({ info }: { info: SettingsInfoKey }) {
       </Tray.Section>
     </Tray.Body>
   );
+}
+
+export function SettingsInfoBody({ info }: { info: SettingsInfoKey }) {
+  return <InfoBody content={SETTINGS_INFO[info]} />;
 }

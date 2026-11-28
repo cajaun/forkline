@@ -66,7 +66,8 @@ export function SettingsHeader({
 }: {
   title: string;
   backSteps?: number;
-  info?: SettingsInfoKey;
+  // a key names a Settings explainer while true marks a step whose explainer another tray supplies
+  info?: SettingsInfoKey | true;
 }) {
   const { colors } = useSheetColors();
   const isSubStep = backSteps > 0;

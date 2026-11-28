@@ -5,6 +5,8 @@ from typing import Callable, Protocol
 
 import chess
 
+from .piece_squares import is_endgame, piece_square_score
+
 PIECE_VALUES: dict[chess.PieceType, int] = {
     chess.PAWN: 100,
     chess.KNIGHT: 320,
@@ -127,23 +129,18 @@ def _king_safety(board: chess.Board, color: chess.Color) -> int:
     return score
 
 
-# minor pieces off their home rank count as developed
-def _development(board: chess.Board, color: chess.Color) -> int:
-    home_rank = 0 if color == chess.WHITE else 7
-    minors = board.pieces(chess.KNIGHT, color) | board.pieces(chess.BISHOP, color)
-    return sum(8 for square in minors if chess.square_rank(square) != home_rank)
-
-
-# the positional agent values king shelter and pawn structure and development
+# the positional agent values king shelter and pawn structure and where each piece stands
 @dataclass(frozen=True)
 class KingSafetyEvaluator:
     name: str = "king-safety-position"
 
     def evaluate(self, board: chess.Board, perspective: chess.Color) -> int:
+        endgame = is_endgame(board)
         white_score = (
             material_score(board)
             + _difference(board, _king_safety)
             + _difference(board, _pawn_structure)
-            + _difference(board, _development)
+            + piece_square_score(board, chess.WHITE, endgame)
+            - piece_square_score(board, chess.BLACK, endgame)
         )
         return _perspective(white_score, perspective)

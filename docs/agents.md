@@ -39,7 +39,9 @@ This agent plays for structure. On top of material it adds:
 - 18 points for each pawn in front of its king and a penalty for each gap
 - a 45 point penalty when its king sits in check
 - penalties for doubled and isolated pawns and a small reward for advanced pawns
-- 8 points for each knight or bishop off its home rank
+- a piece-square table bonus for where each knight, bishop, rook, queen and king stands
+
+The tables in [`server/chess/piece_squares.py`](../server/chess/piece_squares.py) come from Tomasz Michniewski's Simplified Evaluation Function. They give each piece a bonus or penalty for its square: a knight in the centre scores up to 20 and a knight in a corner loses 50. The king uses a table that keeps it in a castled corner until the queens come off or each side has at most 1,300 points of pieces, such as a queen and a minor piece. After that it switches to a table that brings the king to the centre. Pawns have no table, because the pawn structure term already scores them.
 
 It keeps pawns at home in front of the king and avoids pawn moves that weaken its structure. It has no reason to seek open lines or chase pieces.
 
@@ -47,4 +49,6 @@ It keeps pawns at home in front of the king and avoids pawn moves that weaken it
 
 The first agent asks how many moves each side has. The second asks how safe each king is and how sound the pawns are. Those questions lead to opposite pawn moves. Material + Mobility pushes and trades pawns to free its pieces. King Safety + Position holds its pawns still to keep its shelter and its structure scores.
 
-The mobility term costs more to compute, since the agent generates legal moves for both sides at every leaf. In the depth 2 match it searched 175 nodes and made 36 cutoffs per move on average, against 156 nodes and 22 cutoffs for King Safety + Position. Its active positions give it more checks and captures, which the move ordering tries first, so more of its branches end in cutoffs.
+The two agents also judge a square differently. King Safety + Position asks where a piece stands on the board, through its tables. Material + Mobility asks how many moves the piece has from there, wherever that is.
+
+The mobility term generates legal moves for both sides at every leaf, so each of its evaluations costs more. At depth 2 the two agents searched about the same number of positions per move, 154 and 152, with 27 and 26 cutoffs. At depth 3 King Safety + Position searched more: 1,581 positions and 139 cutoffs per move, against 1,151 and 129.

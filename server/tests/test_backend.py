@@ -11,6 +11,7 @@ from server.chess.reference import ReferenceAgent
 from server.matches.harness import play_game, run_match
 from server.chess.search import MinimaxAlphaBeta
 from server.chess.evaluation import KingSafetyEvaluator, MaterialMobilityEvaluator
+from server.chess.piece_squares import piece_square_score
 
 
 class BackendTests(unittest.TestCase):
@@ -41,6 +42,18 @@ class BackendTests(unittest.TestCase):
                 max_plies=4,
             )
             self.assertEqual(len(result.moves), 4)
+
+    # a mirrored position scores the same for each colour so the tables favour neither side
+    def test_piece_square_tables_mirror_between_colours(self) -> None:
+        board = chess.Board()
+        self.assertEqual(KingSafetyEvaluator().evaluate(board, chess.WHITE), 0)
+        board = chess.Board("r1bq1rk1/pppp1ppp/2n2n2/2b1p3/2B1P3/2N2N2/PPPP1PPP/R1BQ1RK1 w - - 6 6")
+        mirrored = board.mirror()
+        for endgame in (False, True):
+            self.assertEqual(
+                piece_square_score(board, chess.WHITE, endgame),
+                piece_square_score(mirrored, chess.BLACK, endgame),
+            )
 
     def test_agents_have_distinct_evaluators(self) -> None:
         self.assertEqual(len(AGENT_NAMES), 2)

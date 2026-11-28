@@ -168,19 +168,20 @@ Run a ten-game agent match and print its JSON report:
 server/.venv/bin/python -m server.matches.harness --games 10 --depth 2 --max-plies 300
 ~~~
 
-Each pair of games starts from one of ten named openings, once with each agent
-as White, so no two games repeat. The report lists every game's opening, result
+The harness holds ten named openings. Games 1 and 2 start from the first, games
+3 and 4 from the second, and so on, with the agents swapping colours, so a
+ten-game match uses five openings. The report lists every game's opening, result
 and moves, plus each agent's average nodes searched and branches pruned per move.
 
-The full depth-2 report is saved in
-[`server/reports/match-depth-2.json`](server/reports/match-depth-2.json), and the
-app shows its summary in the stats tray (the chart button on the home screen,
-then AI match report). To refresh both after changing an agent:
+The full depth-2 and depth-3 reports are saved in
+[`server/reports/`](server/reports), and the app shows their summaries in the AI
+tray (the brain button on the home screen). To refresh one after changing an
+agent:
 
 ~~~bash
-server/.venv/bin/python -m server.matches.harness --games 10 --depth 2 \
-  --output server/reports/match-depth-2.json \
-  --summary client/constants/match-report.json
+server/.venv/bin/python -m server.matches.harness --games 10 --depth 3 \
+  --output server/reports/match-depth-3.json \
+  --summary client/constants/match-report-depth-3.json
 ~~~
 
 ## Repository Layout

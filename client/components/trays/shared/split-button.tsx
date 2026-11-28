@@ -79,7 +79,9 @@ export function SplitButton({
   const labelStyle = useAnimatedStyle(() => ({
     transform: [{ translateX: (cancelWidth.get() - BUTTON_WIDTH) / 2 }],
   }));
+  // the action hides while Cancel spans the row so a press on Cancel never shows it beneath
   const actionStyle = useAnimatedStyle(() => ({
+    opacity: progress.get() > 0 ? 1 : 0,
     transform: [{ scale: interpolate(progress.get(), [0, 1], [0.96, 1]) }],
   }));
 

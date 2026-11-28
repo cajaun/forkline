@@ -14,14 +14,17 @@ export function useOpenStep() {
   };
 }
 
+// a stride of two leaves room for each card's explainer step right after it
 export function StatTiles({
   columns = 2,
   firstStep,
   pages,
+  stride = 1,
 }: {
   columns?: number;
   firstStep: number;
   pages: StatPage[];
+  stride?: number;
 }) {
   const openStep = useOpenStep();
 
@@ -31,7 +34,7 @@ export function StatTiles({
         <OptionTile
           key={page.key}
           label={page.title}
-          onPress={() => openStep(firstStep + offset)}
+          onPress={() => openStep(firstStep + offset * stride)}
           visual={{ fallback: page.fallback, icon: page.icon }}
         />
       ))}

@@ -4,6 +4,7 @@ import { Extrapolation, interpolate, useAnimatedStyle } from 'react-native-reani
 import type { SharedValue } from 'react-native-reanimated';
 
 import { AnimatedView } from '@/components/shared/uniwind';
+import { AiTray } from '@/components/trays/ai/ai-tray';
 import { StatsTray } from '@/components/trays/stats/stats-tray';
 import { SettingsTray } from '@/components/trays/settings';
 import { useSheetColors } from '@/hooks/use-sheet-colors';
@@ -40,8 +41,10 @@ export const HomeChrome = memo(function HomeChrome({
   return (
     <View className="flex-1 pt-17" style={{ backgroundColor: colors.appBackground }}>
       <AnimatedView className="flex-row items-center gap-3 px-7" style={topChromeStyle}>
-        <StatsTray size={48} />
+        {/* the AI sits apart on the left while your own stats and settings share the right */}
+        <AiTray size={48} />
         <View className="flex-1" />
+        <StatsTray size={48} />
         <SettingsTray size={48} />
         {__DEV__ ? <PromotionPreview /> : null}
         <DeleteGameTray />
