@@ -1,6 +1,6 @@
 # Search and agents
 
-Cajaun Campbell (620169526) built both agents, the shared search, the match harness and the app.
+Cajaun Campbell built both agents, the shared search, the match harness and the app.
 
 ## Minimax with Alpha-Beta pruning
 
