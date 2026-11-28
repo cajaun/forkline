@@ -1,7 +1,3 @@
-
-
-https://github.com/user-attachments/assets/67064d14-69be-4cf0-a268-2c01bed25b5a
-
 # Forkline
 
 Forkline is a React Native chess application with a Python backend. The client
@@ -27,7 +23,9 @@ Changing the mode or colour of a game in progress starts a new game.
 
 ## Demo videos
 
-The GUI runs as an iOS app, so these recordings show both modes without an iPhone. https://github.com/user-attachments/assets/4b5e7da4-ad6f-47e7-a821-9ec2c772d274 joins all six clips with a title card before each one. Each clip below also stands on its own.
+https://github.com/user-attachments/assets/67064d14-69be-4cf0-a268-2c01bed25b5a
+
+The GUI runs as an iOS app, so these recordings show both modes without an iPhone. joins all six clips with a title card before each one. Each clip below also stands on its own.
 
 ### Getting started
 
